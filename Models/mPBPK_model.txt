@@ -20,7 +20,7 @@ Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 2.1e-4 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 5000 pDCs/ml blood.
+BDCA2_plasma_total(0) = 1.05e-4 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 5000 pDCs/ml blood.
 BDCA2_skin_total(0) = 1e-7 // Assumed to be almost non existent in HV, however should be higher for SLE patients
 ########## PARAMETERS
 F = 0.713 // Bioavailibility
@@ -53,7 +53,7 @@ BDCA2_plasma_bound = BDCA2_plasma_total * Plasma_free / (kd + Plasma_free)
 BDCA2_skin_bound = BDCA2_skin_total * Skin_free / (kd + Skin_free)
 BDCA2_plasma_free = BDCA2_plasma_total - BDCA2_plasma_bound
 BDCA2_skin_free = BDCA2_skin_total - BDCA2_skin_bound
-kdegp = ksynp/(2.1e-4/Vp)
+kdegp = ksynp/(1.05e-4/Vp)
 kdegs = ksyns/(1e-7/Vs)
 
 r1 = ka*Depot
@@ -85,7 +85,7 @@ IV = IV_in @ 0
 SC = SC_in @ 0
 ########## FEATURES
 //y_sim = Plasma_total/Vp
-y_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-2.1e-4)/2.1e-4)
+y_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.05e-4)/1.05e-4)
 
 
 

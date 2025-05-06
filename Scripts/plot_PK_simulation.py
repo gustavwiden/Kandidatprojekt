@@ -115,9 +115,8 @@ def fcost(params, sims, PK_data):
     return cost
 
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 5.896, 
- 13.9, 0.421, 1.1e-4, 5e-8, 8, 8, 0.525] # Optimized parameters both models
-
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 
+5.896, 13.9, 0.421, 1.09e-4, 5e-8, 8, 8, 0.525] # Optimized parameters both models
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")
