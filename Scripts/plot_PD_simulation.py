@@ -34,12 +34,28 @@ def plot_PD_dataset(PD_data, face_color='k'):
     plt.xlabel('Time [Hours]')
     plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline. (µg/ml)')
 
-# Definition of the function that plots all PD_datasets
-def plot_PD_data(PD_data, face_color='k'):
+# Definition of a function that plots the simulation
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
+    sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
+    feature_idx = sim.feature_names.index(feature_to_plot)
+    plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
+
+# Definition of the function that plots all PD simulations and saves them to Results folder
+def plot_sim_with_PD_data(params, sims, PD_data, color='b', save_dir='../Results'):
+    os.makedirs(save_dir, exist_ok=True)
+
     for experiment in PD_data:
         plt.figure()
-        plot_PD_dataset(PD_data[experiment], face_color=face_color)
+        timepoints = time_vectors[experiment]
+        plot_sim(params, sims[experiment], timepoints, color)
+        plot_PD_dataset(PD_data[experiment])
         plt.title(experiment)
+
+        # Save figure with PD-specific name
+        filename = f"PD_{experiment}_simulation.png"
+        save_path = os.path.join(save_dir, filename)
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close()
 
 # Install and load model
 sund.install_model('../Models/mPBPK_model.txt')
@@ -77,19 +93,6 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 1000, 1) for exp in PD_data}
 
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
-    sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
-
-def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
-    for experiment in PD_data:
-        plt.figure()
-        timepoints = time_vectors[experiment]
-        plot_sim(params, sims[experiment], timepoints, color)
-        plot_PD_dataset(PD_data[experiment])
-        plt.title(experiment)
-
 def fcost(params, sims, PD_data):
     cost = 0
     for dose in PD_data:
@@ -117,5 +120,3 @@ print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 
 plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)
-
-plt.show()
