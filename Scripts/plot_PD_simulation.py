@@ -35,7 +35,7 @@ def plot_PD_dataset(PD_data, face_color='k'):
     plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline. (µg/ml)')
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
@@ -98,10 +98,10 @@ def fcost(params, sims, PD_data):
     for dose in PD_data:
         try:
             sims[dose].simulate(time_vector=PD_data[dose]["time"], parameter_values=params, reset=True)
-            y_sim = sims[dose].feature_data[:,0]
+            PD_sim = sims[dose].feature_data[:,0]
             y = PD_data[dose]["BDCA2_median"]
             SEM = PD_data[dose]["SEM"]
-            cost += np.sum(np.square(((y_sim - y) / SEM)))
+            cost += np.sum(np.square(((PD_sim - y) / SEM)))
         except Exception as e:
             if "CVODE" not in str(e):
                 print(str(e))

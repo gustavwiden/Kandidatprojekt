@@ -20,7 +20,7 @@ Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 1.05e-4 // 505 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 5000 pDCs/ml blood.
+BDCA2_plasma_total(0) = 2.1e-4 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 5000 pDCs/ml blood.
 BDCA2_skin_total(0) = 1e-7 // Assumed to be almost non existent in HV, however should be higher for SLE patients
 ########## PARAMETERS
 F = 0.713           // Bioavailibility
@@ -40,7 +40,7 @@ RCL = 0.20          // Reflection co-efficient lymph
 HV_CL = 5.896       // Linear clearance for healthy volunteer (mL/h). SLE_CL = 6.87. Linear clearance for SLE subject
 Vm = 13.9           // Maximum rate achieved by the system (μg/h)
 Km = 0.421          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm
-ksynp = 1.092e-4    // 526 000 MESF/h converted to μg/h
+ksynp = 2.18e-4     // 1 052 000 MESF/h converted to μg/h
 ksyns = 1.04e-7     // Using the same ratio between between baseline and ksyn as in plasma
 kintp = 8           // Optimized from guess, however value kept below 10 for physiologically reasonable params
 kints = 8           // Optimized from guess, however value kept below 10 for physiologically reasonable params
@@ -53,7 +53,7 @@ BDCA2_plasma_bound = BDCA2_plasma_total * Plasma_free / (kd + Plasma_free)
 BDCA2_skin_bound = BDCA2_skin_total * Skin_free / (kd + Skin_free)
 BDCA2_plasma_free = BDCA2_plasma_total - BDCA2_plasma_bound
 BDCA2_skin_free = BDCA2_skin_total - BDCA2_skin_bound
-kdegp = ksynp/(1.05e-4/Vp)
+kdegp = ksynp/(2.1e-4/Vp)
 kdegs = ksyns/(1e-7/Vs)
 
 r1 = ka*Depot
@@ -84,10 +84,10 @@ SC_dose = SC > 0, Depot, (Depot + SC)*F
 IV = IV_in @ 0
 SC = SC_in @ 0
 ########## FEATURES
-//Output not used needs to be commented out if running optimization
+//Output not used needs to be commented out in scripts that calculates cost
 
-PK_sim = Plasma_total/Vp
-PD_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.05e-4)/1.05e-4)
+//PK_sim = Plasma_total/Vp
+PD_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-2.1e-4)/2.1e-4)
 
 
 
