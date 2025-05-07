@@ -86,7 +86,7 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
@@ -104,10 +104,10 @@ def fcost(params, sims, PK_data):
     for dose in PK_data:
         try:
             sims[dose].simulate(time_vector = PK_data[dose]["time"], parameter_values = params, reset = True)
-            y_sim = sims[dose].feature_data[:,0]
+            PK_sim = sims[dose].feature_data[:,0]
             y = PK_data[dose]["BIIB059_mean"]
             SEM = PK_data[dose]["SEM"] 
-            cost += np.sum(np.square(((y_sim - y) / SEM)))
+            cost += np.sum(np.square(((PK_sim - y) / SEM)))
         except Exception as e:
             if "CVODE" not in str(e):
                 print(str(e))
@@ -116,10 +116,6 @@ def fcost(params, sims, PK_data):
 
 params_M1 = [0.713, 0.00975, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.7, 0.95, 0.55, 
 0.20, 5.52, 10.7, 0.547, 5.46e-5, 2.5e-8, 4, 4, 0.35] # Initial guess for PK and PD parameters
-
-# Params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 5.896, 
-#  10.7, 0.547, 5.46e-5, 2.5e-8, 4, 4, 0.35] # Optimized parameters for PK from PK_model, initial guess for PD
-
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")

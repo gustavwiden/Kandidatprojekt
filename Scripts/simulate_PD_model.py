@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("mPBPK_model.txt", "r") as f:
+with open("../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("PD_data.json", "r") as f:
+with open("../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Define a function to plot one PD_dataset
@@ -42,7 +42,7 @@ def plot_PD_data(PD_data, face_color='k'):
         plt.title(experiment)
 
 # Install and load model
-sund.install_model('mPBPK_model.txt')
+sund.install_model('../Models/mPBPK_model.txt')
 print(sund.installed_models())
 first_model = sund.load_model("mPBPK_model")
 
@@ -77,7 +77,7 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 1000, 1) for exp in PD_data}
 
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
@@ -95,10 +95,10 @@ def fcost(params, sims, PD_data):
     for dose in PD_data:
         try:
             sims[dose].simulate(time_vector=PD_data[dose]["time"], parameter_values=params, reset=True)
-            y_sim = sims[dose].feature_data[:,0]
+            PD_sim = sims[dose].feature_data[:,0]
             y = PD_data[dose]["BDCA2_median"]
             SEM = PD_data[dose]["SEM"]
-            cost += np.sum(np.square(((y_sim - y) / SEM)))
+            cost += np.sum(np.square(((PD_sim - y) / SEM)))
         except Exception as e:
             if "CVODE" not in str(e):
                 print(str(e))
