@@ -84,9 +84,9 @@ SC_dose = SC > 0, Depot, (Depot + SC)*F
 IV = IV_in @ 0
 SC = SC_in @ 0
 ########## FEATURES
-//Output not used needs to be commented out
+//Output not used needs to be commented out if running optimization
 
-//PK_sim = Plasma_total/Vp
+PK_sim = Plasma_total/Vp
 PD_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.05e-4)/1.05e-4)
 
 
