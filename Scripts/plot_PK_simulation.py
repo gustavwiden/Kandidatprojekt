@@ -34,12 +34,28 @@ def plot_PK_dataset(PK_data, face_color='k'):
     plt.xlabel('Time [Hours]')
     plt.ylabel('BIIB059 serum conc. (µg/ml)')
 
-# Definition of the function that plots all PK_datasets
-def plot_PK_data(PK_data, face_color='k'):
+# Definition of a function that plots the simulation
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
+    sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
+    feature_idx = sim.feature_names.index(feature_to_plot)
+    plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
+
+# Definition of the function that plots all PK simulations and saves them to Results folder
+def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results'):
+    os.makedirs(save_dir, exist_ok=True)
+
     for experiment in PK_data:
         plt.figure()
-        plot_PK_dataset(PK_data[experiment], face_color=face_color)
+        timepoints = time_vectors[experiment]
+        plot_sim(params, sims[experiment], timepoints, color)
+        plot_PK_dataset(PK_data[experiment])
         plt.title(experiment)
+
+        # Save figure with PK-specific name
+        filename = f"PK_{experiment}_simulation.png"
+        save_path = os.path.join(save_dir, filename)
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close()
 
 ## Setup of the model
 
@@ -86,19 +102,6 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
-    sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
-
-def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
-    for experiment in PK_data:
-        plt.figure()
-        timepoints = time_vectors[experiment]
-        plot_sim(params, sims[experiment], timepoints, color)
-        plot_PK_dataset(PK_data[experiment])
-        plt.title(experiment)
-
 def fcost(params, sims, PK_data):
     cost = 0
     for dose in PK_data:
@@ -114,9 +117,8 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 
-5.896, 13.9, 0.421, 1.09e-4, 5e-8, 8, 8, 0.525] # Optimized parameters both models
+5.896, 13.9, 0.421, 1.09e-4, 5e-8, 7.99, 7.99, 0.525] # Optimized parameters both models
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")
@@ -127,5 +129,3 @@ print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 
 plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
-
-plt.show()
