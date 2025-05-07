@@ -20,7 +20,7 @@ Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 1.05e-4 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 5000 pDCs/ml blood.
+BDCA2_plasma_total(0) = 1.05e-4 // 505 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 5000 pDCs/ml blood.
 BDCA2_skin_total(0) = 1e-7 // Assumed to be almost non existent in HV, however should be higher for SLE patients
 ########## PARAMETERS
 F = 0.713 // Bioavailibility
@@ -33,18 +33,18 @@ VL = 2600 // volume of lymph compartment (mL)
 Ls = 10.29 // Skin lymph flow rate (mL/h)
 L1 = 29.58 // Muscle lymph flow rate (mL/h)
 L2 = 80.96 // Leaky tissue lymph flow rate (mL/h)
-RCS = 0.63 // Reflection co-efficient skin
+RCS = 0.769 // Reflection co-efficient skin
 RC1 = 0.95 // Reflection co-efficient muscle
-RC2 = 0.36 // Reflection co-efficient leaky tissue
+RC2 = 0.605 // Reflection co-efficient leaky tissue
 RCL = 0.20 // Reflection co-efficient lymph
-HV_CL = 5.52 // Linear clearance for healthy volunteer (mL/h). SLE_CL = 6.87. Linear clearance for SLE subject
-Vm = 10.7 // Maximum rate achieved by the system (μg/h)
-Km = 0.547 // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm
-ksynp = 1.92e-4 // 526 000 MESF/h converted to μg/h
+HV_CL = 5.896 // Linear clearance for healthy volunteer (mL/h). SLE_CL = 6.87. Linear clearance for SLE subject
+Vm = 13.9 // Maximum rate achieved by the system (μg/h)
+Km = 0.421 // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm
+ksynp = 1.092e-4 // 526 000 MESF/h converted to μg/h
 ksyns = 5e-8 // Using the same ratio between between baseline and ksyn as in plasma
-kintp = 4 // Guess
-kints = 4 // Guess
-kd = 0.35 // 10 nM found for 24F4 (similair antibody), converted to μg/ml
+kintp = 8 // Optimized from guess, however value kept below 10 for physiologically reasonable params
+kints = 8 // Optimized from guess, however value kept below 10 for physiologically reasonable params
+kd = 0.525 // 0.35 μg/ml found for 24F4 (similair antibody)
 
 ########## VARIABLES
 Plasma_free = 0.5*((Plasma_total-kd-BDCA2_plasma_total)+sqrt((Plasma_total-kd-BDCA2_plasma_total)^2+4*Plasma_total*kd))
@@ -84,8 +84,10 @@ SC_dose = SC > 0, Depot, (Depot + SC)*F
 IV = IV_in @ 0
 SC = SC_in @ 0
 ########## FEATURES
-//y_sim = Plasma_total/Vp
-y_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.05e-4)/1.05e-4)
+//Output not used needs to be commented out
+
+//PK_sim = Plasma_total/Vp
+PD_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.05e-4)/1.05e-4)
 
 
 
