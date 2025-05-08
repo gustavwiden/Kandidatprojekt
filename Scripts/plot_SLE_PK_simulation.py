@@ -36,7 +36,7 @@ def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PK simulations and saves them to Results folder
-def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results'):
+def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results/SLE_results/PK'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in PK_data:
