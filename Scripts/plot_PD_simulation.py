@@ -33,15 +33,18 @@ def plot_PD_dataset(PD_data, face_color='k'):
     plt.errorbar(PD_data['time'], PD_data['BDCA2_median'], PD_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
     plt.xlabel('Time [Hours]')
     plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline. (µg/ml)')
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=8)
+
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
+def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PD_sim'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
 
 # Definition of the function that plots all PD simulations and saves them to Results folder
-def plot_sim_with_PD_data(params, sims, PD_data, color='b', save_dir='../Results'):
+def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in PD_data:
@@ -51,11 +54,76 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='b', save_dir='../Results
         plot_PD_dataset(PD_data[experiment])
         plt.title(experiment)
 
-        # Save figure with PD-specific name
+        # Save figures
         filename = f"PD_{experiment}_simulation.png"
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
+
+# Plot all PD simulations together
+def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results', feature_to_plot='PD_sim'):
+    import os
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(12, 7))
+
+    # Färger för varje dos
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
+
+    # Kortare etiketter
+    dose_labels = {
+        'IVdose_005_HV': 'IV 0.05',
+        'IVdose_03_HV':  'IV 0.3',
+        'IVdose_1_HV':   'IV 1',
+        'IVdose_3_HV':   'IV 3',
+        'IVdose_20_HV':  'IV 20',
+        'SCdose_50_HV':  'SC 50'
+    }
+
+    # Manuella etikettpositioner (x, y) för varje kurva
+    label_positions = {
+        'IVdose_005_HV': (490, -40),
+        'IVdose_03_HV':  (1275, -50),
+        'IVdose_1_HV':   (2340, -40),
+        'IVdose_3_HV':   (3550, -30),
+        'IVdose_20_HV':  (5600, -45),
+        'SCdose_50_HV':  (1575, -70),
+    }
+
+    # Plotta varje simulering och etikett
+    for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
+        timepoints = time_vectors[experiment]
+        sim = sims[experiment]
+        sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        feature_idx = sim.feature_names.index(feature_to_plot)
+
+        y = sim.feature_data[:, feature_idx]
+        x = sim.time_vector
+
+        plt.plot(x, y, color=color, linewidth=2)
+
+        # Sätt etiketten på vald plats
+        if experiment in label_positions:
+            label_x, label_y = label_positions[experiment]
+            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+                     color=color, fontsize=12, weight='bold')
+
+    # Axlar och stil
+    plt.xlabel('Time [Hours]', fontsize=16)
+    plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
+    plt.title('PD simulation of all doses in HV', fontsize=20)
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=12.5)
+
+    plt.tight_layout()
+    plt.xlim(-100, 6500)
+    plt.yscale('linear')
+
+    # Spara och/eller visa
+    save_path = os.path.join(save_dir, "PD_all_doses_simulation.png")
+    plt.savefig(save_path, bbox_inches='tight')
+    # plt.show()  # Avkommentera för att testa visuellt innan export
+    plt.close()
+
 
 # Install and load model
 sund.install_model('../Models/mPBPK_model.txt')
@@ -91,7 +159,7 @@ first_model_sims = {
     'SCdose_50_HV': sund.Simulation(models=first_model, activities=SC_50_HV, time_unit='h')
 }
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 1000, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 4000, 1) for exp in PD_data}
 
 def fcost(params, sims, PD_data):
     cost = 0
@@ -109,7 +177,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 
-5.896, 13.9, 0.421, 1.09e-4, 5e-8, 8, 8, 0.525] # Optimized parameters both models
+5.896, 13.9, 0.421, 2.18e-4, 5e-8, 8, 8, 0.525] # Optimized parameters both models
 
 cost_M1 = fcost(params_M1, first_model_sims, PD_data)
 print(f"Cost of the M1 model: {cost_M1}")
@@ -119,4 +187,7 @@ chi2_limit = chi2.ppf(0.95, dgf)
 print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 
+# Callback to plot the simulation with PD data in both separate graphs and one graph
 plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)
+plot_all_PD_doses_together(params_M1, first_model_sims, PD_data, time_vectors)
+

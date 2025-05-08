@@ -35,13 +35,13 @@ def plot_PK_dataset(PK_data, face_color='k'):
     plt.ylabel('BIIB059 serum conc. (µg/ml)')
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
+def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PK_sim'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PK simulations and saves them to Results folder
-def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results'):
+def plot_sim_with_PK_data(params, sims, PK_data, color='g', save_dir='../Results'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in PK_data:
@@ -60,20 +60,31 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results
 # Save figure with all doses together
 def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Results', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(12, 7))
 
-    # Färger med god kontrast
-    colors = [
-        '#1b7837', '#01665e', '#4d9221', '#80cdc1', '#35978f', '#a6dba0', '#ccebc5'
-    ]
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa','#35978f', '#76b56e', '#6d65bf']
+    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
 
-    # Unika markörer för datapunkter
-    markers = ['o', 's', 'o', 's', 'o', 's', 'o']  # cirkel, kvadrat, diamant, triangel upp/ner, plus, kryss
+    dose_labels = {
+        'IVdose_005_HV': '0.05 IV',
+        'IVdose_03_HV':  '0.3 IV',
+        'IVdose_1_HV':   '1 IV',
+        'IVdose_3_HV':   '3 IV',
+        'IVdose_10_HV':  '10 IV',
+        'IVdose_20_HV':  '20 IV',
+        'SCdose_50_HV':  '50 SC'
+    }
 
-    while len(colors) < len(PK_data):
-        colors += colors
-    while len(markers) < len(PK_data):
-        markers += markers
+    # Manuella etikettpositioner (x, y) för varje kurva
+    label_positions = {
+        'IVdose_005_HV': (300, 0.15),
+        'IVdose_03_HV':  (300, 0.88),
+        'IVdose_1_HV':   (1550, 1.25),
+        'IVdose_3_HV':   (1800, 5),
+        'IVdose_10_HV':  (1750, 22),
+        'IVdose_20_HV':  (1600, 55),
+        'SCdose_50_HV':  (1150, 0.75),
+    }
 
     for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
         timepoints = time_vectors[experiment]
@@ -81,42 +92,48 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
         sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
         feature_idx = sim.feature_names.index(feature_to_plot)
 
-        # Plotta simulering
+        # Simuleringslinje utan label
         plt.plot(sim.time_vector, sim.feature_data[:, feature_idx],
-                 label=f"Sim {experiment}", color=color, linewidth=2)
+                 color=color, linewidth=2, label=None)
 
-        # Plotta datapunkter utan felstaplar
+        # Plotta etikett med manuell positionering
+         # Sätt etiketten på vald plats
+        if experiment in label_positions:
+            label_x, label_y = label_positions[experiment]
+            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+                     color=color, fontsize=12, weight='bold')
+
+        # Datapunkter
         marker = markers[i]
-        plt.plot(
-        PK_data[experiment]['time'],
-        PK_data[experiment]['BIIB059_mean'],
-        linestyle='None',
-        marker=marker,
-        markersize=6,
-        color=color,
-        label=f"Data {experiment}"
+        plt.errorbar(
+            PK_data[experiment]['time'],
+            PK_data[experiment]['BIIB059_mean'],
+            yerr=PK_data[experiment]['SEM'],
+            fmt=marker,
+            markersize=6,
+            color=color,
+            label=dose_labels.get(experiment, experiment),
+            linestyle='None',
+            capsize=3
         )
 
+    plt.xlabel('Time [Hours]', fontsize=16)
+    plt.ylabel('BIIB059 plasma conc. (µg/ml)', fontsize=16)
+    plt.title('PK simulation of all doses in HV', fontsize=20)
 
-    plt.xlabel('Time [Hours]')
-    plt.ylabel('BIIB059 serum conc. (µg/ml)')
-    plt.title('PK: All Doses - Simulated vs. Observed')
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='small')
     plt.tight_layout()
+    plt.subplots_adjust(bottom=0.25)
 
-    # Logaritmisk y-axel och fasta axelgränser
     plt.yscale('log')
-    plt.ylim(0.1, 500)
-    plt.xlim(-25, 2500)
+    plt.ylim(0.03, 700)
+    plt.xlim(-25, 2150)
 
     save_path = os.path.join(save_dir, "PK_all_doses_simulation.png")
     plt.savefig(save_path, bbox_inches='tight')
     plt.close()
 
 
-
 ## Setup of the model
-
 # Install the model
 sund.install_model('../Models/mPBPK_model.txt')
 print(sund.installed_models())
