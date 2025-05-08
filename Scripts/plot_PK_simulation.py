@@ -35,7 +35,7 @@ def plot_PK_dataset(PK_data, face_color='k'):
     plt.ylabel('BIIB059 serum conc. (µg/ml)')
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='y_sim'):
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
@@ -56,6 +56,64 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
+
+# Save figure with all doses together
+def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Results', feature_to_plot='PK_sim'):
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(10, 6))
+
+    # Färger med god kontrast
+    colors = [
+        '#1b7837', '#01665e', '#4d9221', '#80cdc1', '#35978f', '#a6dba0', '#ccebc5'
+    ]
+
+    # Unika markörer för datapunkter
+    markers = ['o', 's', 'o', 's', 'o', 's', 'o']  # cirkel, kvadrat, diamant, triangel upp/ner, plus, kryss
+
+    while len(colors) < len(PK_data):
+        colors += colors
+    while len(markers) < len(PK_data):
+        markers += markers
+
+    for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
+        timepoints = time_vectors[experiment]
+        sim = sims[experiment]
+        sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        feature_idx = sim.feature_names.index(feature_to_plot)
+
+        # Plotta simulering
+        plt.plot(sim.time_vector, sim.feature_data[:, feature_idx],
+                 label=f"Sim {experiment}", color=color, linewidth=2)
+
+        # Plotta datapunkter utan felstaplar
+        marker = markers[i]
+        plt.plot(
+        PK_data[experiment]['time'],
+        PK_data[experiment]['BIIB059_mean'],
+        linestyle='None',
+        marker=marker,
+        markersize=6,
+        color=color,
+        label=f"Data {experiment}"
+        )
+
+
+    plt.xlabel('Time [Hours]')
+    plt.ylabel('BIIB059 serum conc. (µg/ml)')
+    plt.title('PK: All Doses - Simulated vs. Observed')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='small')
+    plt.tight_layout()
+
+    # Logaritmisk y-axel och fasta axelgränser
+    plt.yscale('log')
+    plt.ylim(0.1, 500)
+    plt.xlim(-25, 2500)
+
+    save_path = os.path.join(save_dir, "PK_all_doses_simulation.png")
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+
+
 
 ## Setup of the model
 
@@ -107,10 +165,10 @@ def fcost(params, sims, PK_data):
     for dose in PK_data:
         try:
             sims[dose].simulate(time_vector = PK_data[dose]["time"], parameter_values = params, reset = True)
-            y_sim = sims[dose].feature_data[:,0]
+            PK_sim = sims[dose].feature_data[:,0]
             y = PK_data[dose]["BIIB059_mean"]
             SEM = PK_data[dose]["SEM"] 
-            cost += np.sum(np.square(((y_sim - y) / SEM)))
+            cost += np.sum(np.square(((PK_sim - y) / SEM)))
         except Exception as e:
             if "CVODE" not in str(e):
                 print(str(e))
@@ -128,4 +186,6 @@ chi2_limit = chi2.ppf(0.95, dgf)
 print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 
+# Plotting the simulation with PK data for each dose and all doses together
 plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
+plot_all_doses_together(params_M1, first_model_sims, PK_data, time_vectors)
