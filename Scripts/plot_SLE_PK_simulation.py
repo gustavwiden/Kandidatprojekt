@@ -1,8 +1,7 @@
-
 # Importing the necessary libraries
 import os
 import re
-import numpy as np
+import numpy np
 import matplotlib.pyplot as plt
 import sund
 import json
@@ -43,10 +42,15 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../Results
         plt.figure()
         timepoints = time_vectors[experiment]
         plot_sim(params, sims[experiment], timepoints, color)
-        plt.title(experiment)
+        
+        # Replace "_HV" with "_SLE" in the experiment name
+        experiment_sle = experiment.replace("_HV", "_SLE")
+        
+        # Update the title
+        plt.title(experiment_sle)
 
         # Save figure with PK-specific name
-        filename = f"SLE_PK_{experiment}_simulation.png"
+        filename = f"SLE_PK_{experiment_sle}_simulation.png"
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()

@@ -5,8 +5,8 @@ import numpy as np
 import sund
 import matplotlib.pyplot as plt
 
-# Ensure the PK_PD folder exists inside HV_results in Results
-results_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Results', 'HV_results', 'PK_PD'))
+# Ensure the PK_PD folder exists inside SLE_results in Results
+results_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Results', 'SLE_results', 'PK_PD'))
 os.makedirs(results_folder, exist_ok=True)
 
 # Map experiment names to doses
@@ -26,7 +26,7 @@ def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_ve
 
     # Get the dose from the mapping
     dose = experiment_to_dose.get(experiment, "Unknown dose")
-    figure_title = f"HV, {dose} BIIB059"
+    figure_title = f"SLE, {dose} BIIB059"
 
     # Create a new figure
     fig, ax1 = plt.subplots()
@@ -91,13 +91,18 @@ for experiment in PK_data:
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 2000, 1) for exp in PK_data}
 
 # Define parameters (example parameters, replace with actual values)
-params = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 5.896, 
+params = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 8.69, 
           13.9, 0.421, 1.92e-4, 5e-8, 8, 8, 0.525]
 
 # Plot and save each experiment
 for experiment in PK_data:
+    # Replace "_HV" with "_SLE" in the experiment name
+    experiment_sle = experiment.replace("_HV", "_SLE")
+    
+    # Generate the plot
     fig = plot_PK_PD_sim_with_data(params, first_model_sims, experiment, PK_data, PD_data, time_vectors)
     if fig:  # Only save if a figure was returned
-        plot_path = os.path.join(results_folder, f"{experiment}_PK_PD_simulation.png")
+        # Save the figure with the updated name
+        plot_path = os.path.join(results_folder, f"{experiment_sle}_PK_PD_simulation.png")
         fig.savefig(plot_path)
-        print(f"Saved plot for {experiment} to {plot_path}")
+        print(f"Saved plot for {experiment_sle} to {plot_path}")
