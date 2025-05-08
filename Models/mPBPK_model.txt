@@ -37,7 +37,7 @@ RCS = 0.769         // Reflection co-efficient skin
 RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
-HV_CL = 5.896       // Linear clearance for healthy volunteer (mL/h). SLE_CL = 6.87. Linear clearance for SLE subject
+HV_CL = 5.896       // Linear clearance for healthy volunteer (mL/h). SLE_CL = 8.69. Linear clearance for SLE subject
 Vm = 13.9           // Maximum rate achieved by the system (μg/h)
 Km = 0.421          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm
 ksynp = 2.18e-4     // 1 052 000 MESF/h converted to μg/h

@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("mPBPK_model.txt", "r") as f:
+with open("../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("PK_data.json", "r") as f:
+with open("../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Define a function to plot one PK_dataset
@@ -44,7 +44,7 @@ def plot_PK_data(PK_data, face_color='k'):
 ## Setup of the model
 
 # Install the model
-sund.install_model('mPBPK_model.txt')
+sund.install_model('../Models/mPBPK_model.txt')
 print(sund.installed_models())
 
 # Load the model object
@@ -138,7 +138,7 @@ args_M1 = (first_model_sims, PK_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 1.1, 1.3, 1.3, 1, 1, 1, 1, 1] # PD parameters frozen
+bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 1.3, 1.3, 1, 1, 1, 1, 1] # PD parameters frozen
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
 upper_bounds = np.log(params_M1) + np.log(bound_factors)
