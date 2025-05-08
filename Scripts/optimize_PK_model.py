@@ -115,7 +115,7 @@ def fcost(params, sims, PK_data):
     return cost
 
 params_M1 = [0.713, 0.00975, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.7, 0.95, 0.55, 
-0.20, 5.52, 10.7, 0.547, 5.46e-5, 2.5e-8, 4, 4, 0.35] # Initial guess for PK and PD parameters
+0.20, 5.52, 10.7, 0.547, 1.31e-4, 2.5e-8, 4, 4, 0.35] # Initial guess for PK and PD parameters
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")

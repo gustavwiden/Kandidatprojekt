@@ -91,8 +91,9 @@ for experiment in PK_data:
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 2000, 1) for exp in PK_data}
 
 # Define parameters (example parameters, replace with actual values)
-params = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 8.69, 
-          13.9, 0.421, 1.92e-4, 5e-8, 8, 8, 0.525]
+params = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769,
+ 0.95, 0.605, 0.2, 12.7, 1.39, 0.421, 1.31e-4, 1.04e-7, 8, 8, 0.525]
+
 
 # Plot and save each experiment
 for experiment in PK_data:
