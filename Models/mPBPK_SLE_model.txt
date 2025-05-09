@@ -20,7 +20,7 @@ Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 1.26e-5 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 300 pDCs/ml
+BDCA2_plasma_total(0) = 1.26e-2 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 300 pDCs/ml
 BDCA2_skin_total(0) = 1.26e-3 // 
 ########## PARAMETERS
 F = 0.713           // Bioavailibility
@@ -40,10 +40,10 @@ RCL = 0.20          // Reflection co-efficient lymph
 HV_CL = 5.896       // Linear clearance for healthy volunteer (mL/h). SLE_CL = 8.69. Linear clearance for SLE subject
 Vm = 12.7           // Maximum rate achieved by the system (μg/h)
 Km = 0.421          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm
-ksyn = 1.31e-4    // 1 052 000 MESF/h converted to μg/h
-kint = 8           // Optimized from guess, however value kept below 10 for physiologically reasonable params
-kd = 0.525          // 0.35 μg/ml found for 24F4 (similair antibody)
-kmig = 0.07
+ksyn = 1.31e-7      // 1 052 000 MESF/h converted to μg/h
+kint = 8e-3            // Optimized from guess, however value kept below 10 for physiologically reasonable params
+kd = 0.525         // 0.35 μg/ml found for 24F4 (similair antibody)
+kmig = 0.07e-3
 
 ########## VARIABLES
 Plasma_free = 0.5*((Plasma_total-kd-BDCA2_plasma_total)+sqrt((Plasma_total-kd-BDCA2_plasma_total)^2+4*Plasma_total*kd))
@@ -52,8 +52,8 @@ BDCA2_plasma_bound = BDCA2_plasma_total * Plasma_free / (kd + Plasma_free)
 BDCA2_skin_bound = BDCA2_skin_total * Skin_free / (kd + Skin_free)
 BDCA2_plasma_free = BDCA2_plasma_total - BDCA2_plasma_bound
 BDCA2_skin_free = BDCA2_skin_total - BDCA2_skin_bound
-kdegp = ksyn/(1.26e-5/Vp)
-kdegs = (kmig*BDCA2_plasma_free/Vp)/(1.26e-3)
+kdegp = ksyn/(1.26e-2/Vp)
+kdegs = (kmig*BDCA2_plasma_total/Vp)/(1.26e-3)
 
 r1 = ka*Depot
 r2 = (Ls+L1+L2)*Lymph/VL
@@ -68,7 +68,7 @@ r10 = Plasma_free/Vp*Vm/(Km+Plasma_free/Vp)
 r11 = kint*BDCA2_plasma_bound
 r12 = kint*BDCA2_skin_bound
 r13 = ksyn
-r14 = kmig*BDCA2_plasma_free/Vp
+r14 = kmig*BDCA2_plasma_bound/Vp
 r15 = kdegp*(BDCA2_plasma_total/Vp-BDCA2_plasma_bound/Vp)
 r16 = kdegs*(BDCA2_skin_total/Vs-BDCA2_skin_bound/Vs)
 r17 = kint*BDCA2_plasma_bound/Vp
@@ -86,7 +86,7 @@ SC = SC_in @ 0
 //Output not used needs to be commented out in scripts that calculates cost
 
 //PK_sim = Plasma_total/Vp
-PD_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.26e-5)/1.26e-5)
+PD_sim = ((BDCA2_plasma_total-BDCA2_plasma_bound-1.26e-2)/1.26e-2)
 
 
 
