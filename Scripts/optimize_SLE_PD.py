@@ -55,7 +55,7 @@ first_model_sims = {
     'IVdose_20_SLE': sund.Simulation(models=first_model, activities=IV_20_SLE, time_unit='h'),
 }
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 8000, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 4000, 1) for exp in PD_data}
 
 def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
@@ -86,7 +86,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 8.69, 13.9, 0.421, 1.31e-4, 8, 0.525, 0.07]
+0.2, 10.43, 20.9, 0.281, 1.31e-4, 8, 0.525, 0.07]
 
 # Linear clearance have been updated for SLE, otherwise the same optimized parameters from HV is used
 
@@ -106,7 +106,7 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.5, 1.5, 1.5, 1, 1, 1, 5] 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] 
 # Frozen parameters except Vm and Km
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
