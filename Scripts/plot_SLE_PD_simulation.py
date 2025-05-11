@@ -21,7 +21,7 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_model.txt", "r") as f:
+with open("../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
@@ -58,11 +58,11 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='b', save_dir='../Results
 ## Setup of the model
 
 # Install the model
-sund.install_model('../Models/mPBPK_model.txt')
+sund.install_model('../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 
 # Load the model object
-first_model = sund.load_model("mPBPK_model")
+first_model = sund.load_model("mPBPK_SLE_model")
 
 # Creating activities for the different doses
 bodyweight = 70 # Bodyweight for subject in kg
@@ -96,7 +96,8 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 12.7, 1.39, 0.421, 1.31e-4, 1.04e-7, 8, 8, 0.525]
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
+0.2, 10.43, 20900, 281, 1.31e-1, 8, 525, 0.07]
 
 
 plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)

@@ -105,8 +105,8 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 5.896, 
-10.7, 0.547, 5.46e-5, 2.5e-8, 4, 4, 0.35] # Optimized parameters for PK from PK_model, initial guess for PD
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 
+5.45, 16.05, 0.365, 0.00003, 4.0, 0.1, 0.4, 0.001] # Optimized parameters for PK from PK_model, initial guess for PD
 
 cost_M1 = fcost(params_M1, first_model_sims, PD_data)
 print(f"Cost of the M1 model: {cost_M1}")
@@ -124,7 +124,7 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.3, 1.3, 2, 2, 2, 2, 1.5] # Frozen parameters for PK 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.3, 1.3, 2, 2, 2, 5, 5] # Frozen parameters for PK 
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
 upper_bounds = np.log(params_M1) + np.log(bound_factors)
