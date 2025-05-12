@@ -51,7 +51,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         plt.figure()
         timepoints = time_vectors[experiment]
         plot_sim(params, sims[experiment], timepoints, color)
-        plot_PD_dataset(PD_data[experiment])
+        plot_PD_dataset(PD_data[experiment])  # Plot the data points
         plt.title(experiment)
 
         # Save figures
@@ -62,14 +62,13 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
 
 # Plot all PD simulations together
 def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results', feature_to_plot='PD_sim'):
-    import os
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
-    # Färger för varje dos
+    # Colors for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
 
-    # Kortare etiketter
+    # Shorter labels
     dose_labels = {
         'IVdose_005_HV': 'IV 0.05',
         'IVdose_03_HV':  'IV 0.3',
@@ -79,17 +78,17 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
         'SCdose_50_HV':  'SC 50'
     }
 
-    # Manuella etikettpositioner (x, y) för varje kurva
+    # Manual label positions (x, y) for each curve
     label_positions = {
-        'IVdose_005_HV': (490, -40),
-        'IVdose_03_HV':  (1275, -50),
-        'IVdose_1_HV':   (2340, -40),
-        'IVdose_3_HV':   (3550, -30),
-        'IVdose_20_HV':  (5600, -45),
-        'SCdose_50_HV':  (1575, -70),
+        'IVdose_005_HV': (470, -40),
+        'IVdose_03_HV':  (1200, -50),
+        'IVdose_1_HV':   (2200, -40),
+        'IVdose_3_HV':   (2200, -92),
+        'IVdose_20_HV':  (2850, -95),
+        'SCdose_50_HV':  (1600, -50),
     }
 
-    # Plotta varje simulering och etikett
+    # Plot each simulation and label
     for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
         timepoints = time_vectors[experiment]
         sim = sims[experiment]
@@ -101,13 +100,16 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
 
         plt.plot(x, y, color=color, linewidth=2)
 
-        # Sätt etiketten på vald plats
+        # Plot the data points
+        plot_PD_dataset(PD_data[experiment], face_color=color)
+
+        # Set the label at the chosen position
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=12, weight='bold')
 
-    # Axlar och stil
+    # Axes and style
     plt.xlabel('Time [Hours]', fontsize=16)
     plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
     plt.title('PD simulation of all doses in HV', fontsize=20)
@@ -115,13 +117,13 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
     plt.text(10, 2, 'Baseline', color='gray', fontsize=12.5)
 
     plt.tight_layout()
-    plt.xlim(-100, 6500)
+    plt.xlim(-100, 3000)
     plt.yscale('linear')
 
-    # Spara och/eller visa
+    # Save and/or show
     save_path = os.path.join(save_dir, "PD_all_doses_simulation.png")
     plt.savefig(save_path, bbox_inches='tight')
-    # plt.show()  # Avkommentera för att testa visuellt innan export
+    plt.show()  # Uncomment to test visually before export
     plt.close()
 
 
@@ -159,7 +161,7 @@ first_model_sims = {
     'SCdose_50_HV': sund.Simulation(models=first_model, activities=SC_50_HV, time_unit='h')
 }
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 4000, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 1500, 1) for exp in PD_data}
 
 def fcost(params, sims, PD_data):
     cost = 0
@@ -176,8 +178,8 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 
-5.896, 13.9, 0.421, 2.18e-4, 5e-8, 8, 8, 0.525] # Optimized parameters both models
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
+0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
 cost_M1 = fcost(params_M1, first_model_sims, PD_data)
 print(f"Cost of the M1 model: {cost_M1}")
