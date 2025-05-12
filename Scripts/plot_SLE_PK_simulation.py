@@ -103,5 +103,62 @@ time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp 
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 10.43, 20.9, 0.281, 1.31e-4, 8, 0.525, 0.07]
 
+def plot_all_PK_doses_together(params, sims, PK_data, time_vectors, save_dir='../Results/SLE_results/PK', feature_to_plot='PK_sim'):
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(12, 7))
+
+    # Färger (välj fler eller andra om du vill)
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf', '#d95f02']
+
+    # Kortare etiketter
+    dose_labels = {
+        'IVdose_005_HV': 'IV 0.05',
+        'IVdose_03_HV':  'IV 0.3',
+        'IVdose_1_HV':   'IV 1',
+        'IVdose_3_HV':   'IV 3',
+        'IVdose_10_HV':  'IV 10',
+        'IVdose_20_HV':  'IV 20',
+        'SCdose_50_HV':  'SC 50'
+    }
+
+    # Plotta varje simulering
+    for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
+        timepoints = time_vectors[experiment]
+        sim = sims[experiment]
+        sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        feature_idx = sim.feature_names.index(feature_to_plot)
+
+        y = sim.feature_data[:, feature_idx]
+        x = sim.time_vector
+
+        # Plot simulation curve
+        plt.plot(x, y, color=color, linewidth=2, label=dose_labels.get(experiment, experiment))
+
+        # Add datapoints for IV 20
+        if experiment == 'IVdose_20_HV':
+            x_data = PK_data[experiment]['time']
+            y_data = PK_data[experiment]['BIIB059_mean']
+            y_err = PK_data[experiment]['SEM']
+            plt.errorbar(x_data, y_data, yerr=y_err, fmt='o', color=color,
+                         ecolor='#6d65bf', capsize=3, label=f'{dose_labels[experiment]} data')
+
+    plt.xlabel('Time [Hours]', fontsize=16)
+    plt.ylabel('BIIB059 concentration (µg/ml)', fontsize=16)
+    plt.title('PK simulation of all doses in SLE', fontsize=20)
+    plt.legend()
+
+    plt.yscale('log')
+    plt.ylim(0.0005, 700)
+    plt.xlim(-25, 2150)
+
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Spara
+    save_path = os.path.join(save_dir, "SLE_PK_all_doses_simulation.png")
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+
 
 plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
+plot_all_PK_doses_together(params_M1, first_model_sims, PK_data, time_vectors)

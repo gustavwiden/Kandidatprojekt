@@ -99,5 +99,48 @@ time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp 
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 10.43, 20900, 281, 1.31e-1, 8, 525, 0.07]
 
+def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results/SLE_results/PD', feature_to_plot='PD_sim'):
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(12, 7))
+
+    # Färger (välj fler eller andra om du vill)
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf', '#d95f02']
+
+    # Kortare etiketter
+    dose_labels = {
+        'IVdose_005_HV': 'IV 0.05',
+        'IVdose_03_HV':  'IV 0.3',
+        'IVdose_1_HV':   'IV 1',
+        'IVdose_3_HV':   'IV 3',
+        'IVdose_10_HV':  'IV 10',
+        'IVdose_20_HV':  'IV 20',
+        'SCdose_50_HV':  'SC 50'
+    }
+
+    # Plotta varje simulering
+    for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
+        timepoints = time_vectors[experiment]
+        sim = sims[experiment]
+        sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        feature_idx = sim.feature_names.index(feature_to_plot)
+
+        y = sim.feature_data[:, feature_idx]
+        x = sim.time_vector
+
+        plt.plot(x, y, color=color, linewidth=2, label=dose_labels.get(experiment, experiment))
+
+    plt.xlabel('Time [Hours]', fontsize=16)
+    plt.ylabel('BIIB059 concentration (µg/ml)', fontsize=16)
+    plt.title('PD simulation of all doses in SLE', fontsize=20)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Spara
+    save_path = os.path.join(save_dir, "SLE_PD_all_doses_simulation.png")
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+
 
 plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)
+plot_all_PD_doses_together(params_M1, first_model_sims, PD_data, time_vectors)
