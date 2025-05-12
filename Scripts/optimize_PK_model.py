@@ -206,7 +206,7 @@ with open('acceptable_params_PK.csv', 'w', newline='') as csvfile:
     writer.writerows(acceptable_params_PK)
 
 # Save all acceptable parameter sets to a JSON file
-with open('acceptable_params.json', 'w') as f:
+with open('acceptable_params_PK.json', 'w') as f:
     json.dump(acceptable_params_PK, f, cls=NumpyArrayEncoder)
 
 # Save the best parameter set to a JSON file

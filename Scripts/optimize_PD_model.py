@@ -106,7 +106,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 5.5, 14603, 280, 1.31e-1, 8, 525, 0.0001] # Optimized parameters for PK from PK_model, initial guess for PD
+0.2, 5.5, 10700, 547, 1.31e-1, 5, 350, 0.0001] # Optimized parameters for PK from PK_model, initial guess for PD
 
 cost_M1 = fcost(params_M1, first_model_sims, PD_data)
 print(f"Cost of the M1 model: {cost_M1}")
@@ -124,7 +124,7 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.4, 1.4, 1.4, 1.2, 1.4, 1.4] # Frozen parameters for PK 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1.5, 2, 1.5, 5] # Frozen parameters for PK 
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
 upper_bounds = np.log(params_M1) + np.log(bound_factors)
@@ -140,6 +140,8 @@ else:
     best_cost_PD = np.inf
     acceptable_params_PD = []
 
+acceptable_params_PD = []
+
 # Cost function for optimization
 def fcost_uncertainty_M1(param_log, model, PD_data):
     global acceptable_params_PD
@@ -147,6 +149,10 @@ def fcost_uncertainty_M1(param_log, model, PD_data):
 
     params = np.exp(param_log)
     cost = fcost(params, model, PD_data)
+
+    # Save all parameter sets with cost < chi2_limit
+    if cost < chi2_limit:
+        acceptable_params_PD.append(params)
 
     if cost < best_cost_PD:
         acceptable_params_PD = [params]
@@ -177,6 +183,10 @@ with open('best_PD_result.json', 'w') as f:
 with open('acceptable_params_PD.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerows(acceptable_params_PD)
+
+# Save all acceptable parameter sets to a JSON file
+with open('acceptable_params_PD.json', 'w') as f:
+    json.dump(acceptable_params_PD, f, cls=NumpyArrayEncoder)
 
 def plot_uncertainty(all_params, sims, PD_data, color='b', n_params_to_plot=500):
     random.shuffle(all_params)
