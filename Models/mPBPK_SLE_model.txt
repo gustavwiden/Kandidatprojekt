@@ -38,11 +38,11 @@ RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
 SLE_CL = 10.43       // Linear clearance for SLE patient (mL/h)
-Vm = 20.9          // Maximum rate achieved by the system (μg/h) [SCALE with 1000 to plot PD without oscialltions]
-Km = 0.421            // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm [SCALE with 1000 to plot PD without oscialltions]
-ksyn = 1.31e-4      // 1 052 000 MESF/h converted to μg/h. [SCALE with 1000 to plot PD without oscialltions]
+Vm = 20900          // Maximum rate achieved by the system (μg/h) [SCALE with 1000 to plot PD without oscialltions]
+Km = 281            // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm [SCALE with 1000 to plot PD without oscialltions]
+ksyn = 1.31e-1      // 1 052 000 MESF/h converted to μg/h. [SCALE with 1000 to plot PD without oscialltions]
 kint = 8            // Optimized from guess, however value kept below 10 for physiologically reasonable params
-kd = 0.525            // 0.35 μg/ml found for 24F4 (similair antibody) [SCALE with 1000 to plot PD without oscialltions]
+kd = 525            // 0.35 μg/ml found for 24F4 (similair antibody) [SCALE with 1000 to plot PD without oscialltions]
 kmig = 0.07         // Migration of pDCs from plasma to skin (1/h)
 
 ########## VARIABLES
@@ -76,7 +76,7 @@ r18 = kint*BDCA2_skin_bound/Vs
 
 ########## FUNCTIONS
 ########## EVENTS
-IV_dose = IV > 0, Plasma_total, Plasma_total + IV *1000// [SCALE with 1000 to plot PD without oscialltions]
+IV_dose = IV > 0, Plasma_total, Plasma_total + IV*1000 // [SCALE with 1000 to plot PD without oscialltions]
 SC_dose = SC > 0, Depot, (Depot + SC)*F*1000 // [SCALE with 1000 to plot PD without oscialltions]
 ########## OUTPUTS
 ########## INPUTS
