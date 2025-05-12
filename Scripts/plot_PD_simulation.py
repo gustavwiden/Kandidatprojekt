@@ -44,7 +44,7 @@ def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PD_sim'):
     plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
 
 # Definition of the function that plots all PD simulations and saves them to Results folder
-def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results'):
+def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results/HV_results/PD'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in PD_data:
@@ -61,7 +61,8 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         plt.close()
 
 # Plot all PD simulations together
-def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results', feature_to_plot='PD_sim'):
+def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results/HV_results/PD', feature_to_plot='PD_sim'):
+    import os
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
