@@ -124,7 +124,7 @@ ax1.text(label_positions['IVdose_20_SLE'][0], label_positions['IVdose_20_SLE'][1
 # Spara
 save_path = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.png"
 os.makedirs(os.path.dirname(save_path), exist_ok=True)
-plt.savefig(save_path, bbox_inches="tight")
+plt.savefig(save_path, bbox_inches="tight", dpi=300)
 plt.close()
 print(f"Saved plot to {save_path}")
 
