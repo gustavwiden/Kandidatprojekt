@@ -20,11 +20,11 @@ Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 1.26e-4 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 3000 pDCs/ml. 300 pDCs/ml
-BDCA2_skin_total(0) = 1e-7 // Assumed to be almost non existent in HV
+BDCA2_plasma_total(0) = 1.26e-1 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 300 pDCs/ml [SCALE with 1000 to plot PD without oscialltions]
+BDCA2_skin_total(0) = 1e-4 // [SCALE with 1000 to plot PD without oscialltions]
 ########## PARAMETERS
-F = 0.713           // Bioavailibility
-ka = 0.00975        // Absorption rate (1/h)
+F = 0.679           // Bioavailibility
+ka = 0.01           // Absorption rate (1/h)
 Vp = 2600           // Volume of plasma compartment (mL)
 Vs = 1810           // Volume of skin compartment (mL)
 V1 = 6300           // Volume of muscle compartment (mL)
@@ -37,14 +37,13 @@ RCS = 0.769         // Reflection co-efficient skin
 RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
-HV_CL = 5.896       // Linear clearance for healthy volunteer (mL/h). SLE_CL = 8.69. Linear clearance for SLE subject
-Vm = 12.7           // Maximum rate achieved by the system (μg/h)
-Km = 0.421          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm
-ksynp = 1.31e-4     // 1 052 000 MESF/h converted to μg/h
-ksyns = 1.04e-7     // Using the same ratio between between baseline and ksyn as in plasma
-kintp = 8           // Optimized from guess, however value kept below 10 for physiologically reasonable params
-kints = 8           // Optimized from guess, however value kept below 10 for physiologically reasonable params
-kd = 0.525          // 0.35 μg/ml found for 24F4 (similair antibody)
+HV_CL = 5.896       // Linear clearance for HV patient (mL/h)
+Vm = 12700          // Maximum rate achieved by the system (μg/h) [SCALE with 1000 to plot PD without oscialltions]
+Km = 421            // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm [SCALE with 1000 to plot PD without oscialltions]
+ksyn = 1.31e-1      // 1 052 000 MESF/h converted to μg/h. [SCALE with 1000 to plot PD without oscialltions]
+kint = 8            // Optimized from guess, however value kept below 10 for physiologically reasonable params
+kd = 525            // 0.35 μg/ml found for 24F4 (similair antibody) [SCALE with 1000 to plot PD without oscialltions]
+kmig = 0.07         // Migration of pDCs from plasma to skin (1/h)
 
 ########## VARIABLES
 Plasma_free = 0.5*((Plasma_total-kd-BDCA2_plasma_total)+sqrt((Plasma_total-kd-BDCA2_plasma_total)^2+4*Plasma_total*kd))
@@ -53,8 +52,8 @@ BDCA2_plasma_bound = BDCA2_plasma_total * Plasma_free / (kd + Plasma_free)
 BDCA2_skin_bound = BDCA2_skin_total * Skin_free / (kd + Skin_free)
 BDCA2_plasma_free = BDCA2_plasma_total - BDCA2_plasma_bound
 BDCA2_skin_free = BDCA2_skin_total - BDCA2_skin_bound
-kdegp = ksynp/(1.26e-4/Vp)
-kdegs = ksyns/(1e-7/Vs)
+kdegp = ksyn/(1.26e-1/Vp) // [SCALE with 1000 to plot PD without oscialltions]
+kdegs = (kmig*BDCA2_plasma_total/Vp)/(1e-4) // [SCALE with 1000 to plot PD without oscialltions]
 
 r1 = ka*Depot
 r2 = (Ls+L1+L2)*Lymph/VL
@@ -66,19 +65,19 @@ r7 = L1*(1-RCL)*Muscle/V1
 r8 = L2*(1-RCL)*Leaky/V2
 r9 = HV_CL*Plasma_free/Vp
 r10 = Plasma_free/Vp*Vm/(Km+Plasma_free/Vp)
-r11 = kintp*BDCA2_plasma_bound
-r12 = kints*BDCA2_skin_bound
-r13 = ksynp
-r14 = ksyns
+r11 = kint*BDCA2_plasma_bound
+r12 = kint*BDCA2_skin_bound
+r13 = ksyn
+r14 = kmig*BDCA2_plasma_bound/Vp
 r15 = kdegp*(BDCA2_plasma_total/Vp-BDCA2_plasma_bound/Vp)
 r16 = kdegs*(BDCA2_skin_total/Vs-BDCA2_skin_bound/Vs)
-r17 = kintp*BDCA2_plasma_bound/Vp
-r18 = kints*BDCA2_skin_bound/Vs
+r17 = kint*BDCA2_plasma_bound/Vp
+r18 = kint*BDCA2_skin_bound/Vs
 
 ########## FUNCTIONS
 ########## EVENTS
-IV_dose = IV > 0, Plasma_total, Plasma_total + IV
-SC_dose = SC > 0, Depot, (Depot + SC)*F
+IV_dose = IV > 0, Plasma_total, Plasma_total + IV*1000 // [SCALE with 1000 to plot PD without oscialltions]
+SC_dose = SC > 0, Depot, (Depot + SC)*F*1000 // [SCALE with 1000 to plot PD without oscialltions]
 ########## OUTPUTS
 ########## INPUTS
 IV = IV_in @ 0
@@ -86,8 +85,6 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-PK_sim = Plasma_total/Vp
-PD_sim = 100 * ((BDCA2_plasma_total-BDCA2_plasma_bound-1.26e-4)/1.26e-4)
-
-
+PK_sim = Plasma_total/(Vp*1000)
+//PD_sim = 100*((BDCA2_plasma_total-BDCA2_plasma_bound-1.26e-1)/1.26e-1)
 
