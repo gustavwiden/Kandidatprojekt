@@ -34,7 +34,7 @@ def plot_PD_dataset(PD_data, face_color='k'):
     plt.xlabel('Time [Hours]')
     plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline. (µg/ml)')
     plt.axhline(y=0, color='gray', linestyle='--', linewidth=1)
-    plt.text(10, 2, 'Baseline', color='gray', fontsize=8)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
 
 
 # Definition of a function that plots the simulation
@@ -59,6 +59,12 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
+
+# Ändra bakgrundsfärgen för hela figuren
+plt.gcf().patch.set_facecolor('#fcf5ed') 
+
+# Ändra bakgrundsfärgen för axlarna
+plt.gca().set_facecolor('#fcf5ed') 
 
 # Plot all PD simulations together
 def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results/HV_results/PD', feature_to_plot='PD_sim'):
@@ -108,14 +114,14 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
-                     color=color, fontsize=12, weight='bold')
+                     color=color, fontsize=22, weight='bold')
 
     # Axes and style
     plt.xlabel('Time [Hours]', fontsize=16)
     plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
-    plt.title('PD simulation of all doses in HV', fontsize=20)
-    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
-    plt.text(10, 2, 'Baseline', color='gray', fontsize=12.5)
+    plt.title('PD simulation of all doses in HV', fontsize=22)
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=22)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=22)
 
     plt.tight_layout()
     plt.xlim(-100, 3000)
@@ -182,7 +188,7 @@ def fcost(params, sims, PD_data):
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
-cost_M1 = fcost(params_M1, first_model_sims, PD_data)
+cost_M1 = fcost(params_HV, first_model_sims, PD_data)
 print(f"Cost of the M1 model: {cost_M1}")
 
 dgf = sum(np.count_nonzero(np.isfinite(PD_data[exp]["SEM"])) for exp in PD_data)
