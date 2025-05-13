@@ -25,7 +25,7 @@ with open("../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/PD_data.json", "r") as f:
+with open("../Data/Modified_PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Define a function to plot one PD_dataset
@@ -51,7 +51,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         plt.figure()
         timepoints = time_vectors[experiment]
         plot_sim(params, sims[experiment], timepoints, color)
-        plot_PD_dataset(PD_data[experiment])
+        plot_PD_dataset(PD_data[experiment])  # Plot the data points
         plt.title(experiment)
 
         # Save figures
@@ -72,10 +72,10 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
-    # Färger för varje dos
+    # Colors for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
 
-    # Kortare etiketter
+    # Shorter labels
     dose_labels = {
         'IVdose_005_HV': 'IV 0.05',
         'IVdose_03_HV':  'IV 0.3',
@@ -85,17 +85,17 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
         'SCdose_50_HV':  'SC 50'
     }
 
-    # Manuella etikettpositioner (x, y) för varje kurva
+    # Manual label positions (x, y) for each curve
     label_positions = {
-        'IVdose_005_HV': (490, -40),
-        'IVdose_03_HV':  (1275, -50),
-        'IVdose_1_HV':   (2340, -40),
-        'IVdose_3_HV':   (2000, -90),
-        'IVdose_20_HV':  (3000, -95),
-        'SCdose_50_HV':  (1575, -70),
+        'IVdose_005_HV': (470, -40),
+        'IVdose_03_HV':  (1200, -50),
+        'IVdose_1_HV':   (2200, -40),
+        'IVdose_3_HV':   (2200, -92),
+        'IVdose_20_HV':  (2850, -95),
+        'SCdose_50_HV':  (1600, -50),
     }
 
-    # Plotta varje simulering och etikett
+    # Plot each simulation and label
     for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
         timepoints = time_vectors[experiment]
         sim = sims[experiment]
@@ -107,35 +107,30 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
 
         plt.plot(x, y, color=color, linewidth=2)
 
-        # Lägg till datapunkterna med errorbars
-        plt.errorbar(PD_data[experiment]["time"], PD_data[experiment]["BDCA2_median"], 
-                     yerr=PD_data[experiment]["SEM"], fmt='o', color=color, 
-                     ecolor='black', elinewidth=1.5, capsize=3, label=f'{dose_labels.get(experiment, experiment)} data')
+        # Plot the data points
+        plot_PD_dataset(PD_data[experiment], face_color=color)
 
-        # Sätt etiketten på vald plats
+        # Set the label at the chosen position
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=22, weight='bold')
 
-    # Axlar och stil
-    plt.xlabel('Time [Hours]', fontsize=22)
+    # Axes and style
+    plt.xlabel('Time [Hours]', fontsize=16)
     plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
     plt.title('PD simulation of all doses in HV', fontsize=22)
     plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
     plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
 
     plt.tight_layout()
-    plt.xlim(-100, 3100)
+    plt.xlim(-100, 3000)
     plt.yscale('linear')
 
-    # Lägg till en legend
-    plt.legend(fontsize=12)
-
-    # Spara och/eller visa
+    # Save and/or show
     save_path = os.path.join(save_dir, "PD_all_doses_simulation.png")
-    plt.savefig(save_path, bbox_inches='tight', dpi=300)
-    # plt.show()  # Avkommentera för att testa visuellt innan export
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.show()  # Uncomment to test visually before export
     plt.close()
 
 
@@ -173,7 +168,7 @@ first_model_sims = {
     'SCdose_50_HV': sund.Simulation(models=first_model, activities=SC_50_HV, time_unit='h')
 }
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 10, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 def fcost(params, sims, PD_data):
     cost = 0
@@ -190,7 +185,7 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605,
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
 cost_M1 = fcost(params_HV, first_model_sims, PD_data)
@@ -201,7 +196,95 @@ chi2_limit = chi2.ppf(0.95, dgf)
 print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../Results', feature_to_plot='PD_sim'):
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(12, 7))
+
+    colors = ['#1b7837', '#01947b', '#628759', '#35978f', '#76b56e', '#6d65bf']
+    markers = ['o', 's', 'D', '^', 'P', 'X']
+
+    dose_labels = {
+        'IVdose_005_HV': '0.05 IV',
+        'IVdose_03_HV':  '0.3 IV',
+        'IVdose_1_HV':   '1 IV',
+        'IVdose_3_HV':   '3 IV',
+        'IVdose_20_HV':  '20 IV',
+        'SCdose_50_HV':  '50 SC'
+    }
+
+    label_positions = {
+        'IVdose_005_HV': (500, 35),
+        'IVdose_03_HV':  (1400, 35),
+        'IVdose_1_HV':   (2450, 35),
+        'IVdose_3_HV':   (2100, -90),
+        'IVdose_20_HV':  (2100, -110),
+        'SCdose_50_HV':  (1900, 35),
+    }
+
+
+    for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
+        timepoints = time_vectors[experiment]
+        y_min = np.full_like(timepoints, np.inf)
+        y_max = np.full_like(timepoints, -np.inf)
+
+        # Calculate uncertainty range
+        for params in acceptable_params:
+            try:
+                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                y_sim = sims[experiment].feature_data[:, 0]
+                y_min = np.minimum(y_min, y_sim)
+                y_max = np.maximum(y_max, y_sim)
+            except RuntimeError as e:
+                if "CV_ERR_FAILURE" in str(e):
+                    print(f"Skipping unstable parameter set for {experiment}")
+                else:
+                    raise e
+
+        # Plot uncertainty range
+        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+
+        # Plot selected parameter set
+        sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
+        y_selected = sims[experiment].feature_data[:, 0]
+        plt.plot(timepoints, y_selected, color=color, linewidth=2)
+
+        # Plot experimental data
+        marker = markers[i]
+        plt.errorbar(
+            PD_data[experiment]['time'],
+            PD_data[experiment]['BDCA2_median'],
+            yerr=PD_data[experiment]['SEM'],
+            fmt=marker,
+            markersize=6,
+            color=color,
+            linestyle='None',
+            capsize=3
+        )
+
+        # Add manually placed labels
+        if experiment in label_positions:
+            label_x, label_y = label_positions[experiment]
+            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+                     color=color, fontsize=18, weight='bold')
+
+    plt.xlabel('Time [Hours]', fontsize=18)
+    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=18)
+    plt.ylim(-120, 45)
+    plt.xlim(-25, 2750)
+    plt.tight_layout()
+
+    save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.svg")
+    plt.savefig(save_path, format='svg', bbox_inches='tight', dpi=300)
+    plt.show()
+    plt.close()
+
 # Callback to plot the simulation with PD data in both separate graphs and one graph
-plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
-plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
+# plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)
+# plot_all_PD_doses_together(params_M1, first_model_sims, PD_data, time_vectors)
+
+# Load acceptable parameters
+with open('acceptable_params_PD.json', 'r') as f:
+    acceptable_params = json.load(f)
+
+plot_all_doses_with_uncertainty(params_M1, acceptable_params, first_model_sims, PD_data, time_vectors)
 

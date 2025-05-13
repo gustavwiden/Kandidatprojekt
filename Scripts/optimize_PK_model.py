@@ -115,7 +115,7 @@ def fcost(params, sims, PK_data):
     return cost
 
 params_M1 = [0.713, 0.00975, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.7, 0.95, 0.55, 
-0.20, 5.52, 10.7, 0.547, 1.31e-4, 4, 0.35, 0.01, 0.001] # Initial guess for PK and PD parameters
+0.2, 5.52, 10700, 547, 1.31e-1, 5, 350, 0.0001] # Initial guess for PK and PD parameters
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")
@@ -138,7 +138,7 @@ args_M1 = (first_model_sims, PK_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 1.5, 1.5, 1.5, 1, 1, 1, 1, 1] # PD parameters frozen
+bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 2, 2, 1.5, 2, 1.5, 5] # PD parameters frozen
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
 upper_bounds = np.log(params_M1) + np.log(bound_factors)
@@ -167,6 +167,9 @@ else:
     best_cost_M1 = np.inf
     acceptable_params_PK = []
 
+# Initialize a list to store acceptable parameter sets
+acceptable_params_PK = []
+
 def fcost_uncertainty_M1(param_log, model, PK_data):
     global acceptable_params_PK
     global best_cost_M1
@@ -174,26 +177,43 @@ def fcost_uncertainty_M1(param_log, model, PK_data):
     params = np.exp(param_log)
     cost = fcost(params, model, PK_data)
 
+    # Save all parameter sets with cost < chi2_limit
+    if cost < chi2_limit:
+        acceptable_params_PK.append(params)
+
+    # Update the best cost and parameter set
     if cost < best_cost_M1:
-        acceptable_params_PK = [params]
         best_cost_M1 = cost
         print(f"New best cost: {best_cost_M1}")
 
     return cost
 
-for i in range(0,5):
-    res = differential_evolution(func=fcost_uncertainty_M1, bounds=bounds_M1_log, args=args_M1, x0=params_M1_log, callback=callback_M1_evolution_log, disp=True)
+# Perform optimization
+for i in range(5):
+    res = differential_evolution(
+        func=fcost_uncertainty_M1,
+        bounds=bounds_M1_log,
+        args=args_M1,
+        x0=params_M1_log,
+        callback=callback_M1_evolution_log,
+        disp=True
+    )
     params_M1_log = res['x']
 
-print(f"Number of parameter sets collected: {len(acceptable_params_PK)}")
-
-# Save best parameter set to JSON
-with open('best_M1_result.json', 'w') as f:
-    json.dump({'best_cost': best_cost_M1, 'best_param': acceptable_params_PK[0]}, f, cls=NumpyArrayEncoder)
-
+# Save all acceptable parameter sets to a CSV file
 with open('acceptable_params_PK.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerows(acceptable_params_PK)
+
+# Save all acceptable parameter sets to a JSON file
+with open('acceptable_params_PK.json', 'w') as f:
+    json.dump(acceptable_params_PK, f, cls=NumpyArrayEncoder)
+
+# Save the best parameter set to a JSON file
+with open('best_M1_result.json', 'w') as f:
+    json.dump({'best_cost': best_cost_M1, 'best_param': res['x'].tolist()}, f, cls=NumpyArrayEncoder)
+
+print(f"Number of acceptable parameter sets collected: {len(acceptable_params_PK)}")
 
 def plot_uncertainty(all_params, sims, PK_data, color='b', n_params_to_plot=500):
     random.shuffle(all_params)

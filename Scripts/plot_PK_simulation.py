@@ -55,6 +55,7 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='g', save_dir='../Results
         filename = f"PK_{experiment}_simulation.png"
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
+        filename = f"PK_{experiment}_simulation.pdf"
         plt.close()
 
 # Save figure with all doses together
@@ -77,13 +78,13 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
 
     # Manuella etikettpositioner (x, y) för varje kurva
     label_positions = {
-        'IVdose_005_HV': (300, 0.15),
-        'IVdose_03_HV':  (300, 0.88),
+        'IVdose_005_HV': (400, 0.05),
+        'IVdose_03_HV':  (300, 0.8),
         'IVdose_1_HV':   (1550, 1.25),
-        'IVdose_3_HV':   (1800, 5),
-        'IVdose_10_HV':  (1750, 22),
+        'IVdose_3_HV':   (1760, 5),
+        'IVdose_10_HV':  (1750, 20),
         'IVdose_20_HV':  (1600, 55),
-        'SCdose_50_HV':  (1150, 0.75),
+        'SCdose_50_HV':  (1080, 0.75),
     }
 
     for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
@@ -101,7 +102,7 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
-                     color=color, fontsize=12, weight='bold')
+                     color=color, fontsize=18, weight='bold')
 
         # Datapunkter
         marker = markers[i]
@@ -117,19 +118,106 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
             capsize=3
         )
 
-    plt.xlabel('Time [Hours]', fontsize=16)
-    plt.ylabel('BIIB059 plasma conc. (µg/ml)', fontsize=16)
-    plt.title('PK simulation of all doses in HV', fontsize=20)
+    plt.xlabel('Time [Hours]', fontsize=18)
+    plt.ylabel('BIIB059 plasma conc. (µg/ml)', fontsize=18)
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
 
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.25)
 
     plt.yscale('log')
     plt.ylim(0.03, 700)
-    plt.xlim(-25, 2150)
+    plt.xlim(-25, 2750)
 
-    save_path = os.path.join(save_dir, "PK_all_doses_simulation.png")
-    plt.savefig(save_path, bbox_inches='tight')
+    plt.close()
+
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../Results', feature_to_plot='PK_sim'):
+    os.makedirs(save_dir, exist_ok=True)
+    plt.figure(figsize=(12, 7))
+
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
+    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
+
+    dose_labels = {
+        'IVdose_005_HV': '0.05 IV',
+        'IVdose_03_HV':  '0.3 IV',
+        'IVdose_1_HV':   '1 IV',
+        'IVdose_3_HV':   '3 IV',
+        'IVdose_10_HV':  '10 IV',
+        'IVdose_20_HV':  '20 IV',
+        'SCdose_50_HV':  '50 SC'
+    }
+
+    label_positions = {
+        'IVdose_005_HV': (400, 0.07),
+        'IVdose_03_HV':  (300, 0.4),
+        'IVdose_1_HV':   (1480, 0.10),
+        'IVdose_3_HV':   (1570, 2),
+        'IVdose_10_HV':  (770, 21),
+        'IVdose_20_HV':  (1900, 80),
+        'SCdose_50_HV':  (900, 0.17),
+    }
+    
+
+    for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
+        timepoints = time_vectors[experiment]
+        y_min = np.full_like(timepoints, np.inf)
+        y_max = np.full_like(timepoints, -np.inf)
+
+        # Calculate uncertainty range
+        for params in acceptable_params:
+            try:
+                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                y_sim = sims[experiment].feature_data[:, 0]
+                y_min = np.minimum(y_min, y_sim)
+                y_max = np.maximum(y_max, y_sim)
+            except RuntimeError as e:
+                if "CV_ERR_FAILURE" in str(e):
+                    print(f"Skipping unstable parameter set for {experiment}")
+                else:
+                    raise e
+
+        # Plot uncertainty range
+        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+
+        # Plot selected parameter set
+        sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
+        y_selected = sims[experiment].feature_data[:, 0]
+        plt.plot(timepoints, y_selected, color=color, linewidth=2)
+
+        # Plot experimental data
+        marker = markers[i]
+        plt.errorbar(
+            PK_data[experiment]['time'],
+            PK_data[experiment]['BIIB059_mean'],
+            yerr=PK_data[experiment]['SEM'],
+            fmt=marker,
+            markersize=6,
+            color=color,
+            linestyle='None',
+            capsize=3
+        )
+
+        # Add manually placed labels
+        if experiment in label_positions:
+            label_x, label_y = label_positions[experiment]
+            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+                     color=color, fontsize=18, weight='bold')
+
+    plt.xlabel('Time [Hours]', fontsize=18)
+    plt.ylabel('BIIB059 plasma conc. (µg/ml)', fontsize=18)
+    plt.yscale('log')
+    plt.ylim(0.03, 700)
+    plt.xlim(-25, 2750)
+    plt.tight_layout()
+
+    # Remove plt.legend() to avoid showing the legend box
+    # plt.legend()  # Commented out to avoid showing the legend box
+
+    save_path = os.path.join(save_dir, "PK_all_doses_with_uncertainty.pdf")
+    plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
+    plt.show()
     plt.close()
 
 
@@ -192,8 +280,8 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 0.2, 
-5.896, 13.9, 0.421, 1.09e-4, 5e-8, 7.99, 7.99, 0.525] # Optimized parameters both models
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
+0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")
@@ -204,5 +292,12 @@ print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 
 # Plotting the simulation with PK data for each dose and all doses together
-plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
-plot_all_doses_together(params_M1, first_model_sims, PK_data, time_vectors)
+#plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
+#plot_all_doses_together(params_M1, first_model_sims, PK_data, time_vectors)
+
+# Load acceptable parameters
+with open('acceptable_params_PK.json', 'r') as f:
+    acceptable_params = json.load(f)
+
+# Plot all doses with uncertainty
+plot_all_doses_with_uncertainty(params_M1, acceptable_params, first_model_sims, PK_data, time_vectors)
