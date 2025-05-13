@@ -95,7 +95,14 @@ plt.tight_layout()
 
 # Save plot
 os.makedirs('../Results', exist_ok=True)
-save_path = '../Results/PK_SLE_HV_20.png'
-plt.savefig(save_path, bbox_inches='tight')
-plt.close()
 
+# Spara som SVG
+save_path_svg = '../Results/PK_SLE_HV_20.svg'
+plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
+
+# Spara som PDF
+save_path_pdf = '../Results/PK_SLE_HV_20.pdf'
+plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight')
+
+# Stäng figuren
+plt.close()
