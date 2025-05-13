@@ -94,6 +94,8 @@ ax2.spines['right'].set_color('#6d65bf')
 ax2.tick_params(axis='y', labelcolor='#6d65bf', labelsize=22)
 
 fig.tight_layout()
+plt.subplots_adjust(top=1.2)  # Öka från default ca 0.9
+
 
 # Lägg till beskrivande text under graferna
 fig.text(0.5, -0.02, "--- HV     — SLE", ha='center', fontsize=24)
