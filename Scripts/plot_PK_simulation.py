@@ -54,7 +54,7 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='g', save_dir='../Results
         # Save figure with PK-specific name
         filename = f"PK_{experiment}_simulation.png"
         save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight', dpi=300)
+        plt.savefig(save_path, bbox_inches='tight')
         plt.close()
 
 # Save figure with all doses together

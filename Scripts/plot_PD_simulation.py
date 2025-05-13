@@ -57,7 +57,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         # Save figures
         filename = f"PD_{experiment}_simulation.png"
         save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
         plt.close()
 
 # Ändra bakgrundsfärgen för hela figuren
@@ -90,8 +90,8 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
         'IVdose_005_HV': (490, -40),
         'IVdose_03_HV':  (1275, -50),
         'IVdose_1_HV':   (2340, -40),
-        'IVdose_3_HV':   (3550, -30),
-        'IVdose_20_HV':  (5600, -45),
+        'IVdose_3_HV':   (2000, -90),
+        'IVdose_20_HV':  (3000, -95),
         'SCdose_50_HV':  (1575, -70),
     }
 
@@ -107,6 +107,11 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
 
         plt.plot(x, y, color=color, linewidth=2)
 
+        # Lägg till datapunkterna med errorbars
+        plt.errorbar(PD_data[experiment]["time"], PD_data[experiment]["BDCA2_median"], 
+                     yerr=PD_data[experiment]["SEM"], fmt='o', color=color, 
+                     ecolor='black', elinewidth=1.5, capsize=3, label=f'{dose_labels.get(experiment, experiment)} data')
+
         # Sätt etiketten på vald plats
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
@@ -117,12 +122,15 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
     plt.xlabel('Time [Hours]', fontsize=22)
     plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
     plt.title('PD simulation of all doses in HV', fontsize=22)
-    plt.axhline(y=0, color='gray', linestyle='--', linewidth=22)
-    plt.text(10, 2, 'Baseline', color='gray', fontsize=22)
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
 
     plt.tight_layout()
-    plt.xlim(-100, 2800)
+    plt.xlim(-100, 3100)
     plt.yscale('linear')
+
+    # Lägg till en legend
+    plt.legend(fontsize=12)
 
     # Spara och/eller visa
     save_path = os.path.join(save_dir, "PD_all_doses_simulation.png")
