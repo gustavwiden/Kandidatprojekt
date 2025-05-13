@@ -185,20 +185,24 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
-cost_M1 = fcost(params_HV, first_model_sims, PD_data)
-print(f"Cost of the M1 model: {cost_M1}")
+PD_cost_HV = fcost(params_HV, first_model_sims, PD_data)
+print(f"Cost of the PD HV model: {PD_cost_HV}")
 
 dgf = sum(np.count_nonzero(np.isfinite(PD_data[exp]["SEM"])) for exp in PD_data)
 chi2_limit = chi2.ppf(0.95, dgf)
 print(f"Chi2 limit: {chi2_limit}")
-print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
+print(f"Cost > limit (rejected?): {PD_cost_HV > chi2_limit}")
 
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../Results', feature_to_plot='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
+
+    # Ändra bakgrundsfärgen
+    plt.gcf().patch.set_facecolor('#fcf5ed')
+    plt.gca().set_facecolor('#fcf5ed')
 
     colors = ['#1b7837', '#01947b', '#628759', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
@@ -279,12 +283,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.close()
 
 # Callback to plot the simulation with PD data in both separate graphs and one graph
-# plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)
-# plot_all_PD_doses_together(params_M1, first_model_sims, PD_data, time_vectors)
+# plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
+# plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
 
 # Load acceptable parameters
 with open('acceptable_params_PD.json', 'r') as f:
     acceptable_params = json.load(f)
 
-plot_all_doses_with_uncertainty(params_M1, acceptable_params, first_model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
 
