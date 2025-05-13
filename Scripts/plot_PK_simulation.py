@@ -133,6 +133,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
+    plt.gcf().patch.set_facecolor('#fcf5ed')
+    plt.gca().set_facecolor('#fcf5ed')
+
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
 
@@ -202,17 +205,18 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=18, weight='bold')
 
-    plt.xlabel('Time [Hours]', fontsize=18)
-    plt.ylabel('BIIB059 plasma conc. (µg/ml)', fontsize=18)
+    plt.xlabel('Time [Hours]', fontsize=22)
+    plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
     plt.yscale('log')
     plt.ylim(0.03, 700)
     plt.xlim(-25, 2750)
+    plt.tick_params(axis='both', which='major', labelsize=22)
     plt.tight_layout()
 
     # Remove plt.legend() to avoid showing the legend box
     # plt.legend()  # Commented out to avoid showing the legend box
 
-    save_path = os.path.join(save_dir, "PK_all_doses_with_uncertainty.pdf")
+    save_path = os.path.join(save_dir, "PK_all_doses_with_uncertainty.svg")
     plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
     plt.show()
     plt.close()
@@ -293,7 +297,7 @@ print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
 #plot_all_doses_together(params_M1, first_model_sims, PK_data, time_vectors)
 
 # Load acceptable parameters
-with open('acceptable_params_PK.json', 'r') as f:
+with open('acceptable_params.json', 'r') as f:
     acceptable_params = json.load(f)
 
 # Plot all doses with uncertainty
