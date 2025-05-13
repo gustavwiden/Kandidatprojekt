@@ -117,8 +117,8 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
                      color=color, fontsize=22, weight='bold')
 
     # Axes and style
-    plt.xlabel('Time [Hours]', fontsize=16)
-    plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
+    plt.xlabel('Time [Hours]', fontsize=22)
+    plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=22)
     plt.title('PD simulation of all doses in HV', fontsize=22)
     plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
     plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
@@ -200,6 +200,11 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
+    # Changed fontsize for axis
+    plt.tick_params(axis='x', labelsize=22)  # Ändra fontstorlek för x-axelns siffror
+    plt.tick_params(axis='y', labelsize=22)  # Ändra fontstorlek för y-axelns siffror
+
+
     # Ändra bakgrundsfärgen
     plt.gcf().patch.set_facecolor('#fcf5ed')
     plt.gca().set_facecolor('#fcf5ed')
@@ -269,17 +274,18 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
-                     color=color, fontsize=18, weight='bold')
+                     color=color, fontsize=22, weight='bold')
 
-    plt.xlabel('Time [Hours]', fontsize=18)
-    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=18)
+    plt.xlabel('Time [Hours]', fontsize=22)
+    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=22)
     plt.ylim(-120, 45)
     plt.xlim(-25, 2750)
     plt.tight_layout()
+    plt.subplots_adjust(top=1.25)  # Öka från default ca 0.9
+
 
     save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.svg")
     plt.savefig(save_path, format='svg', bbox_inches='tight', dpi=300)
-    plt.show()
     plt.close()
 
 # Callback to plot the simulation with PD data in both separate graphs and one graph
