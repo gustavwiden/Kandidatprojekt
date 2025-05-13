@@ -94,6 +94,8 @@ ax2.spines['right'].set_color('#6d65bf')
 ax2.tick_params(axis='y', labelcolor='#6d65bf', labelsize=22)
 
 fig.tight_layout()
+plt.subplots_adjust(top=1.2)  # Öka från default ca 0.9
+
 
 # Lägg till beskrivande text under graferna
 fig.text(0.5, -0.02, "--- HV     — SLE", ha='center', fontsize=24)
@@ -122,9 +124,16 @@ ax1.text(label_positions['IVdose_20_SLE'][0], label_positions['IVdose_20_SLE'][1
 
 
 # Spara
-save_path = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.png"
-os.makedirs(os.path.dirname(save_path), exist_ok=True)
-plt.savefig(save_path, bbox_inches="tight", dpi=300)
-plt.close()
-print(f"Saved plot to {save_path}")
+save_path_svg = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.svg"
+save_path_pdf = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.pdf"
+os.makedirs(os.path.dirname(save_path_svg), exist_ok=True)
 
+# Spara som SVG
+plt.savefig(save_path_svg, format="svg", bbox_inches="tight", dpi=300)
+
+# Spara som PDF
+plt.savefig(save_path_pdf, format="pdf", bbox_inches="tight", dpi=300)
+
+plt.close()
+print(f"Saved plot as SVG to {save_path_svg}")
+print(f"Saved plot as PDF to {save_path_pdf}")

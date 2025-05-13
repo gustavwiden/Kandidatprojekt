@@ -57,7 +57,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         # Save figures
         filename = f"PD_{experiment}_simulation.png"
         save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
         plt.close()
 
 # Ändra bakgrundsfärgen för hela figuren
@@ -117,11 +117,11 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
                      color=color, fontsize=22, weight='bold')
 
     # Axes and style
-    plt.xlabel('Time [Hours]', fontsize=16)
-    plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=16)
+    plt.xlabel('Time [Hours]', fontsize=22)
+    plt.ylabel('BDCA2 levels on pDCs (% change from baseline)', fontsize=22)
     plt.title('PD simulation of all doses in HV', fontsize=22)
-    plt.axhline(y=0, color='gray', linestyle='--', linewidth=22)
-    plt.text(10, 2, 'Baseline', color='gray', fontsize=22)
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
 
     plt.tight_layout()
     plt.xlim(-100, 3000)
@@ -185,20 +185,29 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
-cost_M1 = fcost(params_HV, first_model_sims, PD_data)
-print(f"Cost of the M1 model: {cost_M1}")
+PD_cost_HV = fcost(params_HV, first_model_sims, PD_data)
+print(f"Cost of the PD HV model: {PD_cost_HV}")
 
 dgf = sum(np.count_nonzero(np.isfinite(PD_data[exp]["SEM"])) for exp in PD_data)
 chi2_limit = chi2.ppf(0.95, dgf)
 print(f"Chi2 limit: {chi2_limit}")
-print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
+print(f"Cost > limit (rejected?): {PD_cost_HV > chi2_limit}")
 
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../Results', feature_to_plot='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
+
+    # Changed fontsize for axis
+    plt.tick_params(axis='x', labelsize=22)  # Ändra fontstorlek för x-axelns siffror
+    plt.tick_params(axis='y', labelsize=22)  # Ändra fontstorlek för y-axelns siffror
+
+
+    # Ändra bakgrundsfärgen
+    plt.gcf().patch.set_facecolor('#fcf5ed')
+    plt.gca().set_facecolor('#fcf5ed')
 
     colors = ['#1b7837', '#01947b', '#628759', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
@@ -265,26 +274,27 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
-                     color=color, fontsize=18, weight='bold')
+                     color=color, fontsize=22, weight='bold')
 
-    plt.xlabel('Time [Hours]', fontsize=18)
-    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=18)
+    plt.xlabel('Time [Hours]', fontsize=22)
+    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=22)
     plt.ylim(-120, 45)
     plt.xlim(-25, 2750)
     plt.tight_layout()
+    plt.subplots_adjust(top=1.25)  # Öka från default ca 0.9
+
 
     save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.svg")
     plt.savefig(save_path, format='svg', bbox_inches='tight', dpi=300)
-    plt.show()
     plt.close()
 
 # Callback to plot the simulation with PD data in both separate graphs and one graph
-# plot_sim_with_PD_data(params_M1, first_model_sims, PD_data)
-# plot_all_PD_doses_together(params_M1, first_model_sims, PD_data, time_vectors)
+# plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
+# plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
 
 # Load acceptable parameters
 with open('acceptable_params_PD.json', 'r') as f:
     acceptable_params = json.load(f)
 
-plot_all_doses_with_uncertainty(params_M1, acceptable_params, first_model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
 

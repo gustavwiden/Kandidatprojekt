@@ -52,6 +52,9 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='g', save_dir='../Results
         plt.title(experiment)
 
         # Save figure with PK-specific name
+        filename = f"PK_{experiment}_simulation.png"
+        save_path = os.path.join(save_dir, filename)
+        plt.savefig(save_path, bbox_inches='tight')
         filename = f"PK_{experiment}_simulation.pdf"
         plt.close()
 
@@ -59,6 +62,10 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='g', save_dir='../Results
 def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Results', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
+
+    # Ändra bakgrundsfärgen
+    plt.gcf().patch.set_facecolor('#fcf5ed')
+    plt.gca().set_facecolor('#fcf5ed')
 
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa','#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
@@ -127,12 +134,24 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
     plt.ylim(0.03, 700)
     plt.xlim(-25, 2750)
 
+    # Spara som SVG
+    save_path_svg = os.path.join(save_dir, "PK_all_doses_together.svg")
+    plt.savefig(save_path_svg, format='svg', bbox_inches='tight', dpi=300)
+
+    # Spara som PDF
+    save_path_pdf = os.path.join(save_dir, "PK_all_doses_together.pdf")
+    plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight', dpi=300)
+
+    print(f"Saving SVG to: {save_path_svg}")
+    print(f"Saving PDF to: {save_path_pdf}")
+
     plt.close()
 
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../Results', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
+    # Ändra bakgrundsfärgen
     plt.gcf().patch.set_facecolor('#fcf5ed')
     plt.gca().set_facecolor('#fcf5ed')
 
@@ -219,6 +238,18 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     save_path = os.path.join(save_dir, "PK_all_doses_with_uncertainty.svg")
     plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
     plt.show()
+
+    # Spara som SVG
+    save_path_svg = os.path.join(save_dir, "PK_all_doses_together.svg")
+    plt.savefig(save_path_svg, format='svg', bbox_inches='tight', dpi=300)
+
+    # Spara som PDF
+    save_path_pdf = os.path.join(save_dir, "PK_all_doses_together.pdf")
+    plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight', dpi=300)
+
+    print(f"Saving SVG to: {save_path_svg}")
+    print(f"Saving PDF to: {save_path_pdf}")
+
     plt.close()
 
 
@@ -281,24 +312,24 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
 0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
 
-cost_M1 = fcost(params_M1, first_model_sims, PK_data)
-print(f"Cost of the M1 model: {cost_M1}")
+PK_cost_HV = fcost(params_HV, first_model_sims, PK_data)
+print(f"Cost of the PK HV model: {PK_cost_HV}")
 
 dgf = sum(np.count_nonzero(np.isfinite(PK_data[exp]["SEM"])) for exp in PK_data)
 chi2_limit = chi2.ppf(0.95, dgf)
 print(f"Chi2 limit: {chi2_limit}")
-print(f"Cost > limit (rejected?): {cost_M1 > chi2_limit}")
+print(f"Cost > limit (rejected?): {PK_cost_HV > chi2_limit}")
 
 # Plotting the simulation with PK data for each dose and all doses together
-#plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
-#plot_all_doses_together(params_M1, first_model_sims, PK_data, time_vectors)
+#plot_sim_with_PK_data(params_HV, first_model_sims, PK_data)
+#plot_all_doses_together(params_HV, first_model_sims, PK_data, time_vectors)
 
 # Load acceptable parameters
 with open('acceptable_params.json', 'r') as f:
     acceptable_params = json.load(f)
 
 # Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params_M1, acceptable_params, first_model_sims, PK_data, time_vectors)
+plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PK_data, time_vectors)
