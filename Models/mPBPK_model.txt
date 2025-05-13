@@ -85,6 +85,6 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-//PK_sim = Plasma_total/(Vp*1000)
-PD_sim = 100*((BDCA2_plasma_total-BDCA2_plasma_bound-1.26e-1)/1.26e-1)
+PK_sim = Plasma_total/(Vp*1000)
+//PD_sim = 100*((BDCA2_plasma_total-BDCA2_plasma_bound-1.26e-1)/1.26e-1)
 
