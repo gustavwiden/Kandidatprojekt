@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_model.txt", "r") as f:
+with open("../../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/Modified_PD_data.json", "r") as f:
+with open("../../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Define a function to plot one PD_dataset
@@ -60,11 +60,11 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='g', save_dir='../Results
         plt.savefig(save_path, bbox_inches='tight', dpi=300)
         plt.close()
 
-# Ändra bakgrundsfärgen för hela figuren
-plt.gcf().patch.set_facecolor('#fcf5ed') 
+# # Ändra bakgrundsfärgen för hela figuren
+# plt.gcf().patch.set_facecolor('#fcf5ed') 
 
-# Ändra bakgrundsfärgen för axlarna
-plt.gca().set_facecolor('#fcf5ed') 
+# # Ändra bakgrundsfärgen för axlarna
+# plt.gca().set_facecolor('#fcf5ed') 
 
 # Plot all PD simulations together
 def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../Results/HV_results/PD', feature_to_plot='PD_sim'):
@@ -130,12 +130,13 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
     # Save and/or show
     save_path = os.path.join(save_dir, "PD_all_doses_simulation.png")
     plt.savefig(save_path, bbox_inches='tight')
-    plt.show()  # Uncomment to test visually before export
+    
+    # plt.show()  # Uncomment to test visually before export
     plt.close()
 
 
 # Install and load model
-sund.install_model('../Models/mPBPK_model.txt')
+sund.install_model('../../../Models/mPBPK_model.txt')
 print(sund.installed_models())
 first_model = sund.load_model("mPBPK_model")
 
@@ -205,9 +206,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.tick_params(axis='y', labelsize=22)  # Ändra fontstorlek för y-axelns siffror
 
 
-    # Ändra bakgrundsfärgen
-    plt.gcf().patch.set_facecolor('#fcf5ed')
-    plt.gca().set_facecolor('#fcf5ed')
+    # # Ändra bakgrundsfärgen
+    # plt.gcf().patch.set_facecolor('#fcf5ed')
+    # plt.gca().set_facecolor('#fcf5ed')
 
     colors = ['#1b7837', '#01947b', '#628759', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
@@ -222,12 +223,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     }
 
     label_positions = {
-        'IVdose_005_HV': (500, 35),
-        'IVdose_03_HV':  (1400, 35),
-        'IVdose_1_HV':   (2450, 35),
-        'IVdose_3_HV':   (2100, -90),
-        'IVdose_20_HV':  (2100, -110),
-        'SCdose_50_HV':  (1900, 35),
+        'IVdose_005_HV': (850, 7),
+        'IVdose_03_HV':  (1520, 10),
+        'IVdose_1_HV':   (2100, -75),
+        'IVdose_3_HV':   (2400, -95),
+        'IVdose_20_HV':  (2100, -105),
+        'SCdose_50_HV':  (2250, 13),
     }
 
 
@@ -278,6 +279,10 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
 
     plt.xlabel('Time [Hours]', fontsize=22)
     plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=22)
+    
+    plt.axhline(y=0, color='gray', linestyle='--', linewidth=1.5)
+    plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
+
     plt.ylim(-120, 45)
     plt.xlim(-25, 2750)
     plt.tight_layout()
@@ -287,7 +292,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.annotate(
         'Simulation',
         xy=(800, -4),  # Koordinater där pilen pekar (justera vid behov)
-        xytext=(800, 14),  # Koordinater för texten
+        xytext=(450, 15),  # Koordinater för texten
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
@@ -302,23 +307,26 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
 
     plt.annotate(
         'Data',
-        xy=(1370, 18),  # Koordinater där pilen pekar (justera vid behov)
+        xy=(1370, 14),  # Koordinater där pilen pekar (justera vid behov)
         xytext=(1470, 28),  # Koordinater för texten
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18)
 
-
     save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.pdf")
-    plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(save_path, format='pdf', bbox_inches='tight')
+
+    save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.svg")
+    plt.savefig(save_path, format='svg', bbox_inches='tight')
+
     plt.close()
 
 # Callback to plot the simulation with PD data in both separate graphs and one graph
 plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
-# plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
+plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
 
 # Load acceptable parameters
-with open('acceptable_params_PD.json', 'r') as f:
+with open('../../../Results/Acceptable params/acceptable_params_PD.json', 'r') as f:
     acceptable_params = json.load(f)
 
-#plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
 
