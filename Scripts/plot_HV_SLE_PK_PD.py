@@ -4,9 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sund
 
-# Ladda modellen
+# Ladda båda modellerna
+sund.install_model('../Models/mPBPK_model.txt')
 sund.install_model('../Models/mPBPK_SLE_model.txt')
-model = sund.load_model("mPBPK_SLE_model")
+model_HV = sund.load_model("mPBPK_model")
+model_SLE = sund.load_model("mPBPK_SLE_model")
 
 # Ladda datafiler
 with open("../Data/HV_SLE_data.json", "r") as pk_file:
@@ -15,10 +17,10 @@ with open("../Data/PD_HV_SLE_data.json", "r") as pd_file:
     PD_data = json.load(pd_file)
 
 # Sätt parametrar
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95,
-             0.605, 0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001]  # HV
-params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95,
-              0.605, 0.2, 10.43, 20900, 281, 1.31e-1, 8, 525, 0.07]  # SLE
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
+             0.605, 0.2, 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05]  # HV
+params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
+             0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]  # SLE
 
 # Välj dos
 dose_key_HV = "IVdose_20_HV"
@@ -28,20 +30,20 @@ dose_key_SLE = "IVdose_20_SLE"
 bw = 70
 
 # Funktion för att sätta upp simulering
-def setup_sim(data_entry, param_set):
+def setup_sim(data_entry, param_set, model):
     activity = sund.Activity(time_unit='h')
     input_data = data_entry["input"]["IV_in"]
     activity.add_output(sund.PIECEWISE_CONSTANT, "IV_in",
                         t=input_data["t"],
                         f=bw * np.array(input_data["f"]))
     sim = sund.Simulation(models=model, activities=activity, time_unit='h')
-    time_vector = np.arange(-10, data_entry["time"][-1] + 4000, 1)
+    time_vector = np.arange(-10, data_entry["time"][-1] + 6500, 1)
     sim.simulate(time_vector=time_vector, parameter_values=param_set, reset=True)
     return sim
 
-# Simuleringar
-sim_HV = setup_sim(PK_data[dose_key_HV], params_HV)
-sim_SLE = setup_sim(PK_data[dose_key_SLE], params_SLE)
+# Simuleringar med olika modeller
+sim_HV = setup_sim(PK_data[dose_key_HV], params_HV, model_HV)
+sim_SLE = setup_sim(PK_data[dose_key_SLE], params_SLE, model_SLE)
 
 # Plot
 fig, ax1 = plt.subplots(figsize=(12, 7))
@@ -73,6 +75,7 @@ idx_pd = sim_HV.feature_names.index("PD_sim")
 # Simulerad PD
 ax2.plot(sim_HV.time_vector, sim_HV.feature_data[:, idx_pd], '#6d65bf', linestyle='--', linewidth=2.5, label="PD sim HV")
 ax2.plot(sim_SLE.time_vector, sim_SLE.feature_data[:, idx_pd], '#6d65bf', linewidth=2.5, label="PD sim SLE")
+
 # Datapunkter PD
 # ax2.errorbar(PD_data[dose_key_HV]["time"], PD_data[dose_key_HV]["BDCA2_median"],
 #              yerr=PD_data[dose_key_HV]["SEM"], fmt='x', color='green', label="PD data HV")
@@ -82,46 +85,29 @@ ax2.plot(sim_SLE.time_vector, sim_SLE.feature_data[:, idx_pd], '#6d65bf', linewi
 # Axlar och etiketter
 ax1.set_xlabel("Time [h]", fontsize=22)
 ax1.set_ylabel("BIIB059 Plasma Concentration [µg/mL]", color='#1b7837', fontsize=22)
-ax1.set_xlim(0, 6500)
+ax1.set_xlim(0, 9000)
 ax1.set_ylim(-10, 550)
 ax1.spines['left'].set_color('#1b7837')
 ax1.tick_params(axis='y', labelcolor='#1b7837', labelsize=22)
 ax1.tick_params(axis='x', labelsize=22)
 
 ax2.set_ylabel("BDCA2 Expression [% change from baseline]", color='#6d65bf', fontsize=22)
-ax2.set_ylim(-100, 30)
+ax2.set_ylim(-100, 45)
 ax2.spines['right'].set_color('#6d65bf')
 ax2.tick_params(axis='y', labelcolor='#6d65bf', labelsize=22)
 
 fig.tight_layout()
 plt.subplots_adjust(top=1.2)  # Öka från default ca 0.9
 
-
-# Lägg till beskrivande text under graferna
-fig.text(0.5, -0.02, "--- HV     — SLE", ha='center', fontsize=24)
-
 # Baseline for bdca2
 ax2.axhline(y=0, color='gray', linestyle='dotted', linewidth=2)
 ax2.text(60, 1, 'Baseline', color='gray', fontsize=22)
 
-# Definiera etiketter och positioner
-dose_labels = {
-    'IVdose_20_HV': 'BIIB059 conc.',
-    'IVdose_20_SLE': 'BDCA2 expression'
-}
 
-# Manuella etikettpositioner (x, y) för varje kurva
-label_positions = {
-    'IVdose_20_HV': (400, 170),  # Position för HV
-    'IVdose_20_SLE': (3000, 250)  # Position för SLE
-}
 
-# Lägg till etiketter för PK-kurvor
-ax1.text(label_positions['IVdose_20_HV'][0], label_positions['IVdose_20_HV'][1],
-         dose_labels['IVdose_20_HV'], color='#1b7837', fontsize=22)
-ax1.text(label_positions['IVdose_20_SLE'][0], label_positions['IVdose_20_SLE'][1],
-         dose_labels['IVdose_20_SLE'], color='#6d65bf', fontsize=22)
-
+# Add legends
+ax1.legend(loc='upper left', fontsize=18, frameon=False)
+ax2.legend(loc='upper right', fontsize=18, frameon=False)
 
 # Spara
 save_path_svg = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.svg"

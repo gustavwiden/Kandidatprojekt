@@ -105,9 +105,7 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 5.5, 10700, 547, 1.31e-1, 5, 350, 0.0001] # Optimized parameters for PK from PK_model, initial guess for PD
-
+params_M1 = [0.679047619047619, 0.0102375, 2600.0, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.77, 0.95, 0.6050000000000001, 0.2, 5.505701148565126, 14.66315976109048, 0.2735, 3.270000000000001e-05, 2.5, 0.3499999999999999, 0.00010000000000000009]
 cost_M1 = fcost(params_M1, first_model_sims, PD_data)
 print(f"Cost of the M1 model: {cost_M1}")
 
@@ -124,14 +122,14 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1.5, 2, 1.5, 5] # Frozen parameters for PK 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.2, 1.2, 2, 2, 1.5, 5] # Frozen parameters for PK 
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
 upper_bounds = np.log(params_M1) + np.log(bound_factors)
 bounds_M1_log = Bounds(lower_bounds, upper_bounds)
 
 # Load previous best result
-if os.path.exists('best_PD_result.json'):
+if os.path.exists('best_PD_result.json') and os.path.getsize('best_PD_result.json') > 0:
     with open('best_PD_result.json', 'r') as f:
         best_data = json.load(f)
         best_cost_PD = best_data['best_cost']
@@ -177,8 +175,11 @@ for i in range(5):
                                   x0=params_M1_log, callback=callback_PD_evolution_log, disp=True)
     params_M1_log = res['x']
 
-with open('best_PD_result.json', 'w') as f:
-    json.dump({'best_cost': best_cost_PD, 'best_param': acceptable_params_PD[0]}, f, cls=NumpyArrayEncoder)
+if acceptable_params_PD:
+    with open('best_PD_result.json', 'w') as f:
+        json.dump({'best_cost': best_cost_PD, 'best_param': acceptable_params_PD[0]}, f, cls=NumpyArrayEncoder)
+else:
+    print("No acceptable parameter sets found. best_PD_result.json not updated.")
 
 with open('acceptable_params_PD.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')

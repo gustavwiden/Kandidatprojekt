@@ -185,8 +185,8 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 
+5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # Optimized parameters both models
 
 PD_cost_HV = fcost(params_HV, first_model_sims, PD_data)
 print(f"Cost of the PD HV model: {PD_cost_HV}")
@@ -283,18 +283,42 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.tight_layout()
     plt.subplots_adjust(top=1.25)  # Öka från default ca 0.9
 
+    # Lägg till beskrivande texter med pilar
+    plt.annotate(
+        'Simulation',
+        xy=(800, -4),  # Koordinater där pilen pekar (justera vid behov)
+        xytext=(800, 14),  # Koordinater för texten
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
 
-    save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.svg")
-    plt.savefig(save_path, format='svg', bbox_inches='tight', dpi=300)
+    plt.annotate(
+        'Uncertainty',
+        xy=(300, -26),  # Koordinater där pilen pekar (justera vid behov)
+        xytext=(30, -6),  # Koordinater för texten
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
+
+    plt.annotate(
+        'Data',
+        xy=(1370, 18),  # Koordinater där pilen pekar (justera vid behov)
+        xytext=(1470, 28),  # Koordinater för texten
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18)
+
+
+    save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.pdf")
+    plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
     plt.close()
 
 # Callback to plot the simulation with PD data in both separate graphs and one graph
-# plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
+plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
 # plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
 
 # Load acceptable parameters
 with open('acceptable_params_PD.json', 'r') as f:
     acceptable_params = json.load(f)
 
-plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
+#plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
 
