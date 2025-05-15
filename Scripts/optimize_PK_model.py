@@ -114,9 +114,7 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_M1 = [0.713, 0.00975, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.7, 0.95, 0.55, 
-0.2, 5.52, 10700, 547, 1.31e-1, 5, 350, 0.0001] # Initial guess for PK and PD parameters
-
+params_M1 = [0.713, 0.00975, 2600, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.70, 0.95, 0.55, 0.2, 5.52, 10.7, 0.547, 3.270000000000001e-05, 4.999999999999999, 0.3499999999999999, 0.00010000000000000009]
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")
 
@@ -138,8 +136,7 @@ args_M1 = (first_model_sims, PK_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 2, 2, 1.5, 2, 1.5, 5] # PD parameters frozen
-
+bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 2, 2, 1, 1, 1, 1] # PD parameters frozen
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
 upper_bounds = np.log(params_M1) + np.log(bound_factors)
 bounds_M1_log = Bounds(lower_bounds, upper_bounds)
@@ -157,14 +154,16 @@ def callback_log(x, file_name='M1-temp'):
 def callback_M1_evolution_log(x,convergence):
     callback_log(x, file_name='M1-temp-evolution')
 
-# Load previous best if exists
-if os.path.exists('best_M1_result.json'):
+# Load previous best if exists and is not empty
+if os.path.exists('best_M1_result.json') and os.path.getsize('best_M1_result.json') > 0:
     with open('best_M1_result.json', 'r') as f:
         best_data = json.load(f)
         best_cost_M1 = best_data['best_cost']
-        acceptable_params_PK = [np.array(best_data['best_param'])]
+        best_param_M1 = np.array(best_data['best_param'])
+        acceptable_params_PK = [best_param_M1]
 else:
     best_cost_M1 = np.inf
+    best_param_M1 = None
     acceptable_params_PK = []
 
 # Initialize a list to store acceptable parameter sets
@@ -173,6 +172,7 @@ acceptable_params_PK = []
 def fcost_uncertainty_M1(param_log, model, PK_data):
     global acceptable_params_PK
     global best_cost_M1
+    global best_param_M1
 
     params = np.exp(param_log)
     cost = fcost(params, model, PK_data)
@@ -184,6 +184,7 @@ def fcost_uncertainty_M1(param_log, model, PK_data):
     # Update the best cost and parameter set
     if cost < best_cost_M1:
         best_cost_M1 = cost
+        best_param_M1 = params.copy()
         print(f"New best cost: {best_cost_M1}")
 
     return cost
@@ -211,7 +212,7 @@ with open('acceptable_params_PK.json', 'w') as f:
 
 # Save the best parameter set to a JSON file
 with open('best_M1_result.json', 'w') as f:
-    json.dump({'best_cost': best_cost_M1, 'best_param': res['x'].tolist()}, f, cls=NumpyArrayEncoder)
+    json.dump({'best_cost': best_cost_M1, 'best_param': best_param_M1.tolist()}, f, cls=NumpyArrayEncoder)
 
 print(f"Number of acceptable parameter sets collected: {len(acceptable_params_PK)}")
 

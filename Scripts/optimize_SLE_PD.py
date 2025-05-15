@@ -85,8 +85,7 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 10.43, 20.9, 0.281, 1.31e-4, 8, 0.525, 0.07]
+params_M1 = [0.679, 0.010000000000000004, 2600.0, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.77, 0.95, 0.605, 0.2, 8.913261231489773, 14.150000000000004, 0.28, 2.12e-5, 2.5, 0.525, 0.6]
 
 # Linear clearance have been updated for SLE, otherwise the same optimized parameters from HV is used
 
@@ -106,7 +105,7 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1.05, 1.05, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 2, 2, 1.5, 2, 1.5, 5] 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] 
 # Frozen parameters except Vm and Km
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)

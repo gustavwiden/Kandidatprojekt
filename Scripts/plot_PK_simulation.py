@@ -224,30 +224,48 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=18, weight='bold')
 
-    plt.xlabel('Time [Hours]', fontsize=18)
-    plt.ylabel('BIIB059 plasma conc. (µg/ml)', fontsize=18)
+    plt.xlabel('Time [Hours]', fontsize=22)
+    plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
     plt.yscale('log')
     plt.ylim(0.03, 700)
     plt.xlim(-25, 2750)
+    plt.tick_params(axis='both', which='major', labelsize=22)
     plt.tight_layout()
 
-    # Remove plt.legend() to avoid showing the legend box
-    # plt.legend()  # Commented out to avoid showing the legend box
+    # Lägg till beskrivande texter med pilar
+    plt.annotate(
+        'Simulation',
+        xy=(1470, 60),  # Koordinater där pilen pekar (justera vid behov)
+        xytext=(1500, 200),  # Koordinater för texten
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
 
-    save_path = os.path.join(save_dir, "PK_all_doses_with_uncertainty.pdf")
-    plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
-    plt.show()
+    plt.annotate(
+        'Uncertainty',
+        xy=(2500, 0.8),  # Koordinater där pilen pekar (justera vid behov)
+        xytext=(2100, 0.1),  # Koordinater för texten
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
 
-    # Spara som SVG
-    save_path_svg = os.path.join(save_dir, "PK_all_doses_together.svg")
-    plt.savefig(save_path_svg, format='svg', bbox_inches='tight', dpi=300)
+    plt.annotate(
+        'Data',
+        xy=(1025, 94),  # Koordinater där pilen pekar (justera vid behov)
+        xytext=(1250, 180),  # Koordinater för texten
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
 
-    # Spara som PDF
-    save_path_pdf = os.path.join(save_dir, "PK_all_doses_together.pdf")
+
+
+
+    #Spara som PDF
+    save_path_pdf = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.pdf")
     plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight', dpi=300)
 
-    print(f"Saving SVG to: {save_path_svg}")
-    print(f"Saving PDF to: {save_path_pdf}")
+    save_path_svg = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
+    plt.savefig(save_path_svg, format='svg', bbox_inches='tight', dpi=300)
 
     plt.close()
 
@@ -311,8 +329,8 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # Optimized parameters both models
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2,
+ 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # Optimized parameters both models
 
 PK_cost_HV = fcost(params_HV, first_model_sims, PK_data)
 print(f"Cost of the PK HV model: {PK_cost_HV}")

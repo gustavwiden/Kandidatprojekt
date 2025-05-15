@@ -103,8 +103,7 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, SLE_PK_data[exp]["time"][-1] + 0.01, 1) for exp in SLE_PK_data}
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605, 
-0.2, 10.43, 20.9, 0.281, 1.31e-4, 8, 0.525, 0.07]
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]
 
 def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir='../Results/SLE_results/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
@@ -164,4 +163,4 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
 
 
 plot_sim_with_SLE_PK_data(params_M1, first_model_sims, SLE_PK_data)
-plot_all_PK_doses_together(params_M1, first_model_sims, SLE_PK_data, time_vectors)
+#plot_all_PK_doses_together(params_M1, first_model_sims, SLE_PK_data, time_vectors)
