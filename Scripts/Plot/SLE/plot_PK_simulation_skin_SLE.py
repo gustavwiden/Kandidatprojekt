@@ -21,14 +21,14 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 
 # Open the data file and read its contents
-with open("../Data/PK_data.json", "r") as f:
+with open("../../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Load the model object
@@ -78,7 +78,7 @@ def plot_sim(params, sim, timepoints, color='g', feature_to_plot='Skin_PK_sim'):
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PK simulations and saves them to Results folder
-def plot_fig(params, sims, color='g', save_dir='../Results/Skin_SLE/PK'):
+def plot_fig(params, sims, color='g', save_dir='../../../Results/Skin_SLE/PK'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in PK_data:
@@ -92,9 +92,9 @@ def plot_fig(params, sims, color='g', save_dir='../Results/Skin_SLE/PK'):
         # Save figure with PK-specific name
         filename = f"PK_{experiment}_simulation_in_SLE_skin.png"
         save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
 
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
- 0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]
+params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
+            0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]
 
-plot_fig(params_HV, mPBPK_model_sims)
+plot_fig(params_SLE, mPBPK_model_sims)
