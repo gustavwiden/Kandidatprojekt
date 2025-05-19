@@ -52,24 +52,22 @@ def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_ve
     ax2.plot(sims[experiment].time_vector, sims[experiment].feature_data[:, feature_idx_PD], 'r-')
     ax2.tick_params(axis='y', labelcolor='r')
 
-    # Add a title with the updated experiment name and dose
     plt.title(figure_title)
 
-    # Adjust layout
     plt.tight_layout()
 
     # Return the figure object for saving
     return fig
 
 # Load the PK and PD data
-with open("../Data/PK_data.json", "r") as pk_file:
+with open("../../../Data/PK_data.json", "r") as pk_file:
     PK_data = json.load(pk_file)
 
-with open("../Data/PD_data.json", "r") as pd_file:
+with open("../../../Data/PD_data.json", "r") as pd_file:
     PD_data = json.load(pd_file)
 
 # Load the model
-sund.install_model('../Models/mPBPK_model.txt')
+sund.install_model('../../../Models/mPBPK_model.txt')
 first_model = sund.load_model("mPBPK_model")
 
 # Create activities for the different doses
@@ -90,8 +88,9 @@ for experiment in PK_data:
 # Generate time vectors for each experiment
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 2000, 1) for exp in PK_data}
 
-# Define parameters (example parameters, replace with actual values)
-params = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05]
+# Define parameters 
+params = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 
+0.2, 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05]
 
 # Plot and save each experiment
 for experiment in PK_data:
@@ -100,3 +99,5 @@ for experiment in PK_data:
         plot_path = os.path.join(results_folder, f"{experiment}_PK_PD_simulation.png")
         fig.savefig(plot_path)
         print(f"Saved plot for {experiment} to {plot_path}")
+
+# plt.show() # Uncomment this line to display the plots interactively
