@@ -63,7 +63,7 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
-    # # Ändra bakgrundsfärgen
+    # # Change background color for poster
     # plt.gcf().patch.set_facecolor('#fcf5ed')
     # plt.gca().set_facecolor('#fcf5ed')
 
@@ -80,7 +80,6 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
         'SCdose_50_HV':  '50 SC'
     }
 
-    # Manuella etikettpositioner (x, y) för varje kurva
     label_positions = {
         'IVdose_005_HV': (400, 0.05),
         'IVdose_03_HV':  (300, 0.8),
@@ -97,18 +96,17 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
         sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
         feature_idx = sim.feature_names.index(feature_to_plot)
 
-        # Simuleringslinje utan label
+        # Plot simulation data
         plt.plot(sim.time_vector, sim.feature_data[:, feature_idx],
                  color=color, linewidth=2, label=None)
 
-        # Plotta etikett med manuell positionering
-         # Sätt etiketten på vald plats
+        # Plot labels
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
             plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=18, weight='bold')
 
-        # Datapunkter
+        # Data points
         marker = markers[i]
         plt.errorbar(
             PK_data[experiment]['time'],
@@ -134,11 +132,8 @@ def plot_all_doses_together(params, sims, PK_data, time_vectors, save_dir='../Re
     plt.ylim(0.03, 700)
     plt.xlim(-25, 2750)
 
-    # Spara som SVG
     save_path_svg = os.path.join(save_dir, "PK_all_doses_together.svg")
-    plt.savefig(save_path_svg, format='svg', bbox_inches='tight', dpi=300)
-
-    # Spara som PDF
+    plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
     save_path_pdf = os.path.join(save_dir, "PK_all_doses_together.pdf")
     plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight', dpi=300)
 
@@ -151,7 +146,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
-    # # Ändra bakgrundsfärgen
+    # # Change background color for poster
     # plt.gcf().patch.set_facecolor('#fcf5ed')
     # plt.gca().set_facecolor('#fcf5ed')
 
@@ -232,40 +227,38 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.tick_params(axis='both', which='major', labelsize=22)
     plt.tight_layout()
 
-    # Lägg till beskrivande texter med pilar
+    # Text to describe the figure
     plt.annotate(
         'Simulation',
-        xy=(1470, 60),  # Koordinater där pilen pekar (justera vid behov)
-        xytext=(1500, 200),  # Koordinater för texten
+        xy=(1470, 60),  # Arrow's coordinates (adjust as needed)
+        xytext=(1500, 200),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
     plt.annotate(
         'Uncertainty',
-        xy=(2500, 0.8),  # Koordinater där pilen pekar (justera vid behov)
-        xytext=(2100, 0.1),  # Koordinater för texten
+        xy=(2500, 0.8), # Arrow's coordinates
+        xytext=(2100, 0.1),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
     plt.annotate(
         'Data',
-        xy=(1025, 94),  # Koordinater där pilen pekar (justera vid behov)
-        xytext=(1250, 180),  # Koordinater för texten
+        xy=(1025, 94),  # Arrow's coordinates
+        xytext=(1250, 180),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
-
-
-
-    #Spara som PDF
+    #Save and show figure
     save_path_pdf = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.pdf")
     plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight', dpi=300)
 
     save_path_svg = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
-    plt.savefig(save_path_svg, format='svg', bbox_inches='tight', dpi=300)
+    plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
+    plt.show()
 
     plt.close()
 
@@ -330,7 +323,7 @@ def fcost(params, sims, PK_data):
     return cost
 
 params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2,
- 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # Optimized parameters both models
+ 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # Optimized parameters
 
 PK_cost_HV = fcost(params_HV, first_model_sims, PK_data)
 print(f"Cost of the PK HV model: {PK_cost_HV}")
@@ -341,8 +334,8 @@ print(f"Chi2 limit: {chi2_limit}")
 print(f"Cost > limit (rejected?): {PK_cost_HV > chi2_limit}")
 
 # Plotting the simulation with PK data for each dose and all doses together
-#plot_sim_with_PK_data(params_HV, first_model_sims, PK_data)
-#plot_all_doses_together(params_HV, first_model_sims, PK_data, time_vectors)
+plot_sim_with_PK_data(params_HV, first_model_sims, PK_data)
+plot_all_doses_together(params_HV, first_model_sims, PK_data, time_vectors)
 
 # Load acceptable parameters
 with open('../../../Results/Acceptable params/acceptable_params_PK.json', 'r') as f:
