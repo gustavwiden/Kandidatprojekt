@@ -1,7 +1,10 @@
+# Note: Due to occasional CVODE errors, the code might need to be run multiple times. 
+# If an error occurs, re-run the code until it succeeds.
+
 // Figure 10: PK plot of HV 
 Model: mPBPK_model.text                             // Use output PK_sim 
 Optimize: optimize_PK_model.py
-Plot: plot_PK_simulation.py 
+Plot: plot_PK_simulation.py                         // Code might take a while to run due to plotting of uncertainty
 
 // Figure 11: PD plot of HV
 Model: mPBPK_model.txt                              // Use output PD_sim 

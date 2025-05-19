@@ -20,8 +20,8 @@ Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 0.0327 // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 3000 pDCs/ml
-BDCA2_skin_total(0) = 7.6e-5 // Skin baseline
+BDCA2_plasma_total(0) = 0.0327      // 1 010 000 MESF baseline converted to μg with molecular weight for BDCA2 of 25.021 kDa. 3000 pDCs/ml
+BDCA2_skin_total(0) = 7.6e-5        // Skin baseline
 ########## PARAMETERS
 F = 0.679           // Bioavailibility
 ka = 0.01           // Absorption rate (1/h)
@@ -33,17 +33,17 @@ VL = 2600           // Volume of lymph compartment (mL)
 Ls = 10.29          // Skin lymph flow rate (mL/h)
 L1 = 29.58          // Muscle lymph flow rate (mL/h)
 L2 = 80.96          // Leaky tissue lymph flow rate (mL/h)
-RCS = 0.77         // Reflection co-efficient skin
+RCS = 0.77          // Reflection co-efficient skin
 RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
-HV_CL = 5.51         // Linear clearance for HV patient (mL/h)
+HV_CL = 5.51        // Linear clearance for HV patient (mL/h)
 Vm = 14.15          // Maximum rate achieved by the system (μg/h) 
-Km = 0.282            // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm 
-ksyn = 2.12e-5       // 263000 MESF/h converted to μg/h. 
-kint = 2.5            // Optimized from guess, however value kept below 10 for physiologically reasonable params
-kd = 0.525            // 0.35 μg/mL found for 24F4 (similair antibody) 
-kmig = 4.08e-5       // Migration of pDCs from plasma to skin (1/h)
+Km = 0.282          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm 
+ksyn = 2.12e-5      // 263000 MESF/h converted to μg/h. 
+kint = 2.5          // Optimized from guess, however value kept below 10 for physiologically reasonable params
+kd = 0.525          // 0.35 μg/mL found for 24F4 (similair antibody) 
+kmig = 4.08e-5      // Migration of pDCs from plasma to skin (1/h)
 
 ########## VARIABLES
 Plasma_free = 0.5*((Plasma_total/Vp-kd-BDCA2_plasma_total/Vp)+sqrt((Plasma_total/Vp-kd-BDCA2_plasma_total/Vp)^2+4*Plasma_total/Vp*kd))
@@ -85,8 +85,8 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-//PK_sim = Plasma_total/Vp
-PD_sim = 100*((BDCA2_plasma_total/Vp-BDCA2_plasma_bound-0.0327/Vp)/(0.0327/Vp))
+PK_sim = Plasma_total/Vp
+//PD_sim = 100*((BDCA2_plasma_total/Vp-BDCA2_plasma_bound-0.0327/Vp)/(0.0327/Vp))
 //Skin_PK_sim = Skin_total/Vs
 //Skin_PD_sim = 100*((BDCA2_skin_total/Vs-BDCA2_skin_bound-7.6e-5/Vs)/(7.6e-5/Vs))
 
