@@ -5,15 +5,15 @@ import matplotlib.pyplot as plt
 import sund
 
 # Ladda båda modellerna
-sund.install_model('../Models/mPBPK_model.txt')
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../../Models/mPBPK_model.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 model_HV = sund.load_model("mPBPK_model")
 model_SLE = sund.load_model("mPBPK_SLE_model")
 
 # Ladda datafiler
-with open("../Data/HV_SLE_data.json", "r") as pk_file:
+with open("../../../Data/HV_SLE_data.json", "r") as pk_file:
     PK_data = json.load(pk_file)
-with open("../Data/PD_HV_SLE_data.json", "r") as pd_file:
+with open("../../../Data/PD_HV_SLE_data.json", "r") as pd_file:
     PD_data = json.load(pd_file)
 
 # Sätt parametrar
@@ -110,16 +110,18 @@ ax1.legend(loc='upper left', fontsize=18, frameon=False)
 ax2.legend(loc='upper right', fontsize=18, frameon=False)
 
 # Spara
-save_path_svg = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.svg"
-save_path_pdf = "../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.pdf"
+save_path_svg = "../../../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.svg"
+save_path_png = "../../../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.png"
 os.makedirs(os.path.dirname(save_path_svg), exist_ok=True)
 
 # Spara som SVG
-plt.savefig(save_path_svg, format="svg", bbox_inches="tight", dpi=300)
+plt.savefig(save_path_svg, format="svg", bbox_inches="tight")
 
-# Spara som PDF
-plt.savefig(save_path_pdf, format="pdf", bbox_inches="tight", dpi=300)
+# Spara som PNG
+plt.savefig(save_path_png, format="png", bbox_inches="tight", dpi=300)
+
+plt.show()
 
 plt.close()
 print(f"Saved plot as SVG to {save_path_svg}")
-print(f"Saved plot as PDF to {save_path_pdf}")
+print(f"Saved plot as PNG to {save_path_png}")
