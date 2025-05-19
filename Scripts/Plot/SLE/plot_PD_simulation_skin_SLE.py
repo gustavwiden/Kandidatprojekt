@@ -90,7 +90,7 @@ def plot_fig(params, sims, color='g', save_dir='../Results/Skin_SLE/PD'):
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
 
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
- 0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
+params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
+            0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
 
-plot_fig(params_HV, mPBPK_model_sims)
+plot_fig(params_SLE, mPBPK_model_sims)
