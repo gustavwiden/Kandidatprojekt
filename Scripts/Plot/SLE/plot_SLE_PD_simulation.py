@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/SLE_PD_data.json", "r") as f:
+with open("../../../Data/SLE_PD_data.json", "r") as f:
     SLE_PD_data = json.load(f)
 
 # Definition of a function that plots the simulation
@@ -35,7 +35,7 @@ def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PD simulations and saves them to Results folder
-def plot_sim_with_SLE_PD_data(params, sims, SLE_PD_data, color='b', save_dir='../Results/SLE_results/PD'):
+def plot_sim_with_SLE_PD_data(params, sims, SLE_PD_data, color='b', save_dir='../../../Results/SLE_results/PD'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in SLE_PD_data:
@@ -52,13 +52,13 @@ def plot_sim_with_SLE_PD_data(params, sims, SLE_PD_data, color='b', save_dir='..
         # Save figure with PD-specific name
         filename = f"SLE_PD_{experiment_sle}_simulation.png"
         save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
         plt.close()
 
 ## Setup of the model
 
 # Install the model
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 
 # Load the model object
@@ -96,9 +96,10 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, SLE_PD_data[exp]["time"][-1] + 3800, 1) for exp in SLE_PD_data}
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.01]
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 
+            8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.01]
 
-def plot_all_PD_doses_together(params, sims, SLE_PD_data, time_vectors, save_dir='../Results/SLE_results/PD', feature_to_plot='PD_sim'):
+def plot_all_PD_doses_together(params, sims, SLE_PD_data, time_vectors, save_dir='../../../Results/SLE_results/PD', feature_to_plot='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))  # Create a single figure for all plots
 
@@ -141,14 +142,19 @@ def plot_all_PD_doses_together(params, sims, SLE_PD_data, time_vectors, save_dir
     plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=16)
     plt.title('PD simulation of all doses in SLE', fontsize=20)
     plt.legend()
-    plt.grid(True)
     plt.tight_layout()
+    plt.xlim(-100, 5100)
+    plt.ylim(-110, 50)
 
     # Save the plot
     save_path = os.path.join(save_dir, "SLE_PD_all_doses_simulation.png")
+    plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    
+    save_path = os.path.join(save_dir, "SLE_PD_all_doses_simulation.svg")
     plt.savefig(save_path, bbox_inches='tight')
+
     plt.show()  # Display the figure
 
 
 plot_sim_with_SLE_PD_data(params_M1, first_model_sims, SLE_PD_data)
-#plot_all_PD_doses_together(params_M1, first_model_sims, SLE_PD_data, time_vectors)
+plot_all_PD_doses_together(params_M1, first_model_sims, SLE_PD_data, time_vectors)
