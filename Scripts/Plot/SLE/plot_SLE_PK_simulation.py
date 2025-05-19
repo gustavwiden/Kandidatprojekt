@@ -21,14 +21,14 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/SLE_PK_data.json", "r") as f:
+with open("../../../Data/SLE_PK_data.json", "r") as f:
     SLE_PK_data = json.load(f)
 
-# with open("../Data/SLE_PK_data.json", "r") as f:
+# with open("../../../Data/SLE_PK_data.json", "r") as f:
 #     SLE_PK_data = json.load(f)
 
 # Definition of a function that plots the simulation
@@ -38,7 +38,7 @@ def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PK simulations and saves them to Results folder
-def plot_sim_with_SLE_PK_data(params, sims, SLE_PK_data, color='b', save_dir='../Results/SLE_results/PK'):
+def plot_sim_with_SLE_PK_data(params, sims, SLE_PK_data, color='b', save_dir='../../../Results/SLE_results/PK'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in SLE_PK_data:
@@ -61,7 +61,7 @@ def plot_sim_with_SLE_PK_data(params, sims, SLE_PK_data, color='b', save_dir='..
 ## Setup of the model
 
 # Install the model
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 
 # Load the model object
@@ -105,7 +105,7 @@ time_vectors = {exp: np.arange(-10, SLE_PK_data[exp]["time"][-1] + 0.01, 1) for 
 
 params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]
 
-def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir='../Results/SLE_results/PK', feature_to_plot='PK_sim'):
+def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir='../../../Results/SLE_results/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
@@ -121,6 +121,15 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
         'IVdose_10_HV':  'IV 10',
         'IVdose_20_SLE':  'IV 20',
         'SCdose_50_HV':  'SC 50'
+    }
+    label_positions = {
+        'IVdose_005_HV': (400, 0.05),
+        'IVdose_03_HV':  (300, 0.4),
+        'IVdose_1_HV':   (1480, 0.10),
+        'IVdose_3_HV':   (1570, 3),
+        'IVdose_10_HV':  (770, 15),
+        'IVdose_20_SLE':  (1600, 30),
+        'SCdose_50_HV':  (900, 0.17),
     }
 
     # Plotta varje simulering
@@ -144,23 +153,31 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
             plt.errorbar(x_data, y_data, yerr=y_err, fmt='o', color=color,
                          ecolor='#6d65bf', capsize=3, label=f'{dose_labels[experiment]} data')
 
+        # Add manually placed labels
+        if experiment in label_positions:
+            label_x, label_y = label_positions[experiment]
+            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+                     color=color, fontsize=18, weight='bold')
+
     plt.xlabel('Time [Hours]', fontsize=16)
     plt.ylabel('BIIB059 concentration (µg/ml)', fontsize=16)
     plt.title('PK simulation of all doses in SLE', fontsize=20)
-    plt.legend()
 
     plt.yscale('log')
-    plt.ylim(0.0005, 700)
+    plt.ylim(0.01, 700)
     plt.xlim(-25, 2150)
 
-    plt.grid(True)
     plt.tight_layout()
 
     # Spara
-    save_path = os.path.join(save_dir, "SLE_PK_all_doses_simulation.png")
+    save_path = os.path.join(save_dir, "SLE_PK_all_doses_simulation.svg")
     plt.savefig(save_path, bbox_inches='tight')
+
+    save_path = os.path.join(save_dir, "SLE_PK_all_doses_simulation.png")
+    plt.savefig(save_path, bbox_inches='tight', dpi=300)
+    plt.show()
     plt.close()
 
 
 plot_sim_with_SLE_PK_data(params_M1, first_model_sims, SLE_PK_data)
-#plot_all_PK_doses_together(params_M1, first_model_sims, SLE_PK_data, time_vectors)
+plot_all_PK_doses_together(params_M1, first_model_sims, SLE_PK_data, time_vectors)
