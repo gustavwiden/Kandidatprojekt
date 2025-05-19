@@ -40,7 +40,7 @@ RCL = 0.20          // Reflection co-efficient lymph
 SLE_CL = 8.91         // Linear clearance for SLE patient (mL/h)
 Vm = 14.15          // Maximum rate achieved by the system (μg/h) 
 Km = 0.282            // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm 
-ksyn = 2.12e-5       // 263000 MESF/h converted to μg/h. 
+ksyn = 2.12e-5       // 263000 MESF/h converted to μg/(mL*h). 
 kint = 2.5            // Optimized from guess, however value kept below 10 for physiologically reasonable params
 kd = 0.525            // 0.35 μg/mL found for 24F4 (similair antibody) 
 kmig = 1.27e-5       // Migration of pDCs from plasma to skin (1/h)
@@ -53,7 +53,7 @@ BDCA2_skin_bound = BDCA2_skin_total/Vs * Skin_free / (kd + Skin_free)
 BDCA2_plasma_free = BDCA2_plasma_total/Vp - BDCA2_plasma_bound
 BDCA2_skin_free = BDCA2_skin_total/Vs - BDCA2_skin_bound
 kdegp = ksyn/(3.27e-3/Vp)  
-kdegs = kmig*BDCA2_plasma_total/(1.97e-2/Vs)  
+kdegs = (kmig*BDCA2_plasma_total)/(1.97e-2/Vs)  
 
 r1 = ka*Depot
 r2 = (Ls+L1+L2)*Lymph/VL

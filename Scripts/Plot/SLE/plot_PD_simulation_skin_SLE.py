@@ -21,14 +21,14 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 
 # Open the data file and read its contents
-with open("../Data/PD_data.json", "r") as f:
+with open("../../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Load the model object

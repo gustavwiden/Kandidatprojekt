@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_model.txt", "r") as f:
+with open("../../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/Modified_PD_data.json", "r") as f:
+with open("../../../Data/Modified_PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Define a function to plot one PD_dataset
@@ -135,7 +135,7 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
 
 
 # Install and load model
-sund.install_model('../Models/mPBPK_model.txt')
+sund.install_model('../../../Models/mPBPK_model.txt')
 print(sund.installed_models())
 first_model = sund.load_model("mPBPK_model")
 
@@ -205,9 +205,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.tick_params(axis='y', labelsize=22)  # Ändra fontstorlek för y-axelns siffror
 
 
-    # Ändra bakgrundsfärgen
-    plt.gcf().patch.set_facecolor('#fcf5ed')
-    plt.gca().set_facecolor('#fcf5ed')
+
 
     colors = ['#1b7837', '#01947b', '#628759', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
@@ -308,17 +306,17 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         fontsize=18)
 
 
-    save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.pdf")
-    plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
+    save_path = os.path.join('../../../Results/HV_results/PD', "PD_all_doses_with_uncertainty.png")
+    plt.savefig(save_path, format='png', bbox_inches='tight', dpi=300)
     plt.close()
 
 # Callback to plot the simulation with PD data in both separate graphs and one graph
-plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
+#plot_sim_with_PD_data(params_HV, first_model_sims, PD_data)
 # plot_all_PD_doses_together(params_HV, first_model_sims, PD_data, time_vectors)
 
 # Load acceptable parameters
-with open('acceptable_params_PD.json', 'r') as f:
+with open("../../../Results/Acceptable params/acceptable_params_PD.json", 'r') as f:
     acceptable_params = json.load(f)
 
-#plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params_HV, acceptable_params, first_model_sims, PD_data, time_vectors)
 
