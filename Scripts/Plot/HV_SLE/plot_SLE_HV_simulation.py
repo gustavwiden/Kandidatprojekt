@@ -14,21 +14,21 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Load model definition
-model_path = "../Models/mPBPK_SLE_model.txt"
+model_path = "../../../Models/mPBPK_SLE_model.txt"
 sund.install_model(model_path)
 first_model = sund.load_model("mPBPK_SLE_model")
 
 # Load PK data
-with open("../Data/HV_SLE_data.json", "r") as f:
+with open("../../../Data/HV_SLE_data.json", "r") as f:
     HV_SLE_data = json.load(f)
 
 
 # Setup parameters
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605,
-             0.2, 5.5, 16356, 336, 1.31e-1, 8, 525, 0.0001] # HV_CL
+params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2,
+            5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # HV_CL
 
-params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.769, 0.95, 0.605,
-              0.2, 10.43, 20900, 281, 1.31e-1, 8, 525, 0.07] # SLE_CL
+params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2,
+            8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # SLE_CL
 
 # Bodyweight
 bodyweight = 70
@@ -89,20 +89,21 @@ plt.title('PK simulation: IV 20 mg/kg dose in HV vs SLE', fontsize=18)
 plt.yscale('log')
 plt.ylim(0.1, 700)
 plt.xlim(-25, 3000)
-plt.grid(True)
 plt.legend()
 plt.tight_layout()
 
 # Save plot
-os.makedirs('../Results', exist_ok=True)
+os.makedirs('../../../Results', exist_ok=True)
 
 # Spara som SVG
-save_path_svg = '../Results/PK_SLE_HV_20.svg'
+save_path_svg = '../../../Results/PK_SLE_HV_20.svg'
 plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
 
 # Spara som PDF
-save_path_pdf = '../Results/PK_SLE_HV_20.pdf'
-plt.savefig(save_path_pdf, format='pdf', bbox_inches='tight')
+save_path_png = '../../../Results/PK_SLE_HV_20.png'
+plt.savefig(save_path_png, format='pdf', bbox_inches='tight', dpi=300)
+
+plt.show()
 
 # Stäng figuren
 plt.close()
