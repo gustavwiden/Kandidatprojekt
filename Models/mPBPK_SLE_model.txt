@@ -85,8 +85,8 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-//PK_sim = Plasma_total/Vp
-//PD_sim = 100*((BDCA2_plasma_total/Vp-BDCA2_plasma_bound-3.27e-3/Vp)/(3.27e-3/Vp))
-Skin_PK_sim = Skin_total/Vs
+PK_sim = Plasma_total/Vp
+PD_sim = 100*((BDCA2_plasma_total/Vp-BDCA2_plasma_bound-3.27e-3/Vp)/(3.27e-3/Vp))
+//Skin_PK_sim = Skin_total/Vs
 //Skin_PD_sim = 100*((BDCA2_skin_total/Vs-BDCA2_skin_bound-1.97e-2/Vs)/(1.97e-2/Vs))
 

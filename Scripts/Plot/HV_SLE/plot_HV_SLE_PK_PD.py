@@ -18,9 +18,9 @@ with open("../../../Data/PD_HV_SLE_data.json", "r") as pd_file:
 
 # Sätt parametrar
 params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
-             0.605, 0.2, 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05]  # HV
+             0.605, 0.2, 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0]  # HV
 params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
-             0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]  # SLE
+             0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]  # SLE
 
 # Välj dos
 dose_key_HV = "IVdose_20_HV"
@@ -92,7 +92,7 @@ ax1.tick_params(axis='y', labelcolor='#1b7837', labelsize=22)
 ax1.tick_params(axis='x', labelsize=22)
 
 ax2.set_ylabel("BDCA2 Expression [% change from baseline]", color='#6d65bf', fontsize=22)
-ax2.set_ylim(-100, 45)
+ax2.set_ylim(-100, 70)
 ax2.spines['right'].set_color('#6d65bf')
 ax2.tick_params(axis='y', labelcolor='#6d65bf', labelsize=22)
 
