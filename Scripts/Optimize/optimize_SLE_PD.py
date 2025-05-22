@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_SLE_model.txt file and read its contents
-with open("../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/SLE_PD_data.json", "r") as f:
+with open("../../Data/SLE_PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Define a function to plot one PD_dataset
@@ -42,7 +42,7 @@ def plot_PD_data(PD_data, face_color='k'):
         plt.title(experiment)
 
 # Install and load model
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 first_model = sund.load_model("mPBPK_SLE_model")
 
@@ -85,7 +85,7 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.010000000000000004, 2600.0, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.77, 0.95, 0.605, 0.2, 8.913261231489773, 14.150000000000004, 0.28, 2.12e-5, 2.5, 0.525, 0.6]
+params_M1 = [0.679, 0.010000000000000004, 2600.0, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.77, 0.95, 0.605, 0.2, 8.913261231489773, 14.150000000000004, 0.28, 2.12e-5, 2.5, 0.525, 1.27e-5]
 
 # Linear clearance have been updated for SLE, otherwise the same optimized parameters from HV is used
 
@@ -105,7 +105,7 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.5, 1, 1, 1, 1, 1, 1] 
 # Frozen parameters except Vm and Km
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)

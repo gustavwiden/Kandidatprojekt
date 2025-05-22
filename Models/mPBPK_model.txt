@@ -11,7 +11,7 @@ d/dt(Muscle) = r4-r7
 d/dt(Leaky) = r5-r8
 d/dt(Lymph) = r6+r7+r8-r2
 d/dt(Depot) = -r1
-d/dt(BDCA2_plasma_total) = r13-r15-r17-r14
+d/dt(BDCA2_plasma_total) = r13-r15-r17
 d/dt(BDCA2_skin_total) = r14-r16-r18
 
 Plasma_total(0) = 0
@@ -53,7 +53,7 @@ BDCA2_skin_bound = BDCA2_skin_total/Vs * Skin_free / (kd + Skin_free)
 BDCA2_plasma_free = BDCA2_plasma_total/Vp - BDCA2_plasma_bound
 BDCA2_skin_free = BDCA2_skin_total/Vs - BDCA2_skin_bound
 kdegp = ksyn/(0.0327/Vp)  
-kdegs = (kmig*BDCA2_plasma_total/Vp)/(7.6e-5/Vs)  
+kdegs = kmig/(7.6e-5/Vs)  
 
 r1 = ka*Depot
 r2 = (Ls+L1+L2)*Lymph/VL
@@ -68,7 +68,7 @@ r10 = Plasma_free*Vm/(Km+Plasma_free)
 r11 = kint*BDCA2_plasma_bound*Vp
 r12 = kint*BDCA2_skin_bound*Vs
 r13 = ksyn
-r14 = kmig*BDCA2_plasma_total/Vp
+r14 = kmig
 r15 = kdegp*(BDCA2_plasma_total/Vp-BDCA2_plasma_bound)
 r16 = kdegs*(BDCA2_skin_total/Vs-BDCA2_skin_bound)
 r17 = kint*BDCA2_plasma_bound
@@ -85,8 +85,8 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-PK_sim = Plasma_total/Vp
+//PK_sim = Plasma_total/Vp
 //PD_sim = 100*((BDCA2_plasma_total/Vp-BDCA2_plasma_bound-0.0327/Vp)/(0.0327/Vp))
 //Skin_PK_sim = Skin_total/Vs
-//Skin_PD_sim = 100*((BDCA2_skin_total/Vs-BDCA2_skin_bound-7.6e-5/Vs)/(7.6e-5/Vs))
+Skin_PD_sim = 100*((BDCA2_skin_total/Vs-BDCA2_skin_bound-7.6e-5/Vs)/(7.6e-5/Vs))
 
