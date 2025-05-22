@@ -11,7 +11,7 @@ model_HV = sund.load_model("mPBPK_model")
 model_SLE = sund.load_model("mPBPK_SLE_model")
 
 # Ladda datafiler
-with open("../../../Data/HV_SLE_data.json", "r") as pk_file:
+with open("../../../Data/PK_HV_SLE_data.json", "r") as pk_file:
     PK_data = json.load(pk_file)
 with open("../../../Data/PD_HV_SLE_data.json", "r") as pd_file:
     PD_data = json.load(pd_file)
