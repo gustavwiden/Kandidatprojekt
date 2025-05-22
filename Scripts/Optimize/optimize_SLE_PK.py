@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBP_SLE_model.txt file and read its contents
-with open("../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/SLE_PK_data.json", "r") as f:
+with open("../../Data/SLE_PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Define a function to plot one PK_dataset
@@ -42,7 +42,7 @@ def plot_PK_data(PK_data, face_color='k'):
         plt.title(experiment)
 
 # Install and load model
-sund.install_model('../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 first_model = sund.load_model("mPBPK_SLE_model")
 
@@ -85,7 +85,7 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 0.6]
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 11.095, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
 # Linear clearance have been updated for SLE, otherwise the same optimized parameters from HV is used
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
