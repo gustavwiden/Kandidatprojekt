@@ -85,7 +85,7 @@ def fcost(params, sims, PD_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.010000000000000004, 2600.0, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.77, 0.95, 0.605, 0.2, 8.913261231489773, 14.150000000000004, 0.28, 2.12e-5, 2.5, 0.525, 1.27e-5]
+params_M1 = [0.679, 0.010000000000000004, 2600.0, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.77, 0.95, 0.605, 0.2, 8.93, 14.7, 0.274, 1.635e-05, 2.2, 0.233, 6.54e-6]
 
 # Linear clearance have been updated for SLE, otherwise the same optimized parameters from HV is used
 
@@ -105,7 +105,7 @@ args_M1 = (first_model_sims, PD_data)
 params_M1_log = np.log(params_M1)
 
 # Bounds for the parameters
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] 
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1] 
 # Frozen parameters except Vm and Km
 
 lower_bounds = np.log(params_M1) - np.log(bound_factors)
@@ -130,10 +130,11 @@ def fcost_uncertainty_M1(param_log, model, PD_data):
     params = np.exp(param_log)
     cost = fcost(params, model, PD_data)
 
-    if cost < best_cost_PD:
-        acceptable_params_PD = [params]
-        best_cost_PD = cost
-        print(f"New best cost: {best_cost_PD}")
+    if cost < chi2_limit:
+        acceptable_params_PD.append(params)
+        if cost < best_cost_PD:
+            best_cost_PD = cost
+            print(f"New best cost: {best_cost_PD}")
 
     return cost
 
@@ -156,9 +157,8 @@ for i in range(5):
 with open('best_SLE_PD_result.json', 'w') as f:
     json.dump({'best_cost': best_cost_PD, 'best_param': acceptable_params_PD[0]}, f, cls=NumpyArrayEncoder)
 
-with open('acceptable_params_SLE_PD.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
-    writer.writerows(acceptable_params_PD)
+with open('acceptable_params_SLE_PD.json', 'w') as f:
+    json.dump(acceptable_params_PD, f, cls=NumpyArrayEncoder)
 
 def plot_uncertainty(all_params, sims, PD_data, color='b', n_params_to_plot=500):
     random.shuffle(all_params)

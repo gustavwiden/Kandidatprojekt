@@ -85,7 +85,7 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 11.095, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
+params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 5.5, 14.7, 0.274, 1.635e-05, 2.2, 0.233, 6.54e-6]
 # Linear clearance have been updated for SLE, otherwise the same optimized parameters from HV is used
 
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
@@ -129,10 +129,11 @@ def fcost_uncertainty_M1(param_log, model, PK_data):
     params = np.exp(param_log)
     cost = fcost(params, model, PK_data)
 
-    if cost < best_cost_PK:
-        acceptable_params_PK = [params]
-        best_cost_PK = cost
-        print(f"New best cost: {best_cost_PK}")
+    if cost < chi2_limit:  # Save all acceptable parameter sets
+        acceptable_params_PK.append(params)
+        if cost < best_cost_PK:
+            best_cost_PK = cost
+            print(f"New best cost: {best_cost_PK}")
 
     return cost
 
@@ -155,9 +156,8 @@ for i in range(5):
 with open('best_SLE_PK_result.json', 'w') as f:
     json.dump({'best_cost': best_cost_PK, 'best_param': acceptable_params_PK[0]}, f, cls=NumpyArrayEncoder)
 
-with open('acceptable_params_SLE_PK.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, delimiter=',')
-    writer.writerows(acceptable_params_PK)
+with open('acceptable_params_SLE_PK.json', 'w') as f:
+    json.dump(acceptable_params_PK, f, cls=NumpyArrayEncoder)
 
 def plot_uncertainty(all_params, sims, PK_data, color='b', n_params_to_plot=500):
     random.shuffle(all_params)

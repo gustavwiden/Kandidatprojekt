@@ -37,13 +37,13 @@ RCS = 0.77          // Reflection co-efficient skin
 RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
-HV_CL = 5.51        // Linear clearance for HV patient (mL/h)
-Vm = 14.15          // Maximum rate achieved by the system (μg/h) 
-Km = 0.282          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm 
-ksyn = 2.12e-5      // 263000 MESF/h converted to μg/h. 
-kint = 2.5          // Optimized from guess, however value kept below 10 for physiologically reasonable params
-kd = 0.525          // 0.35 μg/mL found for 24F4 (similair antibody) 
-kmig = 0            // BDCA2 does not migrate to skin in HV
+HV_CL = 5.5         // Linear clearance for HV patient (mL/h)
+Vm = 14.7           // Maximum rate achieved by the system (μg/h) 
+Km = 0.274          // Substrate concentration (μg/mL) where reaction velocity is 50% of Vm 
+ksyn = 1.635e-5     // 263000 MESF/h converted to μg/h. 
+kint = 2.2          // Optimized from guess, however value kept below 10 for physiologically reasonable params
+kd = 0.233          // 0.35 μg/mL found for 24F4 (similair antibody) 
+kmig = 1e-10        // BDCA2 does not migrate to skin in HV
 
 ########## VARIABLES
 Plasma_free = 0.5*((Plasma_total/Vp-kd-BDCA2_plasma_total/Vp)+sqrt((Plasma_total/Vp-kd-BDCA2_plasma_total/Vp)^2+4*Plasma_total/Vp*kd))
