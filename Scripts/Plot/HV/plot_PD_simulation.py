@@ -25,7 +25,7 @@ with open("../../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../../../Data/PD_data.json", "r") as f:
+with open("../../../Data/Modified_PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Define a function to plot one PD_dataset
@@ -85,9 +85,9 @@ def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='..
     label_positions = {
         'IVdose_005_HV': (470, -40),
         'IVdose_03_HV':  (1200, -50),
-        'IVdose_1_HV':   (2200, -40),
-        'IVdose_3_HV':   (2200, -92),
-        'IVdose_20_HV':  (2850, -95),
+        'IVdose_1_HV':   (2200, -35),
+        'IVdose_3_HV':   (2200, -85),
+        'IVdose_20_HV':  (2850, -98),
         'SCdose_50_HV':  (1600, -50),
     }
 
@@ -165,7 +165,7 @@ first_model_sims = {
     'SCdose_50_HV': sund.Simulation(models=first_model, activities=SC_50_HV, time_unit='h')
 }
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-100, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 def fcost(params, sims, PD_data):
     cost = 0
@@ -183,7 +183,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 
-5.51, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 4.08e-05] # Optimized parameters 
+5.5, 14.7, 0.2735, 1.89e-05, 2.5, 0.233, 1e-7] # Optimized parameters 
 
 PD_cost_HV = fcost(params_HV, first_model_sims, PD_data)
 print(f"Cost of the PD HV model: {PD_cost_HV}")
@@ -201,9 +201,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.tick_params(axis='x', labelsize=22)  
     plt.tick_params(axis='y', labelsize=22)  
 
-    # # Change background color for poster
-    # plt.gcf().patch.set_facecolor('#fcf5ed')
-    # plt.gca().set_facecolor('#fcf5ed')
+    # Change background color for poster
+    plt.gcf().patch.set_facecolor('#fcf5ed')
+    plt.gca().set_facecolor('#fcf5ed')
 
     colors = ['#1b7837', '#01947b', '#628759', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
@@ -219,9 +219,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     label_positions = {
         'IVdose_005_HV': (850, 7),
         'IVdose_03_HV':  (1520, 10),
-        'IVdose_1_HV':   (2100, -75),
-        'IVdose_3_HV':   (2400, -95),
-        'IVdose_20_HV':  (2100, -105),
+        'IVdose_1_HV':   (2100, -65),
+        'IVdose_3_HV':   (2400, -88),
+        'IVdose_20_HV':  (2100, -110),
         'SCdose_50_HV':  (2250, 13),
     }
 
@@ -278,7 +278,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     plt.text(10, 2, 'Baseline', color='gray', fontsize=18)
 
     plt.ylim(-120, 45)
-    plt.xlim(-25, 2750)
+    plt.xlim(-100, 2750)
     plt.tight_layout()
     plt.subplots_adjust(top=1.25)  # Öka från default ca 0.9
 
@@ -308,7 +308,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
 
     # Save and show figures
     save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.png")
-    plt.savefig(save_path, format='pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(save_path, format='png', bbox_inches='tight', dpi=300)
 
     save_path = os.path.join(save_dir, "PD_all_doses_with_uncertainty.svg")
     plt.savefig(save_path, format='svg', bbox_inches='tight')

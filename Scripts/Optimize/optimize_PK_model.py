@@ -21,11 +21,11 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../Models/mPBPK_model.txt", "r") as f:
+with open("../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../Data/PK_data.json", "r") as f:
+with open("../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Define a function to plot one PK_dataset
@@ -44,7 +44,7 @@ def plot_PK_data(PK_data, face_color='k'):
 ## Setup of the model
 
 # Install the model
-sund.install_model('../Models/mPBPK_model.txt')
+sund.install_model('../../Models/mPBPK_model.txt')
 print(sund.installed_models())
 
 # Load the model object
@@ -114,7 +114,7 @@ def fcost(params, sims, PK_data):
             return 1e30
     return cost
 
-params_M1 = [0.713, 0.00975, 2600, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.70, 0.95, 0.55, 0.2, 5.52, 10.7, 0.547, 3.270000000000001e-05, 4.999999999999999, 0.3499999999999999, 0.00010000000000000009]
+params_M1 = [0.713, 0.00975, 2600, 1809.9999999999993, 6299.999999999996, 4369.999999999996, 2600.0, 10.29, 29.57999999999999, 80.96000000000001, 0.70, 0.95, 0.55, 0.2, 5.52, 10.7, 0.547, 3.270000000000001e-05, 4.999999999999999, 0.3499999999999999, 1e-7]
 cost_M1 = fcost(params_M1, first_model_sims, PK_data)
 print(f"Cost of the M1 model: {cost_M1}")
 
