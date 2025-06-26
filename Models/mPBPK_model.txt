@@ -30,21 +30,21 @@ Vs = 1.81           // Volume of skin compartment (L)
 V1 = 6.3           // Volume of muscle compartment (L)
 V2 = 4.37           // Volume of leaky tissue compartment (L)
 VL = 2.6           // Volume of lymph compartment (L)
-Ls = 1.03e-2          // Skin lymph flow rate (L/h)
-L1 = 2.96e-2          // Muscle lymph flow rate (L/h)
-L2 = 8.1e-2          // Leaky tissue lymph flow rate (L/h)
+Ls = 0.0103          // Skin lymph flow rate (L/h)
+L1 = 0.0296          // Muscle lymph flow rate (L/h)
+L2 = 0.081          // Leaky tissue lymph flow rate (L/h)
 RCS = 0.77          // Reflection co-efficient skin
 RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
-HV_CL = 5.7e-3         // Linear clearance for HV patient (L/h)
+HV_CL = 0.0057         // Linear clearance for HV patient (L/h)
 Vm = 76.6           // Maximum rate achieved by the system (pmol/h) 
 Km = 944          // Substrate concentration (pmol/L) where reaction velocity is 50% of Vm 
 ksyn = 1.31            // Synthesis rate of BDCA2 (pM/h). Converted from 263 000 MESF/h.
 kintp = 4.84          // Internalization rate in plasma (1/h), guess, however value kept below 10
 kints = 5.48          // Internalization rate in skin (1/h), guess, however value kept below 10. Also used for muscle and leaky.
 kd = 14000          // Disassociation constant (pM). 14000 pM found for 24F4 (similair antibody) 
-kmig = 7.14e-5        // Migration of pDCs (pM/h) from plasma to tissue
+kmig = 0.0001        // Migration of pDCs (pM/h) from plasma to tissue
 
 
 ########## VARIABLES
