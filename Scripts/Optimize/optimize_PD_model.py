@@ -32,7 +32,7 @@ with open("../../Data/PD_data.json", "r") as f:
 def plot_PD_dataset(PD_data, face_color='k'):
     plt.errorbar(PD_data['time'], PD_data['BDCA2_median'], PD_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
     plt.xlabel('Time [Hours]')
-    plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline. (µg/ml)')
+    plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline')
 
 # Define a function to plot all PD datasets
 def plot_PD_data(PD_data, face_color='k'):
@@ -115,7 +115,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 # Use optimal parameters from PK optimization as intial parameters
-initial_params_PD = [0.6487473627326819, 0.0144451183651336, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.7699721708507254, 0.95, 0.6049159825858128, 0.2, 0.0057177006968308, 76.66293277265875, 933.1997617282486, 1.31, 4.999999999999999, 4.999999999999999, 14000.0, 0.00010000000000000009]
+initial_params_PD = [0.820113594746233, 0.010992753705205343, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.77, 0.95, 0.6050000000000001, 0.2, 0.004449753678457776, 119.55220610984654, 3612.368970827746, 2.05, 0.00044000000000000007, 1.0, 1.0, 14000.0]
 # Print cost for initial parameters
 cost_PD = fcost(initial_params_PD, model_sims, PD_data)
 print(f"Cost of the PD model: {cost_PD}")
@@ -149,7 +149,7 @@ initial_params_log_PD = np.log(initial_params_PD)
 
 # Bounds for the parameters
 # Parameters that were optimized in optimize_Pk_model.py are frozen in this optimization
-bound_factors_PD = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 10]
+bound_factors_PD = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.2, 1, 2, 1, 1]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -162,17 +162,18 @@ output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
 best_result_path = os.path.join(output_dir, 'best_PD_result.json')
 
-# Load previous best result if available, otherwise initialize best cost and parameters
+# Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
     with open(best_result_path, 'r') as f:
         best_data = json.load(f)
         best_cost_PD = best_data['best_cost']
         best_param_PD = np.array(best_data['best_param'])
-        acceptable_params_PD = [best_param_PD]
 else:
     best_cost_PD = np.inf
     best_param_PD = None
-    acceptable_params_PD = []
+
+# Create list to store all acceptable parameter sets
+acceptable_params_PD = []
 
 # Define the cost function for uncertainty analysis
 # This function calculates the cost and updates the acceptable parameters and best cost if the cost is improved

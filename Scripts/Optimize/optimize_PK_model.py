@@ -98,8 +98,6 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
         plt.figure()
         timepoints = time_vectors[experiment]
         plot_PK_dataset(PK_data[experiment])
-        plt.yscale('log')
-        plt.ylim(1e-1, 1e3)
         plot_sim(params, sims[experiment], timepoints, color)
         plt.title(experiment)
 
@@ -121,7 +119,7 @@ def fcost(params, sims, PK_data):
     return cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.713, 0.00975, 2.6, 1.81, 6.3, 4.37, 2.6, 1.03e-2, 2.96e-2, 8.1e-2, 0.7, 0.95, 0.55, 0.2, 5.52e-3, 73, 3731, 1.31, 5, 5, 14000, 1e-4]
+initial_params = [0.713, 0.00975, 2.6, 1.81, 6.3, 4.37, 2.6, 1.03e-2, 2.96e-2, 8.1e-2, 0.7, 0.95, 0.55, 0.2, 5.52e-3, 73, 3731, 2.05, 4.4e-4, 1, 1, 14000]
 
 # Print cost for initial parameters
 cost_PK = fcost(initial_params, model_sims, PK_data)
@@ -159,7 +157,7 @@ initial_params_log = np.log(initial_params)
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
 # Additionally, since this is an optimization of PK, parameters related to PD are also frozen
-bound_factors = [1.1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 2, 4, 1, 1, 1, 1, 1]
+bound_factors = [1.2, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 1.1, 1, 2, 2, 4, 1, 1, 1, 1, 1]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -190,17 +188,18 @@ output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
 best_result_path = os.path.join(output_dir, 'best_PK_result.json')
 
-# Load previous best result if available, otherwise initialize best cost and parameters
+# Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
     with open(best_result_path, 'r') as f:
         best_data = json.load(f)
         best_cost_PK = best_data['best_cost']
         best_param_PK = np.array(best_data['best_param'])
-        acceptable_params_PK = [best_param_PK]
 else:
     best_cost_PK = np.inf
     best_param_PK = None
-    acceptable_params_PK = []
+
+# Create list to store all acceptable parameter sets
+acceptable_params_PK = []
 
 # Define the cost function for uncertainty analysis
 # This function calculates the cost and updates the acceptable parameters and best cost if the cost is improved
@@ -293,19 +292,6 @@ def plot_uncertainty(all_params, sims, PK_data, color='b', n_params_to_plot=500)
 
 # Plot the uncertainty of PK in the model using the acceptable parameters
 plot_uncertainty(acceptable_params_PK, model_sims, PK_data)
-
-# Define a function to plot the best attempt
-def plot_best_attempt(best_param, sims, PK_data, color='r'):
-    for experiment in PK_data:
-        plt.figure()
-        timepoints = time_vectors[experiment]
-        plot_PK_dataset(PK_data[experiment])
-        plt.yscale('log')
-        plt.ylim(1e-1, 1e3)
-        plot_sim(best_param, sims[experiment], timepoints, color)
-        plt.title(f"Best attempt: {experiment}")
-
-plot_best_attempt(best_param_PK, model_sims, PK_data, color='r')
 
 # Show the plots
 plt.show()
