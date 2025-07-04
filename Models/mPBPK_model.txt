@@ -5,23 +5,23 @@ mPBPK_model
 time_unit = h
 ########## MACROS
 ########## STATES
-d/dt(Plasma_total) = r1+r2-r3-r4-r5-r9-r10-r11
-d/dt(Skin_total) = r3-r6-r12
+d/dt(Plasma) = r1+r2-r3-r4-r5-r9-r11
+d/dt(Skin) = r3-r6
 d/dt(Muscle) = r4-r7
 d/dt(Leaky) = r5-r8
 d/dt(Lymph) = r6+r7+r8-r2
 d/dt(Depot) = -r1
-d/dt(BDCA2_plasma_total) = r13-r15-r17
-d/dt(BDCA2_skin_total) = r14-r16-r18
+d/dt(BDCA2_plasma) = r13-r15-r17
+//d/dt(BDCA2_skin_total) = r14-r16-r18
 
-Plasma_total(0) = 0
-Skin_total(0) = 0
+Plasma(0) = 0
+Skin(0) = 0
 Muscle(0) = 0
 Leaky(0) = 0
 Lymph(0) = 0
 Depot(0) = 0
-BDCA2_plasma_total(0) = 7.9           // BDCA2 concentration (pM) in plasma. Converted from 1 010 000 MESF with median 4700 pDCs/ml in blood.
-BDCA2_skin_total(0) = 1.7e-3          // BDCA2 concentration (pM) in skin. 1 pDC/ml in skin is assumed.
+BDCA2_plasma(0) = 8.57           // BDCA2 concentration (pM) in plasma. Converted from 1 010 000 MESF with median 5100 pDCs/ml in blood.
+//BDCA2_skin_total(0) = 1.7e-3          // BDCA2 concentration (pM) in skin. 1 pDC/ml in skin is assumed.
 ########## PARAMETERS
 F = 0.649           // Bioavailibility
 ka = 0.0146         // Absorption rate (1/h)
@@ -38,45 +38,45 @@ RC1 = 0.95          // Reflection co-efficient muscle
 RC2 = 0.605         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
 CL = 0.0057         // Linear clearance for HV patient (L/h)
-Vm = 76.6           // Maximum rate achieved by the system (pmol/h) 
-Km = 944            // Substrate concentration (pmol/L) where reaction velocity is 50% of Vm 
+//Vm = 76.6           // Maximum rate achieved by the system (pmol/h) 
+//Km = 944            // Substrate concentration (pmol/L) where reaction velocity is 50% of Vm 
 ksynp = 2.05      // Synthesis rate of BDCA2 (pM/h). Converted from 263 000 MESF/h
-ksyns = 4.4e-4
+//ksyns = 4.4e-4
 kintp = 1        // Internalization rate in plasma (1/h), guess, however value kept below 10
-kints = 0.058        // Internalization rate in skin (1/h), guess, however value kept below 10.
+//kints = 0.058        // Internalization rate in skin (1/h), guess, however value kept below 10.
 kd = 14000          // Disassociation constant (pM). 14000 pM found for 24F4 (similair antibody)   
 
 ########## VARIABLES
-Plasma_free = 0.5*((Plasma_total/Vp - kd - BDCA2_plasma_total) + sqrt((Plasma_total/Vp - kd - BDCA2_plasma_total)^2 + 4*Plasma_total/Vp*kd))   // Concentration (pM) of free BIIB059 in plasma
-Skin_free = 0.5*((Skin_total/Vs - kd - BDCA2_skin_total) + sqrt((Skin_total/Vs - kd - BDCA2_skin_total)^2 + 4*Skin_total/Vs*kd))               // Concentration (pM) of free BIIB059 in skin
-BDCA2_plasma_bound = (BDCA2_plasma_total * Plasma_free) / (kd + Plasma_free)                                                                      // Concentration (pM) of bound BDCA2 in plasma
-BDCA2_skin_bound = (BDCA2_skin_total * Skin_free) / (kd + Skin_free)                                                                      // Concentration (pM) of bound BDCA2 in skin                                                                                                                                                                                      // Concentration (pM) of free BDCA2 in skin
-kdegp = ksynp/(7.9)                                                                                                                     // Degradation rate (1/h) of BDCA2 in plasma
-kdegs = ksyns/(1.7e-3)                                                                                                                       // Degradation rate (1/h) of BDCA2 in skin                                                                                                                           
+Plasma_free = 0.5*((Plasma/Vp - kd - BDCA2_plasma) + sqrt((Plasma/Vp - kd - BDCA2_plasma)^2 + 4*Plasma/Vp*kd))   // Concentration (pM) of free BIIB059 in plasma
+//Skin_free = 0.5*((Skin_total/Vs - kd - BDCA2_skin_total) + sqrt((Skin_total/Vs - kd - BDCA2_skin_total)^2 + 4*Skin_total/Vs*kd))               // Concentration (pM) of free BIIB059 in skin
+BDCA2_plasma_bound = (BDCA2_plasma * Plasma_free) / (kd + Plasma_free)                                                                      // Concentration (pM) of bound BDCA2 in plasma
+//BDCA2_skin_bound = (BDCA2_skin_total * Skin_free) / (kd + Skin_free)                                                                      // Concentration (pM) of bound BDCA2 in skin                                                                                                                                                                                      // Concentration (pM) of free BDCA2 in skin
+kdegp = ksynp/(8.57)                                                                                                                     // Degradation rate (1/h) of BDCA2 in plasma
+//kdegs = ksyns/(1.7e-3)                                                                                                                       // Degradation rate (1/h) of BDCA2 in skin                                                                                                                           
 
 r1 = ka*Depot
 r2 = (Ls+L1+L2)*Lymph/VL
 r3 = Ls*(1-RCS)*Plasma_free
 r4 = L1*(1-RC1)*Plasma_free
 r5 = L2*(1-RC2)*Plasma_free
-r6 = Ls*(1-RCL)*Skin_free
+r6 = Ls*(1-RCL)*Skin/Vs
 r7 = L1*(1-RCL)*Muscle/V1
 r8 = L2*(1-RCL)*Leaky/V2
 r9 = CL*Plasma_free
-r10 = Plasma_free*Vm/(Km+Plasma_free)
+//r10 = Plasma_free*Vm/(Km+Plasma_free)
 r11 = kintp*BDCA2_plasma_bound*Vp
-r12 = kints*BDCA2_skin_bound*Vs
+//r12 = kints*BDCA2_skin_bound*Vs
 r13 = ksynp
-r14 = ksyns
-r15 = kdegp*(BDCA2_plasma_total-BDCA2_plasma_bound)
-r16 = kdegs*(BDCA2_skin_total-BDCA2_skin_bound)
+//r14 = ksyns
+r15 = kdegp*(BDCA2_plasma-BDCA2_plasma_bound)
+//r16 = kdegs*(BDCA2_skin_total-BDCA2_skin_bound)
 r17 = kintp*BDCA2_plasma_bound
-r18 = kints*BDCA2_skin_bound
+//r18 = kints*BDCA2_skin_bound
 
 
 ########## FUNCTIONS
 ########## EVENTS
-IV_dose = IV > 0, Plasma_total, Plasma_total + IV*1e6/(146600)  
+IV_dose = IV > 0, Plasma, Plasma + IV*1e6/(146600)  
 SC_dose = SC > 0, Depot, Depot + SC*1e6*F/(146600)  
 ########## OUTPUTS
 ########## INPUTS
@@ -85,6 +85,6 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-PK_sim = Plasma_total*146600/(Vp*1e9)                                                 // Output is concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa
-PD_sim = 100*((BDCA2_plasma_total-BDCA2_plasma_bound-7.9)/7.9)           // Output is the percentage change from baseline of BDCA2 expression on pDCs
+PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa
+PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-8.57)/8.57)           // Output is the percentage change from baseline of BDCA2 expression on pDCs
 

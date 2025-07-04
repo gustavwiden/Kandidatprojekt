@@ -25,7 +25,7 @@ with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../../../Data/SLE_PD_data.json", "r") as f:
+with open("../../../Data/PD_data.json", "r") as f:
     SLE_PD_data = json.load(f)
 
 # Definition of a function that plots the simulation
@@ -33,6 +33,11 @@ def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
+
+def plot_PD_dataset(PD_data, face_color='k'):
+    plt.errorbar(PD_data['time'], PD_data['BDCA2_median'], PD_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
+    plt.xlabel('Time [Hours]')
+    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)')
 
 # Definition of the function that plots all PD simulations and saves them to Results folder
 def plot_sim_with_SLE_PD_data(params, sims, SLE_PD_data, color='b', save_dir='../../../Results/SLE_results/PD'):
@@ -42,6 +47,7 @@ def plot_sim_with_SLE_PD_data(params, sims, SLE_PD_data, color='b', save_dir='..
         plt.figure()
         timepoints = time_vectors[experiment]
         plot_sim(params, sims[experiment], timepoints, color)
+        # plot_PD_dataset(SLE_PD_data[experiment], face_color=color)
         
         # Replace "_HV" with "_SLE" in the experiment name
         experiment_sle = experiment.replace("_HV", "_SLE")
@@ -80,7 +86,7 @@ IV_3_HV = sund.Activity(time_unit='h')
 IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_3_HV']['input']['IV_in']['f']))
 
 IV_20_HV = sund.Activity(time_unit='h')
-IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_20_SLE']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_20_SLE']['input']['IV_in']['f']))
+IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_20_HV']['input']['IV_in']['f']))
 
 SC_50_HV = sund.Activity(time_unit='h')
 SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = SLE_PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = SLE_PD_data['SCdose_50_HV']['input']['SC_in']['f'])
@@ -90,14 +96,13 @@ first_model_sims = {
     'IVdose_03_HV': sund.Simulation(models = first_model, activities = IV_03_HV, time_unit = 'h'),
     'IVdose_1_HV': sund.Simulation(models = first_model, activities = IV_1_HV, time_unit = 'h'),
     'IVdose_3_HV': sund.Simulation(models = first_model, activities = IV_3_HV, time_unit = 'h'),
-    'IVdose_20_SLE': sund.Simulation(models = first_model, activities = IV_20_HV, time_unit = 'h'),
+    'IVdose_20_HV': sund.Simulation(models = first_model, activities = IV_20_HV, time_unit = 'h'),
     'SCdose_50_HV': sund.Simulation(models = first_model, activities = SC_50_HV, time_unit = 'h')
 }
 
-time_vectors = {exp: np.arange(-10, SLE_PD_data[exp]["time"][-1] + 3800, 1) for exp in SLE_PD_data}
+time_vectors = {exp: np.arange(-10, SLE_PD_data[exp]["time"][-1] + 3000, 1) for exp in SLE_PD_data}
 
-params_M1 = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 0.605, 0.2, 
-            8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
+params_M1 = [0.81995, 0.00867199496525978, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.0096780180307827, 1.52, 1.14185149185025, 14000.0]
 
 def plot_all_PD_doses_together(params, sims, SLE_PD_data, time_vectors, save_dir='../../../Results/SLE_results/PD', feature_to_plot='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
@@ -157,4 +162,4 @@ def plot_all_PD_doses_together(params, sims, SLE_PD_data, time_vectors, save_dir
 
 
 plot_sim_with_SLE_PD_data(params_M1, first_model_sims, SLE_PD_data)
-plot_all_PD_doses_together(params_M1, first_model_sims, SLE_PD_data, time_vectors)
+# plot_all_PD_doses_together(params_M1, first_model_sims, SLE_PD_data, time_vectors)

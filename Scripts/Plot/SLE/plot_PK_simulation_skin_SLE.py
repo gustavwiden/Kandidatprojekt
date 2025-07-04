@@ -72,7 +72,7 @@ mPBPK_model_sims = {
 }
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='g', feature_to_plot='Skin_PK_sim'):
+def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PK_sim_skin'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
@@ -90,11 +90,10 @@ def plot_fig(params, sims, color='g', save_dir='../../../Results/Skin_SLE/PK'):
         plt.ylabel('BIIB059 Skin Concentration (µg/ml)')
 
         # Save figure with PK-specific name
-        filename = f"PK_{experiment}_simulation_in_SLE_skin.png"
+        filename = f"PK_{experiment}_simulation_in_SLE_skin_low.png"
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight', dpi=300)
 
-params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
-            0.605, 0.2, 8.91, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
+params_SLE = [0.81995, 0.00867199496525978, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6327716105886019, 0.95, 0.7960584853135797, 0.2, 0.0096780180307827, 1.52, 1.82, 1.14185149185025, 14000.0]
 
 plot_fig(params_SLE, mPBPK_model_sims)

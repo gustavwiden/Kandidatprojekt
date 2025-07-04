@@ -95,7 +95,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.818, 0.011, 2.6, 1.81, 6.3, 4.37, 2.6, 0.0103, 0.0296, 0.081, 0.77, 0.95, 0.605, 0.2, 5.5e-3, 120, 3612, 0.91, 4.4e-4, 0.04, 1, 14000]
+initial_params = [0.81995, 0.00867199496525978, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.0096780180307827, 1.52, 54.7, 1.14185149185025, 14000.0]
 cost_PD = fcost(initial_params, model_sims, PD_data)
 print(f"Cost of the PD model: {cost_PD}")
 
@@ -131,7 +131,7 @@ initial_params_log = np.log(initial_params)
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
 # Additionally, since this is an optimization of PD, parameters related to PD are also frozen
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1]  
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]  
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)

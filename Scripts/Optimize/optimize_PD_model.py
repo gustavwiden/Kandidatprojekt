@@ -115,7 +115,7 @@ def fcost(params, sims, PD_data):
     return cost
 
 # Use optimal parameters from PK optimization as intial parameters
-initial_params_PD = [0.820113594746233, 0.010992753705205343, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.77, 0.95, 0.6050000000000001, 0.2, 0.004449753678457776, 119.55220610984654, 3612.368970827746, 2.05, 0.00044000000000000007, 1.0, 1.0, 14000.0]
+initial_params_PD = [0.81995, 0.009023581987003631, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6615000000000001, 0.95, 0.7992477179204904, 0.2, 0.0076670917893932045, 2.22, 1.0, 14000.0]
 # Print cost for initial parameters
 cost_PD = fcost(initial_params_PD, model_sims, PD_data)
 print(f"Cost of the PD model: {cost_PD}")
@@ -149,7 +149,7 @@ initial_params_log_PD = np.log(initial_params_PD)
 
 # Bounds for the parameters
 # Parameters that were optimized in optimize_Pk_model.py are frozen in this optimization
-bound_factors_PD = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.2, 1, 2, 1, 1]
+bound_factors_PD = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 2, 1]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)

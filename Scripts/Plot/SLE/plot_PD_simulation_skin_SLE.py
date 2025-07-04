@@ -34,7 +34,7 @@ with open("../../../Data/PD_data.json", "r") as f:
 # Load the model object
 mPBPK_model = sund.load_model("mPBPK_SLE_model")
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 6000, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 
 # Creating activities for the different doses
@@ -68,13 +68,13 @@ mPBPK_model_sims = {
 }
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='g', feature_to_plot='Skin_PD_sim'):
+def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PD_sim_skin'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PD simulations and saves them to Results folder
-def plot_fig(params, sims, color='g', save_dir='../Results/Skin_SLE/PD'):
+def plot_fig(params, sims, color='g', save_dir='../../../Results/Skin_SLE/PD'):
     os.makedirs(save_dir, exist_ok=True)
 
     for experiment in PD_data:
@@ -83,64 +83,13 @@ def plot_fig(params, sims, color='g', save_dir='../Results/Skin_SLE/PD'):
         plot_sim(params, sims[experiment], timepoints, color)
         plt.title(f"PD simulation in SLE skin for {experiment}")
         plt.xlabel('Time [Hours]')
-        plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)')
+        plt.ylabel('BDCA2 expression (percentage change from baseline)')
 
         # Save figure with PD-specific name
         filename = f"PD_{experiment}_simulation_in_SLE_skin.png"
         save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(save_path, bbox_inches='tight', dpi=300)
 
-params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95,
-            0.605, 0.2, 11.095, 14.15, 0.28, 2.12e-05, 2.5, 0.525, 1.27e-5]
+params_SLE = [0.81995, 0.00867199496525978, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.0096780180307827, 1.52, 54.7, 1.14185149185025, 14000.0]
 
-def plot_all_PD_doses_together(params, sims, PD_data, time_vectors, save_dir='../../../Results/Skin_SLE/PD', feature_to_plot='Skin_PD_sim'):
-    os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(12, 7))  # Create a single figure for all plots
-
-    # Colors for the plots
-    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#6d65bf', '#d95f02']
-
-    # Shorter labels for the doses
-    dose_labels = {
-        'IVdose_005_HV': 'IV 0.05',
-        'IVdose_03_HV':  'IV 0.3',
-        'IVdose_1_HV':   'IV 1',
-        'IVdose_3_HV':   'IV 3',
-        'IVdose_20_SLE':  'IV 20',
-        'SCdose_50_HV':  'SC 50'
-    }
-
-    # Plot each simulation
-    for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
-        timepoints = time_vectors[experiment]
-        sim = sims[experiment]
-        sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
-        feature_idx = sim.feature_names.index(feature_to_plot)
-
-        y = sim.feature_data[:, feature_idx]
-        x = sim.time_vector
-
-        # Plot simulation curve
-        plt.plot(x, y, color=color, linewidth=2, label=dose_labels.get(experiment, experiment))
-
-
-    # Add labels, title, and legend
-    plt.xlabel('Time [Hours]', fontsize=16)
-    plt.ylabel('BDCA2 levels on pDCs (% Change from Baseline)', fontsize=16)
-    plt.title('PD simulation of all doses in SLE', fontsize=20)
-    plt.legend()
-    plt.tight_layout()
-    plt.xlim(-100, 8000)
-    plt.ylim(-110, 50)
-
-    # Save the plot
-    save_path = os.path.join(save_dir, "SLE_PD_all_doses_simulation.png")
-    plt.savefig(save_path, bbox_inches='tight', dpi=300)
-    
-    save_path = os.path.join(save_dir, "SLE_PD_all_doses_simulation.svg")
-    plt.savefig(save_path, bbox_inches='tight')
-
-    plt.show()  # Display the figure
-
-#plot_fig(params_SLE, mPBPK_model_sims)
-plot_all_PD_doses_together(params_SLE, mPBPK_model_sims, PD_data, time_vectors)
+plot_fig(params_SLE, mPBPK_model_sims)
