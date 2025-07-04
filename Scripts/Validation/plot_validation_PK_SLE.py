@@ -21,7 +21,7 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
@@ -43,9 +43,9 @@ def plot_sim_PK(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Install and load the model
-sund.install_model('../../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../Models/mPBPK_model.txt')
 print(sund.installed_models())
-model = sund.load_model("mPBPK_SLE_model")
+model = sund.load_model("mPBPK_model")
 
 # Create activity objects for each dose
 SC_50_SLE = sund.Activity(time_unit='h')
@@ -69,8 +69,7 @@ model_sims = {
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
 # Optimal parameters for the mPBPK model when trained on HV data. Ksyn is adapted to fit the lower basline of BDCA2 in plasma in SLE patients.
-HV_params = [0.81995, 0.009023581987003631, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.007911517932177177, 1.52, 1.14185149185025, 14000.0]
-
+HV_params = [0.6921413285313175, 0.011562059728408203, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6903571298565425, 0.95, 0.7997644048236776, 0.2, 0.007117474439469669, 2.23, 0.9974545632754038, 14000.0]
 def plot_model_uncertainty_with_validation_data(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../Results/Validation', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
 

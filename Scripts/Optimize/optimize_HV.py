@@ -172,7 +172,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return pk_weight * pk_cost + pd_weight * pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.81995, 0.009023581987003631, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.63, 0.95, 0.4, 0.2, 0.00552, 2.22, 0.2, 14000.0]
+initial_params = [0.713, 0.00975, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.63, 0.95, 0.4, 0.2, 0.00552, 2.23, 0.2, 14000.0]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -213,7 +213,7 @@ initial_params_log = np.log(initial_params)
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
 # Additionally, since this is an optimization of PK, parameters related to PD are also frozen
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 2, 1, 2, 1, 10, 1]
+bound_factors = [1.2, 1.2, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 2, 1, 2, 1, 10, 1]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -257,6 +257,12 @@ else:
 # Create list to store all acceptable parameter sets
 acceptable_params = []
 
+# Load existing acceptable parameter sets if the file exists
+acceptable_params_path = os.path.join(output_dir, 'acceptable_params.json')
+if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_path) > 0:
+    with open(acceptable_params_path, 'r') as f:
+        acceptable_params = json.load(f)
+
 # Define the cost function for uncertainty analysis
 # This function calculates the cost and updates the acceptable parameters and best cost if the cost is improved
 def fcost_uncertainty(param_log, model, PK_data, PD_data):
@@ -282,14 +288,16 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
 
 # Perform optimization using differential evolution
 # This optimization runs multiple iterations to find the best parameters that minimize the cost function
-res = differential_evolution(
-    func=fcost_uncertainty,
-    bounds=bounds_log,
-    args=cost_function_args,
-    x0=initial_params_log,
-    callback=callback_evolution_log,
-    disp=True
-)
+
+for i in range(5):  # Run the optimization 5 times
+    res = differential_evolution(
+        func=fcost_uncertainty,
+        bounds=bounds_log,
+        args=cost_function_args,
+        x0=initial_params_log,
+        callback=callback_evolution_log,
+        disp=True
+    )
 
 # Save all acceptable parameter sets to a CSV file
 with open(os.path.join(output_dir, 'acceptable_params.csv'), 'w', newline='') as csvfile:
