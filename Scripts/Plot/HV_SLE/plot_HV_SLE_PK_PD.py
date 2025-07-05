@@ -4,207 +4,126 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sund
 
-# Ladda båda modellerna
+# Load models
 sund.install_model('../../../Models/mPBPK_model.txt')
 sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 model_HV = sund.load_model("mPBPK_model")
 model_SLE = sund.load_model("mPBPK_SLE_model")
 
-# Ladda datafiler
-with open("../../../Data/PK_HV_SLE_data.json", "r") as pk_file:
-    PK_data = json.load(pk_file)
-with open("../../../Data/PD_HV_SLE_data.json", "r") as pd_file:
-    PD_data = json.load(pd_file)
+# Load data
+with open("../../../Data/PK_data.json", "r") as f:
+    PK_data = json.load(f)
+with open("../../../Data/PD_data.json", "r") as f:
+    PD_data = json.load(f)
 
-# Sätt parametrar
-params_HV = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 
-0.605, 0.2, 5.5, 14.7, 0.274, 1.635e-5, 2.2, 0.233, 1e-10]  # HV
+params_HV = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6920233945323367, 0.95, 0.7995175786295078, 0.2, 0.007349224278973848, 2.23, 1.04317488678716, 14000.0]  # HV
+params_SLE = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6920233945323367, 0.95, 0.7995175786295078, 0.2, 0.008532364216792725, 1.53, 28.299999999999997, 0.10431748867871599, 14000.0]  # SLE
 
-params_SLE = [0.679, 0.01, 2600, 1810, 6300, 4370, 2600, 10.29, 29.58, 80.96, 0.77, 0.95, 
-0.605, 0.2, 8.93, 14.7, 0.274, 1.635e-05, 2.2, 0.466, 6.54e-6]  # SLE
+save_dir = "./PK_PD_HV_SLE_figures"
+os.makedirs(save_dir, exist_ok=True)
 
-# Välj dos
-dose_key_HV = "IVdose_20_HV"
-dose_key_SLE = "IVdose_20_SLE"
+# --- Define simulation objects as in your code ---
+bodyweight = 70  # or whatever value is appropriate
 
-# Kroppsvikt
-bw = 70
+IV_005_HV = sund.Activity(time_unit='h')
+IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_005_HV']['input']['IV_in']['f']))
+IV_03_HV = sund.Activity(time_unit='h')
+IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_03_HV']['input']['IV_in']['f']))
+IV_1_HV = sund.Activity(time_unit='h')
+IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_1_HV']['input']['IV_in']['f']))
+IV_3_HV = sund.Activity(time_unit='h')
+IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_3_HV']['input']['IV_in']['f']))
+IV_10_HV = sund.Activity(time_unit='h')
+IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_10_HV']['input']['IV_in']['f']))
+IV_20_HV = sund.Activity(time_unit='h')
+IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_20_HV']['input']['IV_in']['f']))
+SC_50_HV = sund.Activity(time_unit='h')
+SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PK_data['SCdose_50_HV']['input']['SC_in']['f'])
 
-# Funktion för att sätta upp simulering
-def setup_sim(data_entry, param_set, model):
-    activity = sund.Activity(time_unit='h')
-    input_data = data_entry["input"]["IV_in"]
-    activity.add_output(sund.PIECEWISE_CONSTANT, "IV_in",
-                        t=input_data["t"],
-                        f=bw * np.array(input_data["f"]))
-    sim = sund.Simulation(models=model, activities=activity, time_unit='h')
-    time_vector = np.arange(-100, data_entry["time"][-1] + 6500, 1)
-    sim.simulate(time_vector=time_vector, parameter_values=param_set, reset=True)
-    return sim
+model_sims_HV = {
+    'IVdose_005_HV': sund.Simulation(models = model_HV, activities = IV_005_HV, time_unit = 'h'),
+    'IVdose_03_HV': sund.Simulation(models = model_HV, activities = IV_03_HV, time_unit = 'h'),
+    'IVdose_1_HV': sund.Simulation(models = model_HV, activities = IV_1_HV, time_unit = 'h'),
+    'IVdose_3_HV': sund.Simulation(models = model_HV, activities = IV_3_HV, time_unit = 'h'),
+    'IVdose_10_HV': sund.Simulation(models = model_HV, activities = IV_10_HV, time_unit = 'h'),
+    'IVdose_20_HV': sund.Simulation(models = model_HV, activities = IV_20_HV, time_unit = 'h'),
+    'SCdose_50_HV': sund.Simulation(models = model_HV, activities = SC_50_HV, time_unit = 'h')
+}
 
-# Simuleringar med olika modeller
-sim_HV = setup_sim(PK_data[dose_key_HV], params_HV, model_HV)
-sim_SLE = setup_sim(PK_data[dose_key_SLE], params_SLE, model_SLE)
+model_sims_SLE = {
+    'IVdose_005_HV': sund.Simulation(models = model_SLE, activities = IV_005_HV, time_unit = 'h'),
+    'IVdose_03_HV': sund.Simulation(models = model_SLE, activities = IV_03_HV, time_unit = 'h'),
+    'IVdose_1_HV': sund.Simulation(models = model_SLE, activities = IV_1_HV, time_unit = 'h'),
+    'IVdose_3_HV': sund.Simulation(models = model_SLE, activities = IV_3_HV, time_unit = 'h'),
+    'IVdose_10_HV': sund.Simulation(models = model_SLE, activities = IV_10_HV, time_unit = 'h'),
+    'IVdose_20_HV': sund.Simulation(models = model_SLE, activities = IV_20_HV, time_unit = 'h'),
+    'SCdose_50_HV': sund.Simulation(models = model_SLE, activities = SC_50_HV, time_unit = 'h')
+}
 
-# Plot
-fig, ax1 = plt.subplots(figsize=(12, 7))
-ax2 = ax1.twinx()
+# --- Plotting loop ---
+for dose in PK_data:
+    # PK plot
+    sim_HV = model_sims_HV[dose]
+    sim_SLE = model_sims_SLE[dose]
+    timepoints = np.arange(-10, PK_data[dose]["time"][-1] + 0.01, 1)
 
-# Ändra bakgrundsfärgen för hela figuren
-fig.patch.set_facecolor('#fcf5ed')
+    sim_HV.simulate(time_vector=timepoints, parameter_values=params_HV, reset=True)
+    idx = sim_HV.feature_names.index("PK_sim")
+    y_HV = sim_HV.feature_data[:, idx]
 
-# Ändra bakgrundsfärgen för axlarna
-ax1.set_facecolor('#fcf5ed')
-ax2.set_facecolor('#fcf5ed')
+    sim_SLE.simulate(time_vector=timepoints, parameter_values=params_SLE, reset=True)
+    y_SLE = sim_SLE.feature_data[:, idx]
 
-# PK-index
-idx_pk = sim_HV.feature_names.index("PK_sim")
+    plt.figure(figsize=(8, 6))
+    plt.plot(timepoints, y_HV, 'b-', label='HV PK_sim (best)')
+    plt.plot(timepoints, y_SLE, 'r-', label='SLE PK_sim (best)')
+    plt.errorbar(
+        PK_data[dose]['time'],
+        PK_data[dose]['BIIB059_mean'],
+        yerr=PK_data[dose]['SEM'],
+        fmt='ko',
+        markersize=6,
+        capsize=3,
+        label='PK Data'
+    )
+    plt.xlabel('Time [Hours]')
+    plt.ylabel('BIIB059 Plasma Concentration (µg/ml)')
+    plt.title(f'PK: {dose}')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(os.path.join(save_dir, f"PK_HV_SLE_{dose}.png"))
+    plt.close()
 
-# Simulerad PK
-ax1.plot(sim_HV.time_vector, sim_HV.feature_data[:, idx_pk], '#1b7837', linestyle='--', linewidth=2.5, label="PK sim HV")
-ax1.plot(sim_SLE.time_vector, sim_SLE.feature_data[:, idx_pk], '#1b7837', linewidth=2.5, label="PK sim SLE")
+    # PD plot (only if dose in PD_data)
+    if dose in PD_data:
+        sim_HV_PD = model_sims_HV[dose]
+        sim_SLE_PD = model_sims_SLE[dose]
+        timepoints_PD = np.arange(-10, PD_data[dose]["time"][-1] + 0.01, 1)
 
-# Datapunkter PK
-# ax1.errorbar(PK_data[dose_key_HV]["time"], PK_data[dose_key_HV]["BIIB059_mean"],
-#              yerr=PK_data[dose_key_HV]["SEM"], fmt='o', color='green', label="PK data HV")
-# ax1.errorbar(PK_data[dose_key_SLE]["time"], PK_data[dose_key_SLE]["BIIB059_mean"],
-#              yerr=PK_data[dose_key_SLE]["SEM"], fmt='o', color='purple', label="PK data SLE")
+        sim_HV_PD.simulate(time_vector=timepoints_PD, parameter_values=params_HV, reset=True)
+        idx_PD = sim_HV_PD.feature_names.index("PD_sim")
+        y_HV_PD = sim_HV_PD.feature_data[:, idx_PD]
 
-# PD-index
-idx_pd = sim_HV.feature_names.index("PD_sim")
+        sim_SLE_PD.simulate(time_vector=timepoints_PD, parameter_values=params_SLE, reset=True)
+        y_SLE_PD = sim_SLE_PD.feature_data[:, idx_PD]
 
-# Simulerad PD
-ax2.plot(sim_HV.time_vector, sim_HV.feature_data[:, idx_pd], '#6d65bf', linestyle='--', linewidth=2.5, label="PD sim HV")
-ax2.plot(sim_SLE.time_vector, sim_SLE.feature_data[:, idx_pd], '#6d65bf', linewidth=2.5, label="PD sim SLE")
+        plt.figure(figsize=(8, 6))
+        plt.plot(timepoints_PD, y_HV_PD, 'b-', label='HV PD_sim (best)')
+        plt.plot(timepoints_PD, y_SLE_PD, 'r-', label='SLE PD_sim (best)')
+        plt.errorbar(
+            PD_data[dose]['time'],
+            PD_data[dose]['BDCA2_median'],
+            yerr=PD_data[dose]['SEM'],
+            fmt='ko',
+            markersize=6,
+            capsize=3,
+            label='PD Data'
+        )
+        plt.xlabel('Time [Hours]')
+        plt.ylabel('BDCA2 expression (percentage change from baseline)')
+        plt.title(f'PD: {dose}')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(save_dir, f"PD_HV_SLE_{dose}.png"))
+        plt.close()
 
-# Datapunkter PD
-# ax2.errorbar(PD_data[dose_key_HV]["time"], PD_data[dose_key_HV]["BDCA2_median"],
-#              yerr=PD_data[dose_key_HV]["SEM"], fmt='x', color='green', label="PD data HV")
-# ax2.errorbar(PD_data[dose_key_SLE]["time"], PD_data[dose_key_SLE]["BDCA2_median"],
-#              yerr=PD_data[dose_key_SLE]["SEM"], fmt='x', color='purple', label="PD data SLE")
-
-# Axlar och etiketter
-ax1.set_xlabel("Time [h]", fontsize=22)
-ax1.set_ylabel("BIIB059 Plasma Concentration [µg/mL]", color='#1b7837', fontsize=22)
-ax1.set_xlim(-100, 9000)
-ax1.set_ylim(-10, 550)
-ax1.spines['left'].set_color('#1b7837')
-ax1.tick_params(axis='y', labelcolor='#1b7837', labelsize=22)
-ax1.tick_params(axis='x', labelsize=22)
-
-ax2.set_ylabel("BDCA2 Expression [% change from baseline]", color='#6d65bf', fontsize=22)
-ax2.set_ylim(-100, 70)
-ax2.spines['right'].set_color('#6d65bf')
-ax2.tick_params(axis='y', labelcolor='#6d65bf', labelsize=22)
-
-fig.tight_layout()
-plt.subplots_adjust(top=1.2)  # Öka från default ca 0.9
-
-# Baseline for bdca2
-ax2.axhline(y=0, color='gray', linestyle='dotted', linewidth=2)
-ax2.text(60, 1, 'Baseline', color='gray', fontsize=22)
-
-
-
-# Add legends
-ax1.legend(loc='upper left', fontsize=18, frameon=False)
-ax2.legend(loc='upper right', fontsize=18, frameon=False)
-
-# --- Add uncertainty bands for PD curves ---
-
-# Load acceptable parameter sets for HV and SLE
-with open("../../../Results/Acceptable params/acceptable_params_PD.json", "r") as f:
-    acceptable_params_HV = json.load(f)
-acceptable_params_HV = [np.array(p) for p in acceptable_params_HV]
-
-with open("../../../Results/Acceptable params/acceptable_params_SLE_PD.json", "r") as f:
-    acceptable_params_SLE = json.load(f)
-acceptable_params_SLE = [np.array(p) for p in acceptable_params_SLE]
-
-# Get time vector and simulation object for each
-time_vector_HV = sim_HV.time_vector
-time_vector_SLE = sim_SLE.time_vector
-idx_pd = sim_HV.feature_names.index("PD_sim")
-
-# HV uncertainty band
-if acceptable_params_HV:
-    y_min = np.full_like(time_vector_HV, np.inf, dtype=float)
-    y_max = np.full_like(time_vector_HV, -np.inf, dtype=float)
-    for params in acceptable_params_HV:
-        sim_HV.simulate(time_vector=time_vector_HV, parameter_values=params, reset=True)
-        y_sim = sim_HV.feature_data[:, idx_pd]
-        y_min = np.minimum(y_min, y_sim)
-        y_max = np.maximum(y_max, y_sim)
-    ax2.fill_between(time_vector_HV, y_min, y_max, color='#6d65bf', alpha=0.18, label="PD uncertainty HV")
-
-# SLE uncertainty band
-if acceptable_params_SLE:
-    y_min = np.full_like(time_vector_SLE, np.inf, dtype=float)
-    y_max = np.full_like(time_vector_SLE, -np.inf, dtype=float)
-    for params in acceptable_params_SLE:
-        sim_SLE.simulate(time_vector=time_vector_SLE, parameter_values=params, reset=True)
-        y_sim = sim_SLE.feature_data[:, idx_pd]
-        y_min = np.minimum(y_min, y_sim)
-        y_max = np.maximum(y_max, y_sim)
-    ax2.fill_between(time_vector_SLE, y_min, y_max, color='#6d65bf', alpha=0.08, label="PD uncertainty SLE")
-
-# (Optional) Update legend to show uncertainty bands
-ax2.legend(loc='upper right', fontsize=18, frameon=False)
-
-# --- Add uncertainty bands for PK curves ---
-
-# Load acceptable parameter sets for HV and SLE PK
-with open("../../../Results/Acceptable params/acceptable_params_PK.json", "r") as f:
-    acceptable_params_PK_HV = json.load(f)
-acceptable_params_PK_HV = [np.array(p) for p in acceptable_params_PK_HV]
-
-with open("../../../Results/Acceptable params/acceptable_params_SLE_PK.json", "r") as f:
-    acceptable_params_PK_SLE = json.load(f)
-acceptable_params_PK_SLE = [np.array(p) for p in acceptable_params_PK_SLE]
-
-# Get time vectors and PK index
-time_vector_HV = sim_HV.time_vector
-time_vector_SLE = sim_SLE.time_vector
-idx_pk = sim_HV.feature_names.index("PK_sim")
-
-# HV PK uncertainty band
-if acceptable_params_PK_HV:
-    y_min = np.full_like(time_vector_HV, np.inf, dtype=float)
-    y_max = np.full_like(time_vector_HV, -np.inf, dtype=float)
-    for params in acceptable_params_PK_HV:
-        sim_HV.simulate(time_vector=time_vector_HV, parameter_values=params, reset=True)
-        y_sim = sim_HV.feature_data[:, idx_pk]
-        y_min = np.minimum(y_min, y_sim)
-        y_max = np.maximum(y_max, y_sim)
-    ax1.fill_between(time_vector_HV, y_min, y_max, color='#1b7837', alpha=0.18, label="PK uncertainty HV")
-
-# SLE PK uncertainty band
-if acceptable_params_PK_SLE:
-    y_min = np.full_like(time_vector_SLE, np.inf, dtype=float)
-    y_max = np.full_like(time_vector_SLE, -np.inf, dtype=float)
-    for params in acceptable_params_PK_SLE:
-        sim_SLE.simulate(time_vector=time_vector_SLE, parameter_values=params, reset=True)
-        y_sim = sim_SLE.feature_data[:, idx_pk]
-        y_min = np.minimum(y_min, y_sim)
-        y_max = np.maximum(y_max, y_sim)
-    ax1.fill_between(time_vector_SLE, y_min, y_max, color='#1b7837', alpha=0.08, label="PK uncertainty SLE")
-
-# (Optional) Update legend to show PK uncertainty bands
-ax1.legend(loc='upper left', fontsize=18, frameon=False)
-
-# Spara
-save_path_svg = "../../../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.svg"
-save_path_png = "../../../Results/SLE_results/PK_PD/Combined_IVdose_20_HV_vs_SLE.png"
-os.makedirs(os.path.dirname(save_path_svg), exist_ok=True)
-
-# Spara som SVG
-plt.savefig(save_path_svg, format="svg", bbox_inches="tight")
-
-# Spara som PNG
-plt.savefig(save_path_png, format="png", bbox_inches="tight", dpi=300)
-
-plt.show()
-
-plt.close()
-print(f"Saved plot as SVG to {save_path_svg}")
-print(f"Saved plot as PNG to {save_path_png}")

@@ -68,7 +68,7 @@ print(sund.installed_models())
 model = sund.load_model("mPBPK_model")
 
 # Bodyweight for subject in kg
-bodyweight = 70
+bodyweight = 73
 
 # Create activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
@@ -146,14 +146,14 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     for dose in PK_data:
         try:
             sims[dose].simulate(time_vector=PK_data[dose]["time"], parameter_values=params, reset=True)
-            PK_sim = sims[dose].feature_data[:, 0]  # PK_sim
+            PK_sim = sims[dose].feature_data[:, sims[dose].feature_names.index('PK_sim')]
             y = PK_data[dose]["BIIB059_mean"]
             SEM = PK_data[dose]["SEM"]
             pk_cost += np.sum(np.square(((PK_sim - y) / SEM)))
         except Exception as e:
             if "CVODE" not in str(e):
                 print(str(e))
-            return 1e30
+            return 1e30, 1e30, 1e30  # Return large costs if simulation fails
 
     # PD cost
     pd_cost = 0
@@ -167,26 +167,26 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
         except Exception as e:
             if "CVODE" not in str(e):
                 print(str(e))
-            return 1e30
+            return 1e30, 1e30, 1e30
 
-    return pk_weight * pk_cost + pd_weight * pd_cost
+    joint_cost = pk_weight * pk_cost + pd_weight * pd_cost
+    return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.713, 0.00975, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.63, 0.95, 0.4, 0.2, 0.00552, 2.23, 0.2, 14000.0]
+initial_params = [0.713, 0.00975, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.63, 0.95, 0.4, 0.2, 0.00552, 2.23, 0.8, 14000]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
-print(f"Cost of the PK model: {cost}")
+print(f"Joint cost: {cost[0]:.2f}, PK cost: {cost[1]:.2f}, PD cost: {cost[2]:.2f}")
 
-# Calculate the degrees of freedom for the chi-squared test
+# Calculate the degrees of freedom and chi2-limits for PK and PD separately
 dgf_PK = sum(np.count_nonzero(np.isfinite(PK_data[exp]["SEM"])) for exp in PK_data)
 dgf_PD = sum(np.count_nonzero(np.isfinite(PD_data[exp]["SEM"])) for exp in PD_data)
-dgf = dgf_PK + dgf_PD
-chi2_limit = chi2.ppf(0.95, dgf)
+chi2_limit_PK = chi2.ppf(0.95, dgf_PK)
+chi2_limit_PD = chi2.ppf(0.95, dgf_PD)
 
 # Print the chi-squared limit and whether the cost exceeds it
-print(f"Chi2 limit: {chi2_limit}")
-print(f"Cost > limit (rejected?): {cost > chi2_limit}")
+print(f"PK Chi2 limit: {chi2_limit_PK}", f"PD Chi2 limit: {chi2_limit_PD}")
 
 # Plot the simulation results with PK and PD data
 plot_sim_with_PK_data(initial_params, model_sims, PK_data)
@@ -213,7 +213,7 @@ initial_params_log = np.log(initial_params)
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
 # Additionally, since this is an optimization of PK, parameters related to PD are also frozen
-bound_factors = [1.2, 1.2, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 2, 1, 2, 1, 10, 1]
+bound_factors = [1.2, 1.2, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 2, 1, 2, 1, 5, 1]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -270,21 +270,19 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     global best_cost
     global best_param
 
-    # Convert the logarithmic parameters to original scale and calculate the cost using the fcost function
     params = np.exp(param_log)
-    cost = fcost_joint(params, model, PK_data, PD_data)
+    joint_cost, pk_cost, pd_cost = fcost_joint(params, model, PK_data, PD_data)
 
-    # Save all parameter sets with cost < chi2_limit
-    if cost < chi2_limit:
+    # Only accept parameter sets that are below BOTH chi2 limits
+    if pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
         acceptable_params.append(params)
 
-    # Update the best cost and parameter set
-    if cost < best_cost:
-        best_cost = cost
+    if joint_cost < best_cost:
+        best_cost = joint_cost
         best_param = params.copy()
-        print(f"New best cost: {best_cost}")
+        print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
 
-    return cost
+    return joint_cost
 
 # Perform optimization using differential evolution
 # This optimization runs multiple iterations to find the best parameters that minimize the cost function

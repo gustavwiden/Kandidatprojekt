@@ -14,17 +14,17 @@ d/dt(Depot) = -r1
 d/dt(BDCA2_plasma) = r13-r15-r17
 d/dt(BDCA2_skin) = r14-r16-r18
 
-Plasma(0) = 0
-Skin(0) = 0
-Muscle(0) = 0
-Leaky(0) = 0
-Lymph(0) = 0
-Depot(0) = 0
-BDCA2_plasma(0) = 5.88           // BDCA2 concentration (pM) in plasma. Converted from 1 010 000 MESF with mean of 3500 pDCs/ml in blood.
-BDCA2_skin(0) = 6.53          // BDCA2 concentration (pM) in skin. Estimated to be 6.53-196 pM (skin lesions assumed to be 1-30 % of total skin)
+Plasma(0) = 0                       // Total BIIB059 amount (pmol) in plasma compartment.
+Skin(0) = 0                         // Total BIIB059 amount (pmol) in skin compartment.
+Muscle(0) = 0                       // Total BIIB059 amount (pmol) in muscle compartment.
+Leaky(0) = 0                        // Total BIIB059 amount (pmol) in leaky compartment.
+Lymph(0) = 0                        // Total BIIB059 amount (pmol) in lymph compartment.
+Depot(0) = 0                        // Total BIIB059 amount (pmol) in depot compartment.
+BDCA2_plasma(0) = 5.88              // BDCA2 concentration (pM) in plasma. Converted from 1 010 000 MESF with mean of 3500 pDCs/ml in blood.
+BDCA2_skin(0) = 101.2               // BDCA2 concentration (pM) in skin.
 ########## PARAMETERS
-F = 0.649           // Bioavailibility
-ka = 0.0146         // Absorption rate (1/h)
+F = 0.684           // Bioavailibility
+ka = 0.0105         // Absorption rate (1/h)
 Vp = 2.6            // Volume of plasma compartment (L)
 Vs = 1.81           // Volume of skin compartment (L)
 V1 = 6.3            // Volume of muscle compartment (L)
@@ -33,23 +33,23 @@ VL = 2.6            // Volume of lymph compartment (L)
 Ls = 0.0103         // Skin lymph flow rate (L/h)
 L1 = 0.0296         // Muscle lymph flow rate (L/h)
 L2 = 0.081          // Leaky tissue lymph flow rate (L/h)
-RCS = 0.77          // Reflection co-efficient skin
+RCS = 0.68          // Reflection co-efficient skin
 RC1 = 0.95          // Reflection co-efficient muscle
-RC2 = 0.605         // Reflection co-efficient leaky tissue
+RC2 = 0.8         // Reflection co-efficient leaky tissue
 RCL = 0.20          // Reflection co-efficient lymph
-CL = 0.0057         // Linear clearance for HV patient (L/h) 
-ksynp = 1.09        // Synthesis rate of BDCA2 (pM/h). Converted from 282 000 MESF/h
-ksyns = 1.82        // Synthesis rate of BDCA2 (pM/h). Converted from 282 000 MESF/h. Up to 54.7
-kint = 1            // Internalization rate in plasma (1/h), guess, however value kept below 10
+CL = 0.00823         // Linear clearance for HV patient (L/h) 
+ksynp = 1.53        // Synthesis rate of BDCA2 (pM/h) in plasma.
+ksyns = 28.3        // Synthesis rate of BDCA2 (pM/h) in skin.
+kint = 1            // Internalization rate in plasma (1/h).
 kd = 14000          // Disassociation constant (pM). 14000 pM found for 24F4 (similair antibody)   
 
 ########## VARIABLES
-Plasma_free = 0.5*((Plasma/Vp - kd - BDCA2_plasma) + sqrt((Plasma/Vp - kd - BDCA2_plasma)^2 + 4*Plasma/Vp*kd))   // Concentration (pM) of free BIIB059 in plasma
-Skin_free = 0.5*((Skin/Vs - kd - BDCA2_skin) + sqrt((Skin/Vs - kd - BDCA2_skin)^2 + 4*Skin/Vs*kd))               // Concentration (pM) of free BIIB059 in skin
-BDCA2_plasma_bound = (BDCA2_plasma * Plasma_free) / (kd + Plasma_free)                                                                      // Concentration (pM) of bound BDCA2 in plasma
-BDCA2_skin_bound = (BDCA2_skin * Skin_free) / (kd + Skin_free)                                                                      // Concentration (pM) of bound BDCA2 in skin                                                                                                                                                                                      // Concentration (pM) of free BDCA2 in skin
-kdegp = ksynp/(5.88)                                                                                                                     // Degradation rate (1/h) of BDCA2 in plasma
-kdegs = ksyns/(6.53)                                                                                                                       // Degradation rate (1/h) of BDCA2 in skin                                                                                                                           
+Plasma_free = 0.5*((Plasma/Vp - kd - BDCA2_plasma) + sqrt((Plasma/Vp - kd - BDCA2_plasma)^2 + 4*Plasma/Vp*kd))      // Concentration (pM) of free BIIB059 in plasma
+Skin_free = 0.5*((Skin/Vs - kd - BDCA2_skin) + sqrt((Skin/Vs - kd - BDCA2_skin)^2 + 4*Skin/Vs*kd))                  // Concentration (pM) of free BIIB059 in skin
+BDCA2_plasma_bound = (BDCA2_plasma * Plasma_free) / (kd + Plasma_free)                                              // Concentration (pM) of bound BDCA2 in plasma
+BDCA2_skin_bound = (BDCA2_skin * Skin_free) / (kd + Skin_free)                                                      // Concentration (pM) of bound BDCA2 in skin                                                                                                                                                                                      // Concentration (pM) of free BDCA2 in skin
+kdegp = ksynp/(5.88)                                                                                                // Degradation rate (1/h) of BDCA2 in plasma
+kdegs = ksyns/(101.2)                                                                                               // Degradation rate (1/h) of BDCA2 in skin                                                                                                                           
 
 r1 = ka*Depot
 r2 = (Ls+L1+L2)*Lymph/VL
@@ -72,7 +72,7 @@ r18 = kint*BDCA2_skin_bound
 
 ########## FUNCTIONS
 ########## EVENTS
-IV_dose = IV > 0, Plasma, Plasma + IV*1e6/(146600)  
+IV_dose = IV > 0, Plasma, Plasma + IV*1e6/(146600)  // BIIB059 have a molecular weigt of 146.6 kDa.
 SC_dose = SC > 0, Depot, Depot + SC*1e6*F/(146600)  
 ########## OUTPUTS
 ########## INPUTS
@@ -81,7 +81,8 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-//PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa
-//PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-5.88)/5.88)           // Output is the percentage change from baseline of BDCA2 expression on pDCs
-PK_sim_skin = Skin*146600/(Vs*1e9)
-PD_sim_skin = 100*((BDCA2_skin-BDCA2_skin_bound-6.53)/6.53)
+PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is concentration of BIIB059 (μg/ml) in plasma.
+PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-5.88)/5.88)                      // Output is the percentage change from baseline of BDCA2 expression on pDCs in plasma.
+PK_sim_skin = Skin*146600/(Vs*1e9)                                              // Output is concentration of BIIB059 (μg/ml) in skin.
+PD_sim_skin = 100*((BDCA2_skin-BDCA2_skin_bound-101.2)/101.2)                   // Output is the percentage change from baseline of BDCA2 expression on pDCs in skin.
+test = BDCA2_plasma_bound
