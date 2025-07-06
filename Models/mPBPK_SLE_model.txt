@@ -85,4 +85,3 @@ PK_sim = Plasma*146600/(Vp*1e9)                                                 
 PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-5.88)/5.88)                      // Output is the percentage change from baseline of BDCA2 expression on pDCs in plasma.
 PK_sim_skin = Skin*146600/(Vs*1e9)                                              // Output is concentration of BIIB059 (μg/ml) in skin.
 PD_sim_skin = 100*((BDCA2_skin-BDCA2_skin_bound-101.2)/101.2)                   // Output is the percentage change from baseline of BDCA2 expression on pDCs in skin.
-test = BDCA2_plasma_bound

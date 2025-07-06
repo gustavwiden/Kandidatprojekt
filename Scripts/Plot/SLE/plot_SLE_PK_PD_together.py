@@ -5,9 +5,7 @@ import numpy as np
 import sund
 import matplotlib.pyplot as plt
 
-# Ensure the PK_PD folder exists inside SLE_results in Results
-results_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Results', 'SLE_results', 'PK_PD'))
-os.makedirs(results_folder, exist_ok=True)
+
 
 # Map experiment names to doses
 experiment_to_dose = {
@@ -19,7 +17,8 @@ experiment_to_dose = {
     "SCdose_50_HV": "50 mg"
 }
 
-def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_vectors, feature_to_plot_PK='PK_sim_skin', feature_to_plot_PD='PD_sim_skin'):
+def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma', feature_to_plot_PK='PK_sim', feature_to_plot_PD='PD_sim'):
+    os.makedirs(save_dir, exist_ok=True)
     if experiment not in PD_data:
         print(f"Skipping {experiment} as it is not present in both PK and PD data.")
         return None
@@ -91,7 +90,11 @@ for experiment in PK_data:
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 100, 1) for exp in PK_data}
 
 # Define parameters (example parameters, replace with actual values)
-params = [0.81995, 0.00867199496525978, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.0096780180307827, 1.52, 547, 1.14185149185025, 0.1, 14000.0]
+params = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6920233945323367, 0.95, 0.7995175786295078, 0.2, 0.008532364216792725, 1.53, 28.299999999999997, 0.10431748867871599, 14000.0]
+
+# Set the save directory at the top level so it's available for saving
+save_dir = '../../../Results/SLE/Plasma'
+os.makedirs(save_dir, exist_ok=True)
 
 # Plot and save each experiment
 for experiment in PK_data:
@@ -99,9 +102,9 @@ for experiment in PK_data:
     experiment_sle = experiment.replace("_HV", "_SLE")
     
     # Generate the plot
-    fig = plot_PK_PD_sim_with_data(params, first_model_sims, experiment, PK_data, PD_data, time_vectors)
+    fig = plot_PK_PD_sim_with_data(params, first_model_sims, experiment, PK_data, PD_data, time_vectors, save_dir=save_dir)
     if fig:  # Only save if a figure was returned
         # Save the figure with the updated name
-        plot_path = os.path.join(results_folder, f"{experiment_sle}_PK_PD_simulation_low.png")
+        plot_path = os.path.join(save_dir, f"{experiment_sle}_PK_PD_simulation_plasma.png")
         fig.savefig(plot_path)
         print(f"Saved plot for {experiment_sle} to {plot_path}")
