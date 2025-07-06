@@ -32,10 +32,6 @@ with open("../../Data/PK_data.json", "r") as f:
 with open("../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
-# Open the data file and read its contents
-with open("../../Data/Only_SC_PK_data.json", "r") as f:
-    SC_PK_data = json.load(f)
-
 # Define a function to plot one PK_dataset
 def plot_PK_dataset(PK_data, face_color='k'):
     plt.errorbar(PK_data['time'], PK_data['BIIB059_mean'], PK_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')

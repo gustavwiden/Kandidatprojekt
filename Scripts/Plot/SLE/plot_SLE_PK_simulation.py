@@ -25,8 +25,8 @@ with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
 # Open the data file and read its contents
-with open("../../../Data/SLE_PK_data.json", "r") as f:
-    SLE_PK_data = json.load(f)
+with open("../../../Data/PK_data.json", "r") as f:
+    PK_data = json.load(f)
 
 def plot_PK_dataset(PK_data, face_color='k'):
     plt.errorbar(PK_data['time'], PK_data['BIIB059_mean'], PK_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
@@ -34,28 +34,33 @@ def plot_PK_dataset(PK_data, face_color='k'):
     plt.ylabel('BIIB059 serum conc. (µg/ml)')
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim_skin'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
 # Definition of the function that plots all PK simulations and saves them to Results folder
-def plot_sim_with_SLE_PK_data(params, sims, SLE_PK_data, color='b', save_dir='../../../Results/SLE_results/PK'):
+def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../../../Results/SLE/Skin/PK'):
     os.makedirs(save_dir, exist_ok=True)
 
-    for experiment in SLE_PK_data:
+    for experiment in PK_data:
         plt.figure()
         timepoints = time_vectors[experiment]
-        plot_sim(params, sims[experiment], timepoints, color)
-        plot_PK_dataset(SLE_PK_data[experiment], face_color=color)
-        
-        # Replace "_HV" with "_SLE" in the experiment name
-        experiment_sle = experiment.replace("_HV", "_SLE")
-        
-        # Update the title
-        plt.title(experiment_sle)
+        sim = sims[experiment]
+        sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        feature_idx = sim.feature_names.index('PK_sim_skin')
+        y = sim.feature_data[:, feature_idx]
+        x = sim.time_vector
 
-        # Save figure with PK-specific name
+        # Calculate AUC over the entire simulation
+        auc = np.trapezoid(y, x)
+        print(f"AUC for {experiment}: {auc:.2f}")
+
+        plt.plot(x, y, color)
+        # plot_PK_dataset(PK_data[experiment], face_color=color)
+
+        experiment_sle = experiment.replace("_HV", "_SLE")
+        plt.title(experiment_sle)
         filename = f"SLE_PK_{experiment_sle}_simulation.png"
         save_path = os.path.join(save_dir, filename)
         plt.savefig(save_path, bbox_inches='tight')
@@ -74,25 +79,25 @@ first_model = sund.load_model("mPBPK_SLE_model")
 bodyweight = 70 # Bodyweight for subject in kg
 
 IV_005_HV = sund.Activity(time_unit='h')
-IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PK_data['IVdose_005_HV']['input']['IV_in']['f']))
+IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_005_HV']['input']['IV_in']['f']))
 
 IV_03_HV = sund.Activity(time_unit='h')
-IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PK_data['IVdose_03_HV']['input']['IV_in']['f']))
+IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_03_HV']['input']['IV_in']['f']))
 
 IV_1_HV = sund.Activity(time_unit='h')
-IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PK_data['IVdose_1_HV']['input']['IV_in']['f']))
+IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_1_HV']['input']['IV_in']['f']))
 
 IV_3_HV = sund.Activity(time_unit='h')
-IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PK_data['IVdose_3_HV']['input']['IV_in']['f']))
+IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_3_HV']['input']['IV_in']['f']))
 
 IV_10_HV = sund.Activity(time_unit='h')
-IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PK_data['IVdose_10_HV']['input']['IV_in']['f']))
+IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_10_HV']['input']['IV_in']['f']))
 
-IV_20_SLE = sund.Activity(time_unit='h')
-IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PK_data['IVdose_20_SLE']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PK_data['IVdose_20_SLE']['input']['IV_in']['f']))
+IV_20_HV = sund.Activity(time_unit='h')
+IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_20_HV']['input']['IV_in']['f']))
 
 SC_50_HV = sund.Activity(time_unit='h')
-SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = SLE_PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = SLE_PK_data['SCdose_50_HV']['input']['SC_in']['f'])
+SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PK_data['SCdose_50_HV']['input']['SC_in']['f'])
 
 first_model_sims = {
     'IVdose_005_HV': sund.Simulation(models = first_model, activities = IV_005_HV, time_unit = 'h'),
@@ -100,15 +105,15 @@ first_model_sims = {
     'IVdose_1_HV': sund.Simulation(models = first_model, activities = IV_1_HV, time_unit = 'h'),
     'IVdose_3_HV': sund.Simulation(models = first_model, activities = IV_3_HV, time_unit = 'h'),
     'IVdose_10_HV': sund.Simulation(models = first_model, activities = IV_10_HV, time_unit = 'h'),
-    'IVdose_20_SLE': sund.Simulation(models = first_model, activities = IV_20_SLE, time_unit = 'h'),
+    'IVdose_20_HV': sund.Simulation(models = first_model, activities = IV_20_HV, time_unit = 'h'),
     'SCdose_50_HV': sund.Simulation(models = first_model, activities = SC_50_HV, time_unit = 'h')
 }
 
-time_vectors = {exp: np.arange(-10, SLE_PK_data[exp]["time"][-1] + 0.01, 1) for exp in SLE_PK_data}
+time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-params_M1 = [0.81995, 0.00867199496525978, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.0096780180307827, 1.52, 54.7, 1.14185149185025, 14000.0]
+params_M1 = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.9420233945323367, 0.95, 0.7995175786295078, 0.2, 0.008532364216792725, 1.53, 28.299999999999997, 0.10431748867871599, 14000.0]
 
-def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir='../../../Results/SLE_results/PK', feature_to_plot='PK_sim'):
+def plot_all_PK_doses_together(params, sims, PK_data, time_vectors, save_dir='../../../Results/SLE/Skin/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
@@ -122,7 +127,7 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
         'IVdose_1_HV':   'IV 1',
         'IVdose_3_HV':   'IV 3',
         'IVdose_10_HV':  'IV 10',
-        'IVdose_20_SLE':  'IV 20',
+        'IVdose_20_HV':  'IV 20',
         'SCdose_50_HV':  'SC 50'
     }
     label_positions = {
@@ -131,12 +136,12 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
         'IVdose_1_HV':   (1480, 0.10),
         'IVdose_3_HV':   (1570, 3),
         'IVdose_10_HV':  (770, 15),
-        'IVdose_20_SLE':  (1600, 30),
+        'IVdose_20_HV':  (1600, 30),
         'SCdose_50_HV':  (900, 0.17),
     }
 
     # Plotta varje simulering
-    for i, (experiment, color) in enumerate(zip(SLE_PK_data.keys(), colors)):
+    for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
         timepoints = time_vectors[experiment]
         sim = sims[experiment]
         sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
@@ -150,9 +155,9 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
 
         # Add datapoints for IV 20
         if experiment == 'IVdose_20_SLE':
-            x_data = SLE_PK_data[experiment]['time']
-            y_data = SLE_PK_data[experiment]['BIIB059_mean']
-            y_err = SLE_PK_data[experiment]['SEM']
+            x_data = PK_data[experiment]['time']
+            y_data = PK_data[experiment]['BIIB059_mean']
+            y_err = PK_data[experiment]['SEM']
             plt.errorbar(x_data, y_data, yerr=y_err, fmt='o', color=color,
                          ecolor='#6d65bf', capsize=3, label=f'{dose_labels[experiment]} data')
 
@@ -182,5 +187,5 @@ def plot_all_PK_doses_together(params, sims, SLE_PK_data, time_vectors, save_dir
     plt.close()
 
 
-plot_sim_with_SLE_PK_data(params_M1, first_model_sims, SLE_PK_data)
-# plot_all_PK_doses_together(params_M1, first_model_sims, SLE_PK_data, time_vectors)
+plot_sim_with_PK_data(params_M1, first_model_sims, PK_data)
+# plot_all_PK_doses_together(params_M1, first_model_sims, PK_data, time_vectors)

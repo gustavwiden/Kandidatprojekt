@@ -17,7 +17,7 @@ experiment_to_dose = {
     "SCdose_50_HV": "50 mg"
 }
 
-def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma', feature_to_plot_PK='PK_sim', feature_to_plot_PD='PD_sim'):
+def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PKPD', feature_to_plot_PK='PK_sim', feature_to_plot_PD='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
     if experiment not in PD_data:
         print(f"Skipping {experiment} as it is not present in both PK and PD data.")
@@ -93,7 +93,7 @@ time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 100, 1) for exp i
 params = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6920233945323367, 0.95, 0.7995175786295078, 0.2, 0.008532364216792725, 1.53, 28.299999999999997, 0.10431748867871599, 14000.0]
 
 # Set the save directory at the top level so it's available for saving
-save_dir = '../../../Results/SLE/Plasma'
+save_dir = '../../../Results/SLE/Plasma/PKPD'
 os.makedirs(save_dir, exist_ok=True)
 
 # Plot and save each experiment
