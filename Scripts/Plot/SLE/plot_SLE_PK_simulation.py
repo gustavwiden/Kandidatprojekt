@@ -34,7 +34,7 @@ def plot_PK_dataset(PK_data, face_color='k'):
     plt.ylabel('BIIB059 serum conc. (µg/ml)')
 
 # Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim_skin'):
+def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
@@ -48,7 +48,7 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b', save_dir='../../../R
         timepoints = time_vectors[experiment]
         sim = sims[experiment]
         sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
-        feature_idx = sim.feature_names.index('PK_sim_skin')
+        feature_idx = sim.feature_names.index('PK_sim')
         y = sim.feature_data[:, feature_idx]
         x = sim.time_vector
 
@@ -111,7 +111,7 @@ first_model_sims = {
 
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-params_M1 = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.9420233945323367, 0.95, 0.7995175786295078, 0.2, 0.008532364216792725, 1.53, 28.299999999999997, 0.10431748867871599, 14000.0]
+params_M1 = [0.7071493492306117, 0.010897430910345316, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6109862178916364, 0.95, 0.7610802128641965, 0.2, 0.00854036758963636, 7.23, 50.24999999999999, 0.08299999999999998, 14000.0, 81310629.8938911]
 
 def plot_all_PK_doses_together(params, sims, PK_data, time_vectors, save_dir='../../../Results/SLE/Skin/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)

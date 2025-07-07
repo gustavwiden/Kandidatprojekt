@@ -143,7 +143,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6920233945323367, 0.95, 0.7995175786295078, 0.2, 0.00919, 1.53, 28.3, 1.04317488678716, 14000.0]
+initial_params = [0.7071493492306117, 0.010897430910345316, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6109862178916364, 0.95, 0.7610802128641965, 0.2, 0.00552, 7.23, 50.25, 0.83, 14000.0, 81310629.8938911]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -170,7 +170,7 @@ def callback(x, file_name):
 
 cost_function_args = (model_sims, PK_data, PD_data)
 initial_params_log = np.log(initial_params)
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.2, 1, 1, 10, 1]
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 10, 1, 1]
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
 upper_bounds = np.log(initial_params) + np.log(bound_factors)
 bounds_log = Bounds(lower_bounds, upper_bounds)

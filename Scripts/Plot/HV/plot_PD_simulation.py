@@ -5,13 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sund
 import json
-from scipy.stats import chi2
-from scipy.optimize import Bounds
-from scipy.optimize import differential_evolution
-import sys
-import csv
-import random
-import requests
 
 from json import JSONEncoder
 class NumpyArrayEncoder(JSONEncoder):
@@ -35,7 +28,7 @@ with open('../../../Results/Acceptable params/acceptable_params.json', 'r') as f
     acceptable_params = json.load(f)
 
 # Bodyweight for subject in kg
-bodyweight = 70
+bodyweight = 73
 
 # Create activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
