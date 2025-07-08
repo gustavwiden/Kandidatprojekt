@@ -21,7 +21,7 @@ with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
 with open("../../../Data/SLE_PD_data_plotting.json", "r") as f:
     PD_data = json.load(f)
 
-with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
+with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
     acceptable_params = json.load(f)
 
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/SLE/Skin/PD', feature_to_plot='PD_sim'):
@@ -124,7 +124,7 @@ model_sims = {
 
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-params_HV = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.5908548614616957, 0.95, 0.7272247648651022, 0.2, 0.005356568223803945, 10.549999999999999, 8.27422276614979, 14123.510378662331, 80063718.67276345]
+params_HV = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.5908548614616957, 0.95, 0.7272247648651022, 0.2, 0.008418983535737234, 7.23, 66.97000000000001, 0.08300000082999998, 14123.510378662331, 80063718.67276345]
 
 # Plot all doses with uncertainty
 plot_all_doses_with_uncertainty(params_HV, acceptable_params, model_sims, PD_data, time_vectors)
