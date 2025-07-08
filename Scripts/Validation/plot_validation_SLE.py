@@ -73,8 +73,8 @@ SLE_params = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999
 def plot_model_uncertainty_with_validation_data(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../Results/Validation', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
 
-    colors = ['#1b7837', '#01947b', '#628759']
-    markers = ['o', 's', 'D']
+    colors = ['#6d65bf', '#6c5ce7', '#8c7ae6']
+    markers = ['X', 'X', 'X']
 
     for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
         plt.figure()

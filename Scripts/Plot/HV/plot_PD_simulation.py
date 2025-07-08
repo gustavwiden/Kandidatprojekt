@@ -27,8 +27,8 @@ with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/HV/PD', feature_to_plot='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
 
-    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
-    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
+    markers = ['o', 's', 'D', '^', 'P', 'X']
 
     for i, experiment in enumerate(PD_data):
         plt.figure()

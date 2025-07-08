@@ -24,18 +24,6 @@ with open("../../../Data/PK_data.json", "r") as f:
 with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
     acceptable_params = json.load(f)
 
-# Define a function to plot one PK_dataset
-def plot_PK_dataset(PK_data, face_color='k'):
-    plt.errorbar(PK_data['time'], PK_data['BIIB059_mean'], PK_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
-    plt.xlabel('Time [Hours]')
-    plt.ylabel('BIIB059 serum conc. (µg/ml)')
-
-# Definition of a function that plots the simulation
-def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PK_sim'):
-    sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
-
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/HV/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
@@ -58,13 +46,13 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     }
 
     label_positions = {
-        'IVdose_005_HV': (400, 0.15),
-        'IVdose_03_HV':  (300, 0.4),
+        'IVdose_005_HV': (400, 0.1),
+        'IVdose_03_HV':  (200, 0.6),
         'IVdose_1_HV':   (1480, 0.11),
         'IVdose_3_HV':   (1570, 2),
-        'IVdose_10_HV':  (770, 21),
-        'IVdose_20_HV':  (1900, 80),
-        'SCdose_50_HV':  (900, 0.17),
+        'IVdose_10_HV':  (770, 19),
+        'IVdose_20_HV':  (1900, 66),
+        'SCdose_50_HV':  (820, 0.2),
     }
     
 
