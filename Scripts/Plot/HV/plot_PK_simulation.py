@@ -36,7 +36,7 @@ def plot_sim(params, sim, timepoints, color='g', feature_to_plot='PK_sim'):
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
-def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../Results', feature_to_plot='PK_sim'):
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/HV/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12, 7))
 
@@ -58,9 +58,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     }
 
     label_positions = {
-        'IVdose_005_HV': (400, 0.07),
+        'IVdose_005_HV': (400, 0.15),
         'IVdose_03_HV':  (300, 0.4),
-        'IVdose_1_HV':   (1480, 0.10),
+        'IVdose_1_HV':   (1480, 0.11),
         'IVdose_3_HV':   (1570, 2),
         'IVdose_10_HV':  (770, 21),
         'IVdose_20_HV':  (1900, 80),
@@ -116,7 +116,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.xlabel('Time [Hours]', fontsize=22)
     plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
     plt.yscale('log')
-    plt.ylim(0.08, 700)
+    plt.ylim(0.01, 1000)
     plt.xlim(-25, 2750)
     plt.tick_params(axis='both', which='major', labelsize=22)
     plt.tight_layout()
@@ -196,7 +196,7 @@ model_sims = {
 
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-params_HV = [0.7071493492306117, 0.010897430910345316, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6109862178916364, 0.95, 0.7610802128641965, 0.2, 0.005369532723001456, 10.549999999999999, 8.295966443408615, 14000.0, 81310629.8938911]
+params_HV = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.5908548614616957, 0.95, 0.7272247648651022, 0.2, 0.005356568223803945, 10.549999999999999, 8.27422276614979, 14123.510378662331, 80063718.67276345]
 
 # Plot all doses with uncertainty
 plot_all_doses_with_uncertainty(params_HV, acceptable_params, model_sims, PK_data, time_vectors)

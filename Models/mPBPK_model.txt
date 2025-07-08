@@ -7,7 +7,7 @@ time_unit = h
 ########## STATES
 d/dt(Plasma) = r1+r2-r3-r4-r5-r9-r11
 d/dt(Skin) = r3-r6
-d/dt(Muscle) = r4-r7
+d/dt(Tight) = r4-r7
 d/dt(Leaky) = r5-r8
 d/dt(Lymph) = r6+r7+r8-r2-r12
 d/dt(Depot) = -r1
@@ -16,7 +16,7 @@ d/dt(BDCA2_lymph) = r14-r16-r12
 
 Plasma(0) = 0                       // Total BIIB059 amount (pmol) in plasma compartment.
 Skin(0) = 0                         // Total BIIB059 amount (pmol) in skin compartment.
-Muscle(0) = 0                       // Total BIIB059 amount (pmol) in muscle compartment.
+Tight(0) = 0                       // Total BIIB059 amount (pmol) in tight compartment.
 Leaky(0) = 0                        // Total BIIB059 amount (pmol) in leaky compartment.
 Lymph(0) = 0                        // Total BIIB059 amount (pmol) in lymph compartment.
 Depot(0) = 0                        // Total BIIB059 amount (pmol) in depot compartment.
@@ -34,7 +34,7 @@ Ls = 0.0103         // Skin lymph flow rate (L/h).
 L1 = 0.0296         // Muscle lymph flow rate (L/h).
 L2 = 0.081          // Leaky tissue lymph flow rate (L/h).
 RCS = 0.77          // Reflection co-efficient for skin compartment.
-RC1 = 0.95          // Reflection co-efficient for muscle compartment.
+RC1 = 0.95          // Reflection co-efficient for tight compartment.
 RC2 = 0.605         // Reflection co-efficient for leaky compartment.
 RCL = 0.20          // Reflection co-efficient for lymph compartment.
 CL = 0.0057         // Linear clearance of BIIB059 from plasma compartment.
@@ -61,7 +61,7 @@ r3 = Ls*(1-RCS)*Plasma_free/Vp
 r4 = L1*(1-RC1)*Plasma_free/Vp
 r5 = L2*(1-RC2)*Plasma_free/Vp
 r6 = Ls*(1-RCL)*Skin/Vs
-r7 = L1*(1-RCL)*Muscle/V1
+r7 = L1*(1-RCL)*Tight/V1
 r8 = L2*(1-RCL)*Leaky/V2
 r9 = CL*Plasma_free/Vp
 //r10 = Plasma_free*Vm/(Km+Plasma_free)
@@ -84,6 +84,6 @@ SC = SC_in @ 0
 ########## FEATURES
 //Output not used needs to be commented out in scripts that calculates cost
 
-PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is serum concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa.
+//PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is serum concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa.
 PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-40.44)/40.44)           // Output is the percentage change from baseline of BDCA2 expression on pDCs
 

@@ -13,24 +13,84 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
-# Load model and data
-
+# Open the mPBPK_model.txt file and read its contents
 with open("../../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
-    
-sund.install_model('../../../Models/mPBPK_model.txt')
-model = sund.load_model("mPBPK_model")
 
+# Open the data file and read its contents
 with open("../../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
-with open('../../../Results/Acceptable params/acceptable_params.json', 'r') as f:
+with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
     acceptable_params = json.load(f)
 
-# Bodyweight for subject in kg
-bodyweight = 73
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/HV/PD', feature_to_plot='PD_sim'):
+    os.makedirs(save_dir, exist_ok=True)
 
-# Create activity objects for each dose
+    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
+    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
+
+    for i, experiment in enumerate(PD_data):
+        plt.figure()
+        color = colors[i % len(colors)]
+        marker = markers[i % len(markers)]
+        timepoints = time_vectors[experiment]
+        y_min = np.full_like(timepoints, np.inf)
+        y_max = np.full_like(timepoints, -np.inf)
+
+        # Calculate uncertainty range
+        for params in acceptable_params:
+            try:
+                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                y_sim = sims[experiment].feature_data[:, 0]
+                y_min = np.minimum(y_min, y_sim)
+                y_max = np.maximum(y_max, y_sim)
+            except RuntimeError as e:
+                if "CV_ERR_FAILURE" in str(e):
+                    print(f"Skipping unstable parameter set for {experiment}")
+                else:
+                    raise e
+
+        # Plot uncertainty range
+        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+
+        # Plot selected parameter set
+        sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
+        y_selected = sims[experiment].feature_data[:, 0]
+        plt.plot(timepoints, y_selected, color=color)
+
+        # Plot experimental data
+        plt.errorbar(
+            PD_data[experiment]['time'],
+            PD_data[experiment]['BDCA2_median'],
+            yerr=PD_data[experiment]['SEM'],
+            marker=marker,
+            color=color,
+            linestyle='None'
+        )
+
+        plt.xlabel('Time [Hours]')
+        plt.ylabel('BDCA2 expression on pDCs (% change from baseline)')
+        plt.title(experiment)
+        plt.tick_params(axis='both', which='major')
+        plt.tight_layout()
+
+        save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.png")
+        plt.savefig(save_path_png, format='png', bbox_inches='tight')
+        plt.show()
+        plt.close()
+
+## Setup of the model
+# Install the model
+sund.install_model('../../../Models/mPBPK_model.txt')
+print(sund.installed_models())
+
+# Load the model object
+model = sund.load_model("mPBPK_model")
+
+# Creating activities for the different doses
+bodyweight = 73 # Bodyweight for subject in kg
+
 IV_005_HV = sund.Activity(time_unit='h')
 IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_005_HV']['input']['IV_in']['f']))
 
@@ -49,7 +109,6 @@ IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_20_HV
 SC_50_HV = sund.Activity(time_unit='h')
 SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PD_data['SCdose_50_HV']['input']['SC_in']['f'])
 
-# Create simulation objects for each dose
 model_sims = {
     'IVdose_005_HV': sund.Simulation(models = model, activities = IV_005_HV, time_unit = 'h'),
     'IVdose_03_HV': sund.Simulation(models = model, activities = IV_03_HV, time_unit = 'h'),
@@ -58,68 +117,10 @@ model_sims = {
     'IVdose_20_HV': sund.Simulation(models = model, activities = IV_20_HV, time_unit = 'h'),
     'SCdose_50_HV': sund.Simulation(models = model, activities = SC_50_HV, time_unit = 'h')
 }
-# Time vectors for each experiment
-time_vectors = {exp: np.arange(-50, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-HV_params = [0.81995, 0.009023581987003631, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6927716105886019, 0.95, 0.7960584853135797, 0.2, 0.007911517932177177, 2.22, 1.14185149185025, 14000.0]
+time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-# Define a function to plot one PD dataset
-def plot_PD_dataset(PD_data, face_color='k'):
-    plt.errorbar(PD_data['time'], PD_data['BDCA2_median'], PD_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
-    plt.xlabel('Time [Hours]')
-    plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline')
+params_HV = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.5908548614616957, 0.95, 0.7272247648651022, 0.2, 0.005356568223803945, 10.549999999999999, 8.27422276614979, 14123.510378662331, 80063718.67276345]
 
-# Define a function to plot all PD datasets
-def plot_PD_data(PD_data, face_color='k'):
-    for experiment in PD_data:
-        plt.figure()
-        plot_PD_dataset(PD_data[experiment], face_color=face_color)
-        plt.title(experiment)
-
-# Define a function to plot the simulation results
-def plot_sim(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
-    sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
-
-# Plot uncertainty and data for each dose in a separate figure
-def plot_sim_with_uncertainty(params, acceptable_params, sims, PD_data, time_vectors, save_dir='../Results/HV_results/PD', feature_to_plot='PD_sim'):
-    os.makedirs(save_dir, exist_ok=True)
-    color_uncertainty = '#1b7837'
-    color_sim = 'blue'
-
-    for experiment in PD_data:
-        plt.figure()
-        timepoints = time_vectors[experiment]
-        y_min = np.full_like(timepoints, np.inf)
-        y_max = np.full_like(timepoints, -np.inf)
-
-        # Calculate uncertainty range
-        for p in acceptable_params:
-            try:
-                sims[experiment].simulate(time_vector=timepoints, parameter_values=p, reset=True)
-                y_sim = sims[experiment].feature_data[:, sims[experiment].feature_names.index(feature_to_plot)]
-                y_min = np.minimum(y_min, y_sim)
-                y_max = np.maximum(y_max, y_sim)
-            except Exception:
-                continue
-
-        # Plot uncertainty range
-        plt.fill_between(timepoints, y_min, y_max, color=color_uncertainty, alpha=0.3, label='Uncertainty')
-
-        # Plot data points
-        plot_PD_dataset(PD_data[experiment])
-
-        # Plot simulation with HV_params
-        plot_sim(params, sims[experiment], timepoints, color=color_sim, feature_to_plot=feature_to_plot)
-
-        plt.title(experiment)
-        plt.legend()
-        plt.tight_layout()
-        save_path = os.path.join(save_dir, f"PD_{experiment}_uncertainty.png")
-        plt.savefig(save_path, bbox_inches='tight', dpi=300)
-        plt.close()
-
-# Run the plotting function
-plot_sim_with_uncertainty(HV_params, acceptable_params, model_sims, PD_data, time_vectors)
-
+# Plot all doses with uncertainty
+plot_all_doses_with_uncertainty(params_HV, acceptable_params, model_sims, PD_data, time_vectors)
