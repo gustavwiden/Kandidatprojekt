@@ -24,7 +24,7 @@ with open("../../../Data/SLE_PD_data_plotting.json", "r") as f:
 with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
     acceptable_params = json.load(f)
 
-def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/SLE/Skin/PD', feature_to_plot='PD_sim'):
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PD', feature_to_plot='PD_sim'):
     os.makedirs(save_dir, exist_ok=True)
 
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
