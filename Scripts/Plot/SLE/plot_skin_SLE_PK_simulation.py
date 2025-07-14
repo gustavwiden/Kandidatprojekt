@@ -73,7 +73,7 @@ model_sims = {
 }
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-SLE_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 213.2, 5.539999999999999, 2497.000000000001]
+SLE_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 831.4599999999999, 5.539999999999999, 2497.000000000001]
 
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PK', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
@@ -124,8 +124,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
         plt.tick_params(axis='both', which='major')
         plt.tight_layout()
 
-        save_path_png = os.path.join(save_dir, f"{experiment}_PK_plot.png")
-        plt.savefig(save_path_png, format='png', bbox_inches='tight')
+        save_path = os.path.join(save_dir, f"{experiment}_PK_plot.svg")
+        plt.savefig(save_path, format='svg', bbox_inches='tight')
         plt.close()
 
 plot_all_doses_with_uncertainty(SLE_params, acceptable_params, model_sims, PK_data, time_vectors)

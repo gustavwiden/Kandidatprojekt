@@ -123,8 +123,8 @@ def plot_model_uncertainty_with_validation_data(selected_params, acceptable_para
         plt.tight_layout()
 
         # Save each figure with a unique name
-        save_path = os.path.join(save_dir, f"PK_validation_with_{experiment}.png")
-        plt.savefig(save_path, format='png')
+        save_path = os.path.join(save_dir, f"PK_validation_with_{experiment}.svg")
+        plt.savefig(save_path, format='svg')
         plt.close()
 
 # Call the function as before
