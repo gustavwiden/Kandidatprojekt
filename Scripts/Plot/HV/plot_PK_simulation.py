@@ -134,8 +134,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
         fontsize=18
     )
 
-    save_path_png = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
-    plt.savefig(save_path_png, format='png', bbox_inches='tight')
+    save_path_png = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
+    plt.savefig(save_path_png, format='svg', bbox_inches='tight')
     plt.show()
 
     plt.close()

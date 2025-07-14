@@ -42,7 +42,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         for params in acceptable_params:
             try:
                 sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
-                y_sim = sims[experiment].feature_data[:, 0]
+                y_sim = sims[experiment].feature_data[:, 1]
                 y_min = np.minimum(y_min, y_sim)
                 y_max = np.maximum(y_max, y_sim)
             except RuntimeError as e:
@@ -56,7 +56,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
 
         # Plot selected parameter set
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
-        y_selected = sims[experiment].feature_data[:, 0]
+        y_selected = sims[experiment].feature_data[:, 1]
         plt.plot(timepoints, y_selected, color=color)
 
         # Plot experimental data
@@ -75,8 +75,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         plt.tick_params(axis='both', which='major')
         plt.tight_layout()
 
-        save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.png")
-        plt.savefig(save_path_png, format='png', bbox_inches='tight')
+        save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.svg")
+        plt.savefig(save_path_png, format='svg', bbox_inches='tight')
         plt.show()
         plt.close()
 

@@ -78,7 +78,6 @@ SC_dose = SC > 0, Depot, Depot + SC*1e6*F/(146600)
 IV = IV_in @ 0
 SC = SC_in @ 0
 ########## FEATURES
-//Output not used needs to be commented out in scripts that calculates cost
 
 PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is concentration of BIIB059 (μg/ml) in plasma.
 PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-27.75)/27.75)                      // Output is the percentage change from baseline of BDCA2 expression on pDCs in plasma.

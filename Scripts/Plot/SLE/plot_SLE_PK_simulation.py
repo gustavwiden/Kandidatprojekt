@@ -46,13 +46,13 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     }
 
     label_positions = {
-        'IVdose_005_HV': (400, 0.2),
+        'IVdose_005_HV': (390, 0.1),
         'IVdose_03_HV':  (200, 0.7),
-        'IVdose_1_HV':   (1480, 0.11),
-        'IVdose_3_HV':   (2250, 0.09),
+        'IVdose_1_HV':   (2100, 0.006),
+        'IVdose_3_HV':   (2400, 0.2),
         'IVdose_10_HV':  (750, 14),
         'IVdose_20_SLE':  (1900, 30),
-        'SCdose_50_HV':  (900, 0.20),
+        'SCdose_50_HV':  (820, 0.20),
     }
     
 
@@ -106,14 +106,14 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.xlabel('Time [Hours]', fontsize=22)
     plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
     plt.yscale('log')
-    plt.ylim(0.001, 1000)
+    plt.ylim(0.002, 1000)
     plt.xlim(-25, 2750)
     plt.tick_params(axis='both', which='major', labelsize=22)
     plt.tight_layout()
     
 
-    save_path_png = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
-    plt.savefig(save_path_png, format='png', bbox_inches='tight')
+    save_path_png = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
+    plt.savefig(save_path_png, format='svg', bbox_inches='tight')
     plt.show()
 
     plt.close()
