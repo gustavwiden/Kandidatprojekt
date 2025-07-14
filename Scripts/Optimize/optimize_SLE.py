@@ -19,7 +19,7 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
-# Open the mPBPK_SLE_model.txt file and read its contents
+# Open the mPBPK_model.txt file and read its contents
 with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
@@ -76,7 +76,7 @@ model_sims = {
 
 # Create time vectors for each experiment
 time_vectors_PK = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
-time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
+time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 3000, 1) for exp in PD_data}
 
 
 # Define a function to plot the simulation results
@@ -110,7 +110,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
 
 # Define the joint cost function for the optimization
 # This function calculates the cost based on the difference between simulations and PK/PD data
-def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
+def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     # PK cost
     pk_cost = 0
     for dose in PK_data:
@@ -143,7 +143,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.7101803179452523, 0.010769598364021152, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.6030123238684714, 0.95, 0.7237920184287614, 0.2, 0.00552, 7.23, 400.6, 0.83, 14022.91389138535, 209757292.34957692]
+initial_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.00552, 46, 831.46, 5.54, 2497]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -170,7 +170,7 @@ def callback(x, file_name):
 
 cost_function_args = (model_sims, PK_data, PD_data)
 initial_params_log = np.log(initial_params)
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 10, 1, 1]
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1]
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
 upper_bounds = np.log(initial_params) + np.log(bound_factors)
 bounds_log = Bounds(lower_bounds, upper_bounds)
@@ -212,7 +212,7 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     joint_cost, pk_cost, pd_cost = fcost_joint(params, model, PK_data, PD_data)
 
     # Only accept parameter sets that are below BOTH chi2 limits
-    if pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
+    if pk_cost < chi2_limit_PK:
         acceptable_params.append(params)
 
     if joint_cost < best_cost:

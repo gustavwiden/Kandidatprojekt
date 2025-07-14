@@ -106,7 +106,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.xlabel('Time [Hours]', fontsize=22)
     plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
     plt.yscale('log')
-    plt.ylim(0.05, 1000)
+    plt.ylim(0.001, 1000)
     plt.xlim(-25, 2750)
     plt.tick_params(axis='both', which='major', labelsize=22)
     plt.tight_layout()
@@ -162,7 +162,7 @@ model_sims = {
 
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-params_SLE = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.5908548614616957, 0.95, 0.7272247648651022, 0.2, 0.008418983535737234, 7.23, 66.97000000000001, 0.08300000082999998, 14123.510378662331, 80063718.67276345]
+params_SLE = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 831.4599999999999, 5.539999999999999, 2497.000000000001]
 
 # Plot all doses with uncertainty
 plot_all_doses_with_uncertainty(params_SLE, acceptable_params, model_sims, PK_data, time_vectors)

@@ -69,7 +69,8 @@ model_sims = {
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
 # Optimal parameters for the mPBPK model when trained on HV data. Ksyn is adapted to fit the lower basline of BDCA2 in plasma in SLE patients.
-SLE_params = [0.70167507023512, 0.010970491553609206, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.5908548614616957, 0.95, 0.7272247648651022, 0.2, 0.008418983535737234, 7.23, 66.97000000000001, 0.08300000082999998, 14123.510378662331, 80063718.67276345]
+SLE_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 831.4599999999999, 5.539999999999999, 2497.000000000001]
+
 def plot_model_uncertainty_with_validation_data(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../Results/Validation', feature_to_plot='PK_sim'):
     os.makedirs(save_dir, exist_ok=True)
 

@@ -117,7 +117,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.713, 0.00975, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.63, 0.95, 0.4, 0.2, 0.00552, 10.55, 0.83, 16800, 7.2e8]
+initial_params = [0.713, 0.00975, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.63, 0.95, 0.4, 0.2, 0.00552, 10.53, 5.54, 3.7e3]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -147,8 +147,7 @@ cost_function_args = (model_sims, PK_data, PD_data)
 initial_params_log = np.log(initial_params)
 
 # Bounds for the parameters
-bound_factors = [2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3, 1, 5, 1, 20, 4, 20]
-
+bound_factors = [2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3, 20, 1, 5]
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
@@ -261,7 +260,7 @@ def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
     global best_param
     global best_cost
 
-    selected_indices = [0, 1, 10, 12, 14, 16, 17, 18]
+    selected_indices = [0, 1, 12, 14, 15, 17]
     full_param = insert_params(params_reduced, best_param, selected_indices)
     joint_cost, pk_cost, pd_cost = fcost_joint(full_param, model_sims, PK_data, PD_data)
 
@@ -277,13 +276,13 @@ def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
 
 
 # Optimization using pypesto ------------------------------------------------------------
-lb=np.array(np.exp(lower_bounds))[[0, 1, 10, 12, 14, 16, 17, 18]]
-ub=np.array(np.exp(upper_bounds))[[0, 1, 10, 12, 14, 16, 17, 18]]
+lb=np.array(np.exp(lower_bounds))[[0, 1, 12, 14, 15, 17]]
+ub=np.array(np.exp(upper_bounds))[[0, 1, 12, 14, 15, 17]]
 
-params_for_MCMC = best_param[[0, 1, 10, 12, 14, 16, 17, 18]]
+params_for_MCMC = best_param[[0, 1, 12, 14, 15, 17]]
 
 parameter_scales = ['lin']*len(params_for_MCMC)
-parameter_names = ['F', 'ka', 'RCS',  'RC2',  'CL',  'kint', 'kd', 'pdc_count_lymph']
+parameter_names = ['F', 'ka',  'RC2',  'CL', 'ksynp', 'kss']
 
 # MCMC sampling using pypesto ------------------------------------------------------------
 # Define a custom objective function for sampling
@@ -298,7 +297,7 @@ sampler = sample.AdaptiveMetropolisSampler()
 result_sampling = sample.sample(
     problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=params_for_MCMC)
 
-with open("sampling_result_2.csv", 'w', newline='') as file:
+with open("sampling_result_3.csv", 'w', newline='') as file:
     writer = csv.writer(file)
     samples = np.array(result_sampling.sample_result["trace_x"])[0]
     writer.writerows(samples)
@@ -306,12 +305,12 @@ with open("sampling_result_2.csv", 'w', newline='') as file:
 
 # Plotting the results using Matplotlib ------------------------------------------------------------
 # Number of rows and columns for subplots
-rows, cols = 2, 4
+rows, cols = 2, 3
 
-trace_array = np.loadtxt("sampling_result_2.csv", delimiter=",")  # loads your samples
+trace_array = np.loadtxt("sampling_result_3.csv", delimiter=",")  # loads your samples
 
 # Plotting histograms
-fig, axs = plt.subplots(rows, cols, figsize=(10, 6))
+fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
 axes = axs.flatten()
 
 for i, ax in enumerate(axes):

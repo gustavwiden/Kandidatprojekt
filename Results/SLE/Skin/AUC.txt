@@ -1,26 +1,26 @@
 PLASMA AUC (μg*ml/h)
-AUC for IVdose_005_HV: 174.13
-AUC for IVdose_03_HV: 1521.92
-AUC for IVdose_1_HV: 7109.54
-AUC for IVdose_3_HV: 22414.93
-AUC for IVdose_10_HV: 77075.46
-AUC for IVdose_20_SLE: 156340.85
-AUC for SCdose_50_HV: 3249.03
+AUC for IVdose_005_HV: 138.84
+AUC for IVdose_03_HV: 1514.78
+AUC for IVdose_1_HV: 6901.11
+AUC for IVdose_3_HV: 24855.68
+AUC for IVdose_10_HV: 96456.58
+AUC for IVdose_20_SLE: 202235.50
+AUC for SCdose_50_HV: 2661.54
 
 SKIN AUC (μg*ml/h)
-AUC for IVdose_005_HV: 44.88
-AUC for IVdose_03_HV: 523.39
-AUC for IVdose_1_HV: 2964.59
-AUC for IVdose_3_HV: 9951.22
-AUC for IVdose_10_HV: 36464.57
-AUC for IVdose_20_SLE: 75934.39
-AUC for SCdose_50_HV: 1277.17
+AUC for IVdose_005_HV: 1.25
+AUC for IVdose_03_HV: 17.30
+AUC for IVdose_1_HV: 236.61
+AUC for IVdose_3_HV: 4303.62
+AUC for IVdose_10_HV: 31783.68
+AUC for IVdose_20_SLE: 77957.84
+AUC for SCdose_50_HV: 30.75
 
 SKIN/PLASMA AUC RATIO
-IVdose_005_SLE: 0.26
-IVdose_03_SLE: 0.34
-IVdose_1_SLE: 0.42
-IVdose_3_SLE: 0.44
-IVdose_10_SLE: 0.47
-IVdose_20_SLE: 0.49
-SCdose_50_SLE: 0.39
+IVdose_005_SLE: 0.009
+IVdose_03_SLE: 0.011
+IVdose_1_SLE: 0.034
+IVdose_3_SLE: 0.173
+IVdose_10_SLE: 0.330
+IVdose_20_SLE: 0.385
+SCdose_50_SLE: 0.012

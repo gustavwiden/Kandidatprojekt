@@ -169,7 +169,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.713, 0.00975, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.63, 0.95, 0.4, 0.2, 0.00552, 10.55, 0.83, 16800, 7.2e8]
+initial_params = [0.713, 0.00975, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.63, 0.95, 0.4, 0.2, 0.00552, 10.53, 5.54, 3.7e3]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -209,7 +209,7 @@ initial_params_log = np.log(initial_params)
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
 # Additionally, since this is an optimization of PK, parameters related to PD are also frozen
-bound_factors = [1.2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1.1, 1, 2, 1, 2, 1, 10, 1.2, 10]
+bound_factors = [1.2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 10, 1, 2]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -283,7 +283,7 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
 # Perform optimization using differential evolution
 # This optimization runs multiple iterations to find the best parameters that minimize the cost function
 
-for i in range(5):  # Run the optimization 5 times
+for i in range(2):  # Run the optimization 5 times
     res = differential_evolution(
         func=fcost_uncertainty,
         bounds=bounds_log,
