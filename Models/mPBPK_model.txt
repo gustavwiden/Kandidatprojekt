@@ -74,6 +74,6 @@ IV = IV_in @ 0
 SC = SC_in @ 0
 ########## FEATURES
 
-PK_sim = Plasma*146600/(Vp*1e9)                                                 // Output is serum concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa.
+PK_sim = Plasma_free*146600/(Vp*1e9)                                                 // Output is serum concentration of BIIB059 in μg/ml. BIIB059 have a molecular weigt of 146.6 kDa.
 PD_sim = 100*((BDCA2_plasma-BDCA2_plasma_bound-40.44)/40.44)           // Output is the percentage change from baseline of BDCA2 expression on pDCs
 
