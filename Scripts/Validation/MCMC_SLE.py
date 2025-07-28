@@ -93,7 +93,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.005719188311687379, 45.45, 2519.000000000001, 5.539999999999999, 188095.59305522923]
+initial_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.00552, 46, 831.46, 5.54, 3700]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -123,7 +123,7 @@ cost_function_args = (model_sims, PK_data, PD_data)
 initial_params_log = np.log(initial_params)
 
 # Bounds for the parameters
-bound_factors = [2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3, 1, 5, 1, 20, 4, 20]
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 10000]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -152,7 +152,7 @@ def callback_evolution_log(x,convergence):
 
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
-best_result_path = os.path.join(output_dir, 'best_result_SLE.json')
+best_result_path = os.path.join(output_dir, 'best_SLE_result.json')
 
 # Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
@@ -168,7 +168,7 @@ else:
 acceptable_params = []
 
 # Load existing acceptable parameter sets if the file exists
-acceptable_params_path = os.path.join(output_dir, 'acceptable_params.json')
+acceptable_params_path = os.path.join(output_dir, 'acceptable_params_SLE.json')
 if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_path) > 0:
     with open(acceptable_params_path, 'r') as f:
         acceptable_params = json.load(f)
@@ -203,22 +203,22 @@ def fcost_optimization(param_log, model_sims, PK_data, PD_data):
 #         disp=True
 #     )
 
-# # Save all acceptable parameter sets to a CSV file
-# with open(os.path.join(output_dir, 'acceptable_params.csv'), 'w', newline='') as csvfile:
-#     writer = csv.writer(csvfile, delimiter=',')
-#     writer.writerows(acceptable_params)
+# Save all acceptable parameter sets to a CSV file
+with open(os.path.join(output_dir, 'acceptable_params_SLE.csv'), 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerows(acceptable_params)
 
-# # Save all acceptable parameter sets to a JSON file
-# with open(os.path.join(output_dir, 'acceptable_params.json'), 'w') as f:
-#     json.dump(acceptable_params, f, cls=NumpyArrayEncoder)
+# Save all acceptable parameter sets to a JSON file
+with open(os.path.join(output_dir, 'acceptable_params_SLE.json'), 'w') as f:
+    json.dump(acceptable_params, f, cls=NumpyArrayEncoder)
 
-# # Save the best parameter set to a JSON file
-# with open(os.path.join(output_dir, 'best_result.json'), 'w') as f:
-#     json.dump({'best_cost': best_cost, 'best_param': best_param.tolist()}, f, cls=NumpyArrayEncoder)
+# Save the best parameter set to a JSON file
+with open(os.path.join(output_dir, 'best_SLE_result.json'), 'w') as f:
+    json.dump({'best_cost': best_cost, 'best_param': best_param.tolist()}, f, cls=NumpyArrayEncoder)
 
-# # print the number of acceptable parameter sets collected
-# print(f"Number of acceptable parameter sets collected: {len(acceptable_params)}")
-# # define objective function for pypesto 
+# print the number of acceptable parameter sets collected
+print(f"Number of acceptable parameter sets collected: {len(acceptable_params)}")
+# define objective function for pypesto 
 
 # sampling_params = []
 
@@ -319,17 +319,16 @@ def fcost_PL(param_log, model_sims, PK_data, PD_data, param_index, PL_revValue):
     penalty = 1e6 * (param_log[param_index] - PL_revValue)**2
     return joint_cost + penalty
 
+
 # ---- Profile Likelihood Loop ----
-parameterIdx = 18  # for example: kint
-nSteps = 10
-step_size = 0.1
+parameterIdx = 18  
+nSteps = 200
+step_size = 0.02
 best_param_log = np.log(best_param)
 
 PL_revValues = np.zeros(nSteps * 2)
 PL_costs = np.zeros(nSteps * 2)
 
-# Start at best log-param
-x0 = best_param_log.copy()
 
 count = 0
 for direction in [-1, 1]:
@@ -341,7 +340,7 @@ for direction in [-1, 1]:
         # Run fast local optimization with L-BFGS-B
         res = minimize(
             fun=fcost_PL,
-            x0=x0,  # warm start from last point
+            x0=best_param_log,
             args=obj_args,
             method='L-BFGS-B',
             bounds=bounds_log,
@@ -349,7 +348,6 @@ for direction in [-1, 1]:
         )
 
         PL_costs[count] = res.fun
-        x0 = res.x.copy()  # warm start next step from here
         count += 1
 
 # Reorder profile for plotting

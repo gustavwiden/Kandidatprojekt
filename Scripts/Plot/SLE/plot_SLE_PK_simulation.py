@@ -46,13 +46,13 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     }
 
     label_positions = {
-        'IVdose_005_HV': (390, 0.1),
-        'IVdose_03_HV':  (200, 0.7),
-        'IVdose_1_HV':   (2100, 0.006),
-        'IVdose_3_HV':   (2400, 0.2),
+        'IVdose_005_HV': (250, 0.1),
+        'IVdose_03_HV':  (600, 0.3),
+        'IVdose_1_HV':   (1920, 0.045),
+        'IVdose_3_HV':   (2400, 0.06),
         'IVdose_10_HV':  (750, 14),
         'IVdose_20_SLE':  (1900, 30),
-        'SCdose_50_HV':  (820, 0.20),
+        'SCdose_50_HV':  (1220, 0.12),
     }
     
 
@@ -112,8 +112,10 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.tight_layout()
     
 
-    save_path_png = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
-    plt.savefig(save_path_png, format='svg', bbox_inches='tight')
+    save_path_svg = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
+    save_path_png = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
+    plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
+    plt.savefig(save_path_png, format='png', bbox_inches='tight', dpi=600)
     plt.show()
 
     plt.close()
@@ -162,7 +164,7 @@ model_sims = {
 
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-params_SLE = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 831.4599999999999, 5.539999999999999, 2497.000000000001]
+params_SLE = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.007233264815221344, 46.0, 831.4599999999999, 5.539999999999999, 231206.61954937642]
 
 # Plot all doses with uncertainty
 plot_all_doses_with_uncertainty(params_SLE, acceptable_params, model_sims, PK_data, time_vectors)

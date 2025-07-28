@@ -107,9 +107,9 @@ model_low_pdc_sims = {
 
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-original_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 831.4599999999999, 5.539999999999999, 2497.000000000001]
-high_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 19781, 5.539999999999999, 2497.000000000001]
-low_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 259, 5.539999999999999, 2497.000000000001]
+original_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.007233264815221344, 46.0, 831.4599999999999, 5.539999999999999, 231206.61954937642]
+high_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.007233264815221344, 46.0, 19781, 5.539999999999999, 231206.61954937642]
+low_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.007233264815221344, 46.0, 259, 5.539999999999999, 231206.61954937642]
 
 all_params = [original_params, high_params, low_params]
 all_sims = [model_sims, model_high_pdc_sims, model_low_pdc_sims]
@@ -154,14 +154,15 @@ def plot_all_doses_with_high_low_pdc_uncertainty_gradient(selected_param_sets, a
                 print(f"Simulation failed for {label} on {experiment}")
 
         plt.xlabel('Time [Hours]')
-        plt.ylabel('BIIB059 Skin Concentration (µg/ml)')
+        plt.ylabel('BDCA2 expression on pDCs (% change from baseline)')
         plt.title(experiment)
         plt.legend()
         plt.tight_layout()
 
-        save_path = os.path.join(save_dir, f"{experiment}_PD_skin_high_low_pdc.svg")
-        plt.savefig(save_path, format='svg', bbox_inches='tight')
-        plt.close()
+        save_path_svg = os.path.join(save_dir, f"{experiment}_PD_skin_high_low_pdc.svg")
+        plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
+        save_path_png = os.path.join(save_dir, f"{experiment}_PD_skin_high_low_pdc.png")
+        plt.savefig(save_path_png, format='png', bbox_inches='tight', dpi=600)
 
 
 
