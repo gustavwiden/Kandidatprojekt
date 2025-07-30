@@ -73,9 +73,9 @@ model_sims = {
 }
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-SLE_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.0061966897055500195, 46.0, 831.4599999999999, 5.539999999999999, 2497.000000000001]
+SLE_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.005585981224494457, 46.0, 3018.0000000000014, 5.539999999999999, 171190.7029110913]
 
-def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PK', feature_to_plot='PK_sim'):
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/SLE/Skin/PK', feature_to_plot='PK_sim_skin'):
     os.makedirs(save_dir, exist_ok=True)
 
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
@@ -93,7 +93,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
         for params in acceptable_params:
             try:
                 sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
-                y_sim = sims[experiment].feature_data[:, 0]
+                y_sim = sims[experiment].feature_data[:, 2]
                 y_min = np.minimum(y_min, y_sim)
                 y_max = np.maximum(y_max, y_sim)
             except RuntimeError as e:
@@ -107,14 +107,15 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
         # Plot selected parameter set
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
-        y_selected = sims[experiment].feature_data[:, 0]
-        plt.plot(timepoints, y_selected, color=color)
+        y = sims[experiment].feature_data[:, 2]
+        plt.plot(timepoints, y, color=color)
 
-        y = sims[experiment].feature_data[:, 0]
-        x = timepoints
-
-        auc = np.trapezoid(y, x)
+        auc = np.trapezoid(y, timepoints)
+        auc_min = np.trapezoid(y_min, timepoints)
+        auc_max = np.trapezoid(y_max, timepoints)
         print(f"AUC for {experiment}: {auc:.2f}")
+        print(f"AUC_min for {experiment}: {auc_min:.2f}")
+        print(f"AUC_max for {experiment}: {auc_max:.2f}")
 
 
 
