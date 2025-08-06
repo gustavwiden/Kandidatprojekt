@@ -5,106 +5,59 @@ import numpy as np
 import sund
 import matplotlib.pyplot as plt
 
-
-
-# Map experiment names to doses
-experiment_to_dose = {
-    "IVdose_005_HV": "0.05 mg/kg",
-    "IVdose_03_HV": "0.3 mg/kg",
-    "IVdose_1_HV": "1 mg/kg",
-    "IVdose_3_HV": "3 mg/kg",
-    "IVdose_20_HV": "20 mg/kg",
-    "SCdose_50_HV": "50 mg"
-}
-
-def plot_PK_PD_sim_with_data(params, sims, experiment, PK_data, PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PKPD', feature_to_plot_PK='PK_sim', feature_to_plot_PD='PD_sim'):
-    os.makedirs(save_dir, exist_ok=True)
-    if experiment not in PD_data:
-        print(f"Skipping {experiment} as it is not present in both PK and PD data.")
-        return None
-
-    # Get the dose from the mapping
-    dose = experiment_to_dose.get(experiment, "Unknown dose")
-    figure_title = f"SLE, {dose} BIIB059"
-
-    # Create a new figure
-    fig, ax1 = plt.subplots()
-
-    # Plot PK_sim on the left y-axis
-    ax1.set_xlabel('Time [Hours]')
-    ax1.set_ylabel('BIIB059 Plasma Concentration (µg/mL)', color='b')
-    timepoints = time_vectors[experiment]
-
-    # Simulate and plot PK data
-    sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
-    feature_idx_PK = sims[experiment].feature_names.index(feature_to_plot_PK)
-    ax1.plot(sims[experiment].time_vector, sims[experiment].feature_data[:, feature_idx_PK], 'b-')
-    ax1.tick_params(axis='y', labelcolor='b')
-
-    # Create a second y-axis for PD_sim
-    ax2 = ax1.twinx()
-    ax2.set_ylabel('BDCA2 Expression % Change from Baseline', color='r')
-
-    # Simulate and plot PD data
-    sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
-    feature_idx_PD = sims[experiment].feature_names.index(feature_to_plot_PD)
-    ax2.plot(sims[experiment].time_vector, sims[experiment].feature_data[:, feature_idx_PD], 'r-')
-    ax2.tick_params(axis='y', labelcolor='r')
-
-    # Add a title with the updated experiment name and dose
-    plt.title(figure_title)
-
-    # Adjust layout
-    plt.tight_layout()
-
-    # Return the figure object for saving
-    return fig
-
-# Load the PK and PD data
-with open("../../../Data/PK_data.json", "r") as pk_file:
-    PK_data = json.load(pk_file)
-
-with open("../../../Data/PD_data.json", "r") as pd_file:
-    PD_data = json.load(pd_file)
-
-# Load the model
-sund.install_model('../../../Models/mPBPK_SLE_model.txt')
-first_model = sund.load_model("mPBPK_SLE_model")
-
-# Create activities for the different doses
-bodyweight = 70  # Bodyweight in kg
-first_model_sims = {}
-
-for experiment in PK_data:
-    activity = sund.Activity(time_unit='h')
-    input_data = PK_data[experiment]['input']['IV_in'] if 'IV_in' in PK_data[experiment]['input'] else PK_data[experiment]['input']['SC_in']
-    activity.add_output(
-        sund.PIECEWISE_CONSTANT,
-        "IV_in" if 'IV_in' in PK_data[experiment]['input'] else "SC_in",
-        t=input_data['t'],
-        f=bodyweight * np.array(input_data['f']) if 'IV_in' in PK_data[experiment]['input'] else np.array(input_data['f'])
-    )
-    first_model_sims[experiment] = sund.Simulation(models=first_model, activities=activity, time_unit='h')
-
-# Generate time vectors for each experiment
-time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 100, 1) for exp in PK_data}
-
-# Define parameters (example parameters, replace with actual values)
-params = [0.6795956201339274, 0.011536420343864593, 2.6, 1.81, 6.299999999999999, 4.37, 2.6, 0.010300000000000002, 0.029600000000000005, 0.08100000000000002, 0.6920233945323367, 0.95, 0.7995175786295078, 0.2, 0.008532364216792725, 1.53, 28.299999999999997, 0.10431748867871599, 14000.0]
-
-# Set the save directory at the top level so it's available for saving
-save_dir = '../../../Results/SLE/Plasma/PKPD'
-os.makedirs(save_dir, exist_ok=True)
-
-# Plot and save each experiment
-for experiment in PK_data:
-    # Replace "_HV" with "_SLE" in the experiment name
-    experiment_sle = experiment.replace("_HV", "_SLE")
+with open("../../../Data/SLE_PK_data.json", "r") as f:
+    PK_data = json.load(f)
     
-    # Generate the plot
-    fig = plot_PK_PD_sim_with_data(params, first_model_sims, experiment, PK_data, PD_data, time_vectors, save_dir=save_dir)
-    if fig:  # Only save if a figure was returned
-        # Save the figure with the updated name
-        plot_path = os.path.join(save_dir, f"{experiment_sle}_PK_PD_simulation_plasma.png")
-        fig.savefig(plot_path)
-        print(f"Saved plot for {experiment_sle} to {plot_path}")
+with open("../../../Data/SLE_PD_data.json", "r") as f:
+    PD_data = json.load(f)
+
+with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
+    lines = f.readlines()
+
+sund.install_model('../../../Models/mPBPK_SLE_model.txt')
+model = sund.load_model("mPBPK_SLE_model")
+
+bodyweight = 69  # Bodyweight in kg
+
+IV_20_SLE = sund.Activity(time_unit='h')
+IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=PK_data['IVdose_20_SLE']['input']['IV_in']['t'],  f=bodyweight * np.array(PK_data['IVdose_20_SLE']['input']['IV_in']['f']))
+
+model_sims = {'IVdose_20_SLE': sund.Simulation(models=model, activities=IV_20_SLE, time_unit='h')}
+
+time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 2000, 1) for exp in PK_data}
+
+params = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.75, 0.95, 0.7467544604963505, 0.2, 0.007326666281272475, 0.9621937056820449, 0.10000000000000002, 5.539999999999999, 5.539999999999999, 2623.9999999999995]
+
+
+def plot_PK_PD_sim_with_data(params, sims, PK_data, PD_data, time_vectors, save_dir='../../../Results/SLE/Skin/PKPD'):
+    os.makedirs(save_dir, exist_ok=True)
+    for experiment in PK_data:
+        fig, ax1 = plt.subplots(figsize=(8, 5))
+
+        # PK simulation (left y-axis)
+        ax1.set_xlabel('Time [Hours]')
+        ax1.set_ylabel('BIIB059 Skin Concentration (µg/mL)', color='b')
+        timepoints = time_vectors[experiment]
+        sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        y = sims[experiment].feature_data[:, 2]
+        ax1.plot(timepoints, y, 'b-', label='PK simulation')
+        ax1.tick_params(axis='y', labelcolor='b')
+
+        # PD simulation (right y-axis)
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('Free BDCA2 Expression % Change from Baseline', color='r')
+        y = sims[experiment].feature_data[:, 3]
+        ax2.plot(timepoints, y, 'r-', label='PD simulation')
+        ax2.tick_params(axis='y', labelcolor='r')
+
+        # Legends
+        ax1.legend(bbox_to_anchor=(0.95, 0.60))
+        ax2.legend(bbox_to_anchor=(0.95, 0.50))
+
+        plt.title(f"PK and PD Simulation for {experiment} with 179 pDCs/mm²")
+        plt.tight_layout()
+        save_path = os.path.join(save_dir, f"{experiment}_PK_PD_sim_179_pDC_mm2.png")
+        plt.savefig(save_path, dpi=600)
+        plt.show()
+
+plot_PK_PD_sim_with_data(params, model_sims, PK_data, PD_data, time_vectors)

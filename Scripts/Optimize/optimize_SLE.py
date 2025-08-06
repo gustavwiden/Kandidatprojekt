@@ -71,12 +71,12 @@ IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_20_S
 
 # Create simulation objects for each dose
 model_sims = {
-    'IVdose_20_SLE': sund.Simulation(models = model, activities = IV_20_SLE, time_unit = 'h')
+    'IVdose_20_SLE': sund.Simulation(models = model, activities = IV_20_SLE, time_unit = 'h')    
 }
 
 # Create time vectors for each experiment
 time_vectors_PK = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
-time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 3000, 1) for exp in PD_data}
+time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 
 # Define a function to plot the simulation results
@@ -110,7 +110,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
 
 # Define the joint cost function for the optimization
 # This function calculates the cost based on the difference between simulations and PK/PD data
-def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
+def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     # PK cost
     pk_cost = 0
     for dose in PK_data:
@@ -143,8 +143,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.00552, 46, 3018, 5.54, 3700]
-
+initial_params = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.75, 0.95, 0.7467544604963505, 0.2, 0.00549200604682213, 0.9621937056820449, 0.1, 5.539999999999999, 5.539999999999999, 2623.9999999999995]
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
 print(f"Joint cost: {cost[0]:.2f}, PK cost: {cost[1]:.2f}, PD cost: {cost[2]:.2f}")
@@ -170,7 +169,7 @@ def callback(x, file_name):
 
 cost_function_args = (model_sims, PK_data, PD_data)
 initial_params_log = np.log(initial_params)
-bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1000]
+bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1]
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
 upper_bounds = np.log(initial_params) + np.log(bound_factors)
 bounds_log = Bounds(lower_bounds, upper_bounds)
@@ -212,13 +211,13 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     joint_cost, pk_cost, pd_cost = fcost_joint(params, model, PK_data, PD_data)
 
     # Only accept parameter sets that are below BOTH chi2 limits
-    if pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
+    if pk_cost < chi2_limit_PK:
         acceptable_params.append(params)
 
-    if joint_cost < best_cost:
-        best_cost = joint_cost
-        best_param = params.copy()
-        print(f"New best joint cost: {best_cost:.2f} (PK: {pk_cost:.2f}, PD: {pd_cost:.2f})")
+        if joint_cost < best_cost:
+            best_cost = joint_cost
+            best_param = params.copy()
+            print(f"New best joint cost: {best_cost:.2f} (PK: {pk_cost:.2f}, PD: {pd_cost:.2f})")
 
     return joint_cost
 

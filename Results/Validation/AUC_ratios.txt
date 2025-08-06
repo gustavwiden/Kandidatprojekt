@@ -1,0 +1,14 @@
+Phase     Dose                     Plasma_AUC       Skin_AUC  AUC_Ratio (%)
+phase_1   IVdose_005_HV              133.3979         0.0385         0.0289
+phase_1   IVdose_03_HV              1450.9802         0.4695         0.0324
+phase_1   IVdose_1_HV               6579.3715         3.3873         0.0515
+phase_1   IVdose_3_HV              22017.5559       741.1586         3.3662
+phase_1   IVdose_10_HV             82507.8942     13278.5794        16.0937
+phase_1   IVdose_20_SLE           172489.6640     37686.9877        21.8488
+phase_1   SCdose_50_HV              2447.0687         0.7962         0.0325
+phase_2A  SCdose_50_SLE            20185.1637         7.3736         0.0365
+phase_2A  SCdose_150_SLE           65905.9979       146.8437         0.2228
+phase_2A  SCdose_450_SLE          226578.6829     34929.2348        15.4159
+phase_2B  SCdose_50_CLE            14400.6369         5.3068         0.0369
+phase_2B  SCdose_150_CLE           47437.9324       127.4666         0.2687
+phase_2B  SCdose_450_CLE          161241.8631     24543.6862        15.2217

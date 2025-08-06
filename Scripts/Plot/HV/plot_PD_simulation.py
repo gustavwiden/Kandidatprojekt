@@ -75,9 +75,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         plt.tick_params(axis='both', which='major')
         plt.tight_layout()
 
-        save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.svg")
-        plt.savefig(save_path_png, format='svg', bbox_inches='tight')
-        plt.show()
+        save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.png")
+        plt.savefig(save_path_png, format='png', dpi=600)
         plt.close()
 
 ## Setup of the model
@@ -120,7 +119,7 @@ model_sims = {
 
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-params_HV = [0.6275806018256461, 0.012521665343092613, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.63, 0.95, 0.7965420036627042, 0.2, 0.005402247272171798, 67.02886707793152, 5.539999999999999, 2497.3959216508456]
+params_HV = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.95, 0.95, 0.7467544604963505, 0.2, 0.00549200604682213, 0.9621937056820449, 5.539999999999999, 2623.9999999999995]
 
 # Plot all doses with uncertainty
 plot_all_doses_with_uncertainty(params_HV, acceptable_params, model_sims, PD_data, time_vectors)

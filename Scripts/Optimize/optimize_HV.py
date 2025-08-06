@@ -169,7 +169,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.713, 0.00975, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.63, 0.95, 0.4, 0.2, 0.00552, 10.53, 5.54, 3.7e3]
+initial_params = [0.713, 0.0096, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.95, 0.95, 0.45, 0.2, 0.00552, 1, 5.54, 2624]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -209,7 +209,7 @@ initial_params_log = np.log(initial_params)
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
 # Additionally, since this is an optimization of PK, parameters related to PD are also frozen
-bound_factors = [1.2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 10, 1, 2]
+bound_factors = [1.25, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 5, 1, 1]
 
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
@@ -273,10 +273,10 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     if pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
         acceptable_params.append(params)
 
-    if joint_cost < best_cost:
-        best_cost = joint_cost
-        best_param = params.copy()
-        print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
+        if joint_cost < best_cost:
+            best_cost = joint_cost
+            best_param = params.copy()
+            print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
 
     return joint_cost
 

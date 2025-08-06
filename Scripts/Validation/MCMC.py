@@ -117,7 +117,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=1.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.713, 0.00975, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.63, 0.95, 0.4, 0.2, 0.00552, 10.53, 5.54, 3.7e3]
+initial_params = [0.713, 0.0096, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.95, 0.95, 0.45, 0.2, 0.00552, 1, 5.54, 2624]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -147,7 +147,7 @@ cost_function_args = (model_sims, PK_data, PD_data)
 initial_params_log = np.log(initial_params)
 
 # Bounds for the parameters
-bound_factors = [2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1, 3, 20, 1, 5]
+bound_factors = [2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 4, 10, 1, 1]
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
@@ -208,10 +208,10 @@ def fcost_optimization(param_log, model_sims, PK_data, PD_data):
     if pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
         acceptable_params.append(params)
 
-    if joint_cost < best_cost:
-        best_cost = joint_cost
-        best_param = params.copy()
-        print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
+        if joint_cost < best_cost:
+            best_cost = joint_cost
+            best_param = params.copy()
+            print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
 
     return joint_cost
 
@@ -243,147 +243,236 @@ with open(os.path.join(output_dir, 'best_result.json'), 'w') as f:
 print(f"Number of acceptable parameter sets collected: {len(acceptable_params)}")
 # define objective function for pypesto 
 
-# sampling_params = []
+sampling_params = []
 
-# best_param = np.array(best_param)
+best_param = np.array(best_param)
 
-# def proxy_f(params):
-#     return fcost_sampling(params, model_sims, PK_data, PD_data, True)
+def proxy_f(params):
+    return fcost_sampling(params, model_sims, PK_data, PD_data, True)
 
-# def insert_params(selected_params, best_param, selected_indices):
-#     full_param = best_param.copy()
-#     full_param[selected_indices] = selected_params
-#     return full_param
-
-
-# def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
-#     global best_param
-#     global best_cost
-
-#     selected_indices = [0, 1, 12, 14, 15, 17]
-#     full_param = insert_params(params_reduced, best_param, selected_indices)
-#     joint_cost, pk_cost, pd_cost = fcost_joint(full_param, model_sims, PK_data, PD_data)
-
-#     if SaveParams and pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
-#         sampling_params.append(full_param)
-
-#     if joint_cost < best_cost:
-#         best_cost = joint_cost
-#         best_param = np.array(full_param.copy())
-#         print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
-
-#     return joint_cost
+def insert_params(selected_params, best_param, selected_indices):
+    full_param = best_param.copy()
+    full_param[selected_indices] = selected_params
+    return full_param
 
 
-# # Optimization using pypesto ------------------------------------------------------------
-# lb=np.array(np.exp(lower_bounds))[[0, 1, 12, 14, 15, 17]]
-# ub=np.array(np.exp(upper_bounds))[[0, 1, 12, 14, 15, 17]]
+def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
+    global best_param
+    global best_cost
 
-# params_for_MCMC = best_param[[0, 1, 12, 14, 15, 17]]
+    selected_indices = [0, 1, 12, 14, 15]
+    full_param = insert_params(params_reduced, best_param, selected_indices)
+    joint_cost, pk_cost, pd_cost = fcost_joint(full_param, model_sims, PK_data, PD_data)
 
-# parameter_scales = ['lin']*len(params_for_MCMC)
-# parameter_names = ['F', 'ka',  'RC2',  'CL', 'ksynp', 'kss']
+    if SaveParams and pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
+        sampling_params.append(full_param)
 
-# # MCMC sampling using pypesto ------------------------------------------------------------
-# # Define a custom objective function for sampling
-# import pypesto.sample as sample
-# custom_objective = pypesto.Objective(fun=proxy_f, grad = None, hess = None, hessp = None)
-# custom_problem = pypesto.Problem(objective=custom_objective, lb=lb, ub=ub, x_guesses=[params_for_MCMC], x_scales=parameter_scales, x_names = parameter_names)
+        if joint_cost < best_cost:
+            best_cost = joint_cost
+            best_param = np.array(full_param.copy())
+            print(f"New best joint cost: {best_cost} (PK: {pk_cost}, PD: {pd_cost})")
 
-# n_samples = int(1e6)
-# print(params_for_MCMC)
-# sampler = sample.AdaptiveMetropolisSampler()
-
-# result_sampling = sample.sample(
-#     problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=params_for_MCMC)
-
-# with open("sampling_result_3.csv", 'w', newline='') as file:
-#     writer = csv.writer(file)
-#     samples = np.array(result_sampling.sample_result["trace_x"])[0]
-#     writer.writerows(samples)
+    return joint_cost
 
 
-# # Plotting the results using Matplotlib ------------------------------------------------------------
-# # Number of rows and columns for subplots
-# rows, cols = 2, 3
+# Optimization using pypesto ------------------------------------------------------------
+lb=np.array(np.exp(lower_bounds))[[0, 1, 12, 14, 15]]
+ub=np.array(np.exp(upper_bounds))[[0, 1, 12, 14, 15]]
 
-# trace_array = np.loadtxt("sampling_result_3.csv", delimiter=",")  # loads your samples
+params_for_MCMC = best_param[[0, 1, 12, 14, 15]]
 
-# # Plotting histograms
-# fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
-# axes = axs.flatten()
+parameter_scales = ['lin']*len(params_for_MCMC)
+parameter_names = ['F', 'ka',  'RC2',  'CL', 'kdeg']
 
-# for i, ax in enumerate(axes):
-#     data_for_hist = trace_array[:, i]
-#     ax.hist(data_for_hist, bins='auto', color='green')
-#     ax.set_title(parameter_names[i])
-#     ax.set_ylabel('Frequency')
-#     ax.set_xlabel('Parameter value')
+# MCMC sampling using pypesto ------------------------------------------------------------
+# Define a custom objective function for sampling
+import pypesto.sample as sample
+custom_objective = pypesto.Objective(fun=proxy_f, grad = None, hess = None, hessp = None)
+custom_problem = pypesto.Problem(objective=custom_objective, lb=lb, ub=ub, x_guesses=[params_for_MCMC], x_scales=parameter_scales, x_names = parameter_names)
 
-    
-#     formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
-#     ax.xaxis.set_major_formatter(formatter)
+n_samples = int(1e6)
+print(params_for_MCMC)
+sampler = sample.AdaptiveMetropolisSampler()
 
-#     ax.tick_params(axis='x', labelrotation=45, labelsize=8)
-#     ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+result_sampling = sample.sample(
+    problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=params_for_MCMC)
 
-# plt.tight_layout()
-# plt.show()
+with open("sampling_result.csv", 'w', newline='') as file:
+    writer = csv.writer(file)
+    samples = np.array(result_sampling.sample_result["trace_x"])[0]
+    writer.writerows(samples)
+
+
+# Plotting the results using Matplotlib ------------------------------------------------------------
+# Number of rows and columns for subplots
+rows, cols = 2, 3
+
+trace_array = np.loadtxt("sampling_result.csv", delimiter=",")
+
+# Plotting histograms
+fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
+axes = axs.flatten()
+
+num_params = trace_array.shape[1]
+
+for i in range(num_params):
+    ax = axes[i]
+    data_for_hist = trace_array[:, i]
+    ax.hist(data_for_hist, bins='auto', color='green')
+    ax.set_title(parameter_names[i])
+    ax.set_ylabel('Frequency')
+    ax.set_xlabel('Parameter value')
+
+    formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
+    ax.xaxis.set_major_formatter(formatter)
+    ax.tick_params(axis='x', labelrotation=45, labelsize=8)
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+
+# Hide any unused subplots
+for j in range(num_params, len(axes)):
+    fig.delaxes(axes[j])
+
+plt.tight_layout()
+plt.show()
 
 
 
-from scipy.optimize import minimize
+# from scipy.optimize import minimize
 
-def fcost_PL(param_log, model_sims, PK_data, PD_data, param_index, PL_revValue):
-    params = np.exp(param_log)
-    joint_cost, pk_cost, pd_cost = fcost_joint(params, model_sims, PK_data, PD_data)
+# def fcost_PL(param_log, model_sims, PK_data, PD_data, param_index, PL_revValue):
+#     params = np.exp(param_log)
+#     joint_cost, pk_cost, pd_cost = fcost_joint(params, model_sims, PK_data, PD_data)
 
-    # Profile penalty in log-space
-    penalty = 1e6 * (param_log[param_index] - PL_revValue)**2
-    return joint_cost + penalty
+#     # Profile penalty in log-space
+#     penalty = 1e6 * (param_log[param_index] - PL_revValue)**2
+#     return joint_cost + penalty
 
 
 # ---- Profile Likelihood Loop ----
-parameterIdx = 17  
-nSteps = 40
-step_size = 0.02
-best_param_log = np.log(best_param)
+# parameterIdx = 17  
+# nSteps = 40
+# step_size = 0.02
+# best_param_log = np.log(best_param)
 
-PL_revValues = np.zeros(nSteps * 2)
-PL_costs = np.zeros(nSteps * 2)
+# PL_revValues = np.zeros(nSteps * 2)
+# PL_costs = np.zeros(nSteps * 2)
 
 
-count = 0
-for direction in [-1, 1]:
-    for step in range(nSteps):
-        # Fix one parameter to profile
-        PL_revValues[count] = best_param_log[parameterIdx] + direction * step_size * step
-        obj_args = (model_sims, PK_data, PD_data, parameterIdx, PL_revValues[count])
+# count = 0
+# for direction in [-1, 1]:
+#     for step in range(nSteps):
+#         # Fix one parameter to profile
+#         PL_revValues[count] = best_param_log[parameterIdx] + direction * step_size * step
+#         obj_args = (model_sims, PK_data, PD_data, parameterIdx, PL_revValues[count])
 
-        # Run fast local optimization with L-BFGS-B
-        res = minimize(
-            fun=fcost_PL,
-            x0=best_param_log,
-            args=obj_args,
-            method='L-BFGS-B',
-            bounds=bounds_log,
-            options={'disp': False, 'maxiter': 100}
-        )
+#         # Run fast local optimization with L-BFGS-B
+#         res = minimize(
+#             fun=fcost_PL,
+#             x0=best_param_log,
+#             args=obj_args,
+#             method='L-BFGS-B',
+#             bounds=bounds_log,
+#             options={'disp': False, 'maxiter': 100}
+#         )
 
-        PL_costs[count] = res.fun
-        count += 1
+#         PL_costs[count] = res.fun
+#         count += 1
 
-# Reorder profile for plotting
-PL_revValues[0:nSteps] = PL_revValues[-(nSteps+1):-((2*nSteps)+1):-1]
-PL_costs[0:nSteps] = PL_costs[-(nSteps+1):-((2*nSteps)+1):-1]
+# # Reorder profile for plotting
+# PL_revValues[0:nSteps] = PL_revValues[-(nSteps+1):-((2*nSteps)+1):-1]
+# PL_costs[0:nSteps] = PL_costs[-(nSteps+1):-((2*nSteps)+1):-1]
 
-# Plot
-plt.figure()
-plt.plot(np.exp(PL_revValues), PL_costs, linestyle='--', marker='o', label='PL (fast)', color='k')
-plt.axhline(y=chi2.ppf(0.95, dgf_PK + dgf_PD), linestyle='--', color='r', label='Chi² threshold')
-plt.xlabel('Parameter value')
-plt.ylabel('Objective function value')
-plt.ylim(0, 1000)
-plt.legend()
-plt.tight_layout()
-plt.show()
+# # Plot
+# plt.figure()
+# plt.plot(np.exp(PL_revValues), PL_costs, linestyle='--', marker='o', label='PL (fast)', color='k')
+# plt.axhline(y=chi2.ppf(0.95, dgf_PK + dgf_PD), linestyle='--', color='r', label='Chi² threshold')
+# plt.xlabel('Parameter value')
+# plt.ylabel('Objective function value')
+# plt.ylim(0, 1000)
+# plt.legend()
+# plt.tight_layout()
+# plt.show()
+
+# from scipy.optimize import minimize, differential_evolution
+# import numpy as np
+
+# def fcost_PL(param_log, model_sims, PK_data, PD_data, param_index, PL_revValue):
+#     params = np.exp(param_log)
+#     joint_cost, pk_cost, pd_cost = fcost_joint(params, model_sims, PK_data, PD_data)
+
+#     # Profile penalty in log-space
+#     penalty = 1e6 * (param_log[param_index] - PL_revValue)**2
+#     return joint_cost + penalty
+
+# # ---- Profile Likelihood Loop ----
+# parameterIdx = 18  
+# nSteps = 40
+# step_size = 0.1
+# best_param_log = np.log(best_param)
+
+# PL_revValues = np.zeros(nSteps * 2)
+# PL_costs = np.zeros(nSteps * 2)
+
+# count = 0
+# max_retries = 3  # Number of times to retry with perturbed initial guess if optimization fails
+
+# for direction in [-1, 1]:
+#     for step in range(nSteps):
+#         PL_revValue = best_param_log[parameterIdx] + direction * step_size * step
+#         PL_revValues[count] = PL_revValue
+
+#         success = False
+#         retry = 0
+
+#         while not success and retry <= max_retries:
+#             # Start from perturbed log-params
+#             x0 = best_param_log + np.random.normal(0, 0.01, size=best_param_log.shape)
+#             x0[parameterIdx] = PL_revValue  # Keep profiled parameter fixed
+
+#             res = minimize(
+#                 fun=fcost_PL,
+#                 x0=x0,
+#                 args=(model_sims, PK_data, PD_data, parameterIdx, PL_revValue),
+#                 method='L-BFGS-B',
+#                 bounds=bounds_log,
+#                 options={'disp': False, 'maxiter': 1000}
+#             )
+
+#             success = res.success
+#             retry += 1
+
+#         # Fallback: use differential evolution if local fails repeatedly
+#         if not success:
+#             print(f"Local optimization failed after {max_retries} retries at step {count}. Trying global optimization.")
+#             def wrapper_de(p):
+#                 return fcost_PL(p, model_sims, PK_data, PD_data, parameterIdx, PL_revValue)
+
+#             result = differential_evolution(
+#                 func=wrapper_de,
+#                 bounds=bounds_log,
+#                 strategy='best1bin',
+#                 maxiter=20,
+#                 popsize=10,
+#                 polish=True,
+#                 disp=False
+#             )
+#             PL_costs[count] = result.fun
+#         else:
+#             PL_costs[count] = res.fun
+
+#         count += 1
+
+# # Reorder profile for plotting
+# PL_revValues[0:nSteps] = PL_revValues[-(nSteps+1):-((2*nSteps)+1):-1]
+# PL_costs[0:nSteps] = PL_costs[-(nSteps+1):-((2*nSteps)+1):-1]
+
+# # Plot
+# plt.figure()
+# plt.plot(np.exp(PL_revValues), PL_costs, linestyle='--', marker='o', label='PL (fast)', color='k')
+# plt.axhline(y=chi2.ppf(0.95, dgf_PK + dgf_PD), linestyle='--', color='r', label='Chi² threshold')
+# plt.xlabel('Parameter value')
+# plt.ylabel('Objective function value')
+# plt.ylim(0, 500)
+# plt.legend()
+# plt.tight_layout()
+# plt.show()
