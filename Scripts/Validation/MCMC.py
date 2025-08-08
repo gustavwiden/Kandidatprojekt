@@ -1,3 +1,4 @@
+# Import necessary libraries
 import os
 import re
 import numpy as np
@@ -16,6 +17,7 @@ import random
 import requests
 import pypesto
 import pypesto.optimize as optimize
+import pypesto.sample as sample
 
 from json import JSONEncoder
 class NumpyArrayEncoder(JSONEncoder):
@@ -28,11 +30,11 @@ class NumpyArrayEncoder(JSONEncoder):
 with open("../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
-# Open the PK data file and read its contents
+# Load PK data
 with open("../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
-# Open the PD data file and read its contents
+# Load PD data
 with open("../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
@@ -41,7 +43,7 @@ sund.install_model('../../Models/mPBPK_model.txt')
 print(sund.installed_models())
 model = sund.load_model("mPBPK_model")
 
-# Bodyweight for subject in kg
+# Average bodyweight for healthy volunteers (HV) (cohort 1-7 in the phase 1 trial)
 bodyweight = 73
 
 # Create activity objects for each dose
@@ -140,14 +142,14 @@ def callback(x, file_name):
         json.dump(out,file, cls=NumpyArrayEncoder)
 
 # Define the cost function arguments
-# This is a tuple containing the model simulations and PK data
 cost_function_args = (model_sims, PK_data, PD_data)
 
 # Convert the initial parameters to logarithmic scale for optimization
 initial_params_log = np.log(initial_params)
 
-# Bounds for the parameters
+# Bounds for the parameters were doubled to allow for more flexibility than in optimization
 bound_factors = [2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 4, 10, 1, 1]
+
 # Calculate the logarithmic bounds for the parameters
 # The bounds are defined as log(initial_params) ± log(bound_factors)
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
@@ -158,21 +160,17 @@ bounds_log = Bounds(lower_bounds, upper_bounds)
 print("Lower bounds:", np.exp(lower_bounds))
 print("Upper bounds:", np.exp(upper_bounds))
 
-# Define the cost function for the optimization in logarithmic scale
-# This function takes parameters in logarithmic scale, exponentiates them, and then calls the original cost function
-def fcost_log(params_log, sims, PK_data, PD_data):
-    return fcost(np.exp(params_log.copy()), sims, PK_data, PD_data)     
-
 # Define a callback function for logging the optimization progress
 # This function converts the parameter to original scale and calls the callback function to save the parameters
-def callback_log(x, file_name='PK-temp'):
+def callback_log(x, file_name='temp'):
     callback(np.exp(x), file_name=file_name)
 
 # Define a callback function for logging the evolution of the optimization
 # This function is called at each iteration of the optimization and calls the callback_log_PK function
 def callback_evolution_log(x,convergence):
-    callback_log(x, file_name='PK-temp-evolution')
+    callback_log(x, file_name='temp-evolution')
 
+# Create output directory for best results
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
 best_result_path = os.path.join(output_dir, 'best_result.json')
@@ -196,6 +194,8 @@ if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_
     with open(acceptable_params_path, 'r') as f:
         acceptable_params = json.load(f)
 
+# Define the cost function for optimization
+# This function calculates the cost based on the joint cost, PK cost, and PD cost
 def fcost_optimization(param_log, model_sims, PK_data, PD_data):
     global acceptable_params
     global best_cost
@@ -215,8 +215,10 @@ def fcost_optimization(param_log, model_sims, PK_data, PD_data):
 
     return joint_cost
 
+# THE OPTIMIZATION IS NOT RUN IN THIS SCRIPT, BUT IN OPTIMIZE_HV.py
+# HOWEVER, THE CODE IS LEFT HERE IN CASE IT IS NEEDED FOR FUTURE REFERENCE
 
-# for i in range(1):  # Run the optimization 1 time
+# for i in range(5):  # Run the optimization 5 times
 #     res = differential_evolution(
 #         func=fcost_optimization,
 #         bounds=bounds_log,
@@ -241,21 +243,24 @@ with open(os.path.join(output_dir, 'best_result.json'), 'w') as f:
 
 # print the number of acceptable parameter sets collected
 print(f"Number of acceptable parameter sets collected: {len(acceptable_params)}")
-# define objective function for pypesto 
 
+
+# MCMC sampling begins here ------------------------------------------------------------- 
 sampling_params = []
-
 best_param = np.array(best_param)
 
+# Define a proxy function for the cost function to be used in MCMC sampling
 def proxy_f(params):
     return fcost_sampling(params, model_sims, PK_data, PD_data, True)
 
+# Define a function to restore the full parameter set from the reduced parameters used in MCMC sampling
 def insert_params(selected_params, best_param, selected_indices):
     full_param = best_param.copy()
     full_param[selected_indices] = selected_params
     return full_param
 
-
+# Define the cost function for MCMC sampling
+# This function calculates the cost based on the joint cost, PK cost, and PD cost
 def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
     global best_param
     global best_cost
@@ -264,6 +269,7 @@ def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
     full_param = insert_params(params_reduced, best_param, selected_indices)
     joint_cost, pk_cost, pd_cost = fcost_joint(full_param, model_sims, PK_data, PD_data)
 
+    # Only save parameters if they are below BOTH chi2 limits
     if SaveParams and pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
         sampling_params.append(full_param)
 
@@ -274,47 +280,53 @@ def fcost_sampling(params_reduced, model_sims, PK_data, PD_data, SaveParams):
 
     return joint_cost
 
-
-# Optimization using pypesto ------------------------------------------------------------
+# Define the lower and upper bounds for the parameters used in MCMC sampling
 lb=np.array(np.exp(lower_bounds))[[0, 1, 12, 14, 15]]
 ub=np.array(np.exp(upper_bounds))[[0, 1, 12, 14, 15]]
 
+# Define the parameters to be used in MCMC sampling
 params_for_MCMC = best_param[[0, 1, 12, 14, 15]]
+print(params_for_MCMC)
 
+# Define the parameter scales and names for MCMC sampling
 parameter_scales = ['lin']*len(params_for_MCMC)
 parameter_names = ['F', 'ka',  'RC2',  'CL', 'kdeg']
 
-# MCMC sampling using pypesto ------------------------------------------------------------
-# Define a custom objective function for sampling
-import pypesto.sample as sample
+# Create a custom objective and create a custom problem for MCMC sampling
 custom_objective = pypesto.Objective(fun=proxy_f, grad = None, hess = None, hessp = None)
 custom_problem = pypesto.Problem(objective=custom_objective, lb=lb, ub=ub, x_guesses=[params_for_MCMC], x_scales=parameter_scales, x_names = parameter_names)
 
-n_samples = int(1e6)
-print(params_for_MCMC)
+# Set the number of samples and the sampler for MCMC sampling
+n_samples = int(1e2)
 sampler = sample.AdaptiveMetropolisSampler()
 
+# Run the MCMC sampling
 result_sampling = sample.sample(
     problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=params_for_MCMC)
 
-with open("sampling_result.csv", 'w', newline='') as file:
+# Save the sampling results to a CSV file
+with open(os.path.join(output_dir, "sampling_result.csv"), 'w', newline='') as file:
     writer = csv.writer(file)
     samples = np.array(result_sampling.sample_result["trace_x"])[0]
     writer.writerows(samples)
 
+# MCMC sampling ends here -------------------------------------------------------------
 
-# Plotting the results using Matplotlib ------------------------------------------------------------
-# Number of rows and columns for subplots
+
+# Plot the results!
+
+# Load the sampling results from the CSV file
+trace_array = np.loadtxt(os.path.join(output_dir, "sampling_result.csv"), delimiter=",")
+
+# Create a figure with subplots for each parameter
 rows, cols = 2, 3
-
-trace_array = np.loadtxt("sampling_result.csv", delimiter=",")
-
-# Plotting histograms
 fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
 axes = axs.flatten()
 
+# Adjust the number of subplots based on the number of parameters
 num_params = trace_array.shape[1]
 
+# Plot histograms for each parameter
 for i in range(num_params):
     ax = axes[i]
     data_for_hist = trace_array[:, i]
@@ -323,6 +335,7 @@ for i in range(num_params):
     ax.set_ylabel('Frequency')
     ax.set_xlabel('Parameter value')
 
+    # Set x-axis to scientific notation
     formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
     ax.xaxis.set_major_formatter(formatter)
     ax.tick_params(axis='x', labelrotation=45, labelsize=8)
@@ -332,10 +345,17 @@ for i in range(num_params):
 for j in range(num_params, len(axes)):
     fig.delaxes(axes[j])
 
+# Save the histogram
+save_dir_histogram = "../../Results/Validation"
+os.makedirs(save_dir_histogram, exist_ok=True)
+save_path = os.path.join(save_dir_histogram, "MCMC mPBPK-model.png")
+plt.savefig(save_path, format='png', dpi=600)
+
 plt.tight_layout()
 plt.show()
 
 
+# THIS PART IS FOR PROFILE LIKELIHOOD, HOWEVER IT IS NOT WORKING GREAT SO IT IS COMMENTED OUT FOR NOW
 
 # from scipy.optimize import minimize
 

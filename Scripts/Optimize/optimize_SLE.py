@@ -23,15 +23,15 @@ class NumpyArrayEncoder(JSONEncoder):
 with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
-# Open the data file and read its contents
+# Load SLE PK data
 with open("../../Data/SLE_PK_data.json", "r") as f:
     PK_data = json.load(f)
 
-# Open the data file and read its contents
+# Load SLE PD data
 with open("../../Data/SLE_PD_data.json", "r") as f:
     PD_data = json.load(f)
 
-# Define a function to plot one PK_dataset
+# Define a function to plot one PK dataset
 def plot_PK_dataset(PK_data, face_color='k'):
     plt.errorbar(PK_data['time'], PK_data['BIIB059_mean'], PK_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
     plt.xlabel('Time [Hours]')
@@ -43,7 +43,7 @@ def plot_PD_dataset(PD_data, face_color='k'):
     plt.xlabel('Time [Hours]')
     plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline')
 
-# Definition of the function that plots all PK_datasets
+# Define a function to plot all PK datasets
 def plot_PK_data(PK_data, face_color='k'):
     for experiment in PK_data:
         plt.figure()
@@ -62,7 +62,7 @@ sund.install_model('../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 model = sund.load_model("mPBPK_SLE_model")
 
-# Bodyweight for subject in kg
+# Average bodyweight for SLE patients (cohort 8 in the phase 1 trial)
 bodyweight = 69
 
 # Create activity objects for each dose
@@ -79,13 +79,13 @@ time_vectors_PK = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for e
 time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 
-# Define a function to plot the simulation results
+# Define a function to plot the PK simulation results
 def plot_sim_PK(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
 
-# Define a function to plot the simulation results with PK data
+# Define a function to plot the PK simulation results with PK data
 def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
     for experiment in PK_data:
         plt.figure()
@@ -94,12 +94,13 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
         plot_sim_PK(params, sims[experiment], timepoints, color)
         plt.title(experiment)
 
+# Define a function to plot the PD simulation results
 def plot_sim_PD(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
     feature_idx = sim.feature_names.index(feature_to_plot)
     plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
 
-# Define a function to plot the simulation results with PD data
+# Define a function to plot PD the simulation results with PD data
 def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
     for experiment in PD_data:
         plt.figure()
@@ -110,6 +111,7 @@ def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
 
 # Define the joint cost function for the optimization
 # This function calculates the cost based on the difference between simulations and PK/PD data
+# It was decided to only use the PK data for the optimization, which is why pd_weight is set to 0.
 def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     # PK cost
     pk_cost = 0
@@ -154,38 +156,61 @@ dgf_PD = sum(np.count_nonzero(np.isfinite(PD_data[exp]["SEM"])) for exp in PD_da
 chi2_limit_PK = chi2.ppf(0.95, dgf_PK)
 chi2_limit_PD = chi2.ppf(0.95, dgf_PD)
 
+# Print the chi2 limits
 print(f"PK Chi2 limit: {chi2_limit_PK:.2f}", f"PD Chi2 limit: {chi2_limit_PD:.2f}")
 
 # Plot the simulation results with PK and PD data
 plot_sim_with_PK_data(initial_params, model_sims, PK_data)
 plot_sim_with_PD_data(initial_params, model_sims, PD_data)
+
+# Show the plots
 plt.show()
 
-# Callback and optimization setup
+# Define a callback function to save the optimization results
+# This function saves the current parameters and their cost to a JSON file
 def callback(x, file_name):
     with open(f"./{file_name}.json",'w') as file:
         out = {"x": x}
         json.dump(out,file, cls=NumpyArrayEncoder)
 
+# Define the cost function arguments
 cost_function_args = (model_sims, PK_data, PD_data)
+
+# Convert the initial parameters to logarithmic scale for optimization
 initial_params_log = np.log(initial_params)
+
+# Bounds for the parameters
+# The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
+# Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
+# To adapt model from HV to SLE, only linear clearance (CL) was re-optimized
 bound_factors = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1]
+
+# Calculate the logarithmic bounds for the parameters
+# The bounds are defined as log(initial_params) ± log(bound_factors)
 lower_bounds = np.log(initial_params) - np.log(bound_factors)
 upper_bounds = np.log(initial_params) + np.log(bound_factors)
 bounds_log = Bounds(lower_bounds, upper_bounds)
+
+# Print the bounds for the parameters
 print("Lower bounds:", np.exp(lower_bounds))
 print("Upper bounds:", np.exp(upper_bounds))
 
+# Define the cost function for the optimization in logarithmic scale
+# This function takes parameters in logarithmic scale, exponentiates them, and then calls the original cost function
 def callback_log(x, file_name='SLE-temp'):
     callback(np.exp(x), file_name=file_name)
 
+# Define a callback function for logging the optimization progress
+# This function converts the parameter to original scale and calls the callback function to save the parameters
 def callback_evolution_log(x,convergence):
     callback_log(x, file_name='SLE-temp-evolution')
 
+# Create the output directory for saving results
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
 best_result_path = os.path.join(output_dir, 'best_SLE_result.json')
 
+# Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
     with open(best_result_path, 'r') as f:
         best_data = json.load(f)
@@ -195,13 +220,17 @@ else:
     best_cost = np.inf
     best_param = None
 
+# Create list to store all acceptable parameter sets
 acceptable_params = []
+
+# Load existing acceptable parameter sets if the file exists
 acceptable_params_path = os.path.join(output_dir, 'acceptable_params_SLE.json')
 if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_path) > 0:
     with open(acceptable_params_path, 'r') as f:
         acceptable_params = json.load(f)
 
-# Cost function for uncertainty analysis (accept only if both PK and PD are below their chi2 limits)
+# Define the cost function for uncertainty analysis
+# This function calculates the cost and updates the acceptable parameters and best cost if the cost is improved
 def fcost_uncertainty(param_log, model, PK_data, PD_data):
     global acceptable_params
     global best_cost
@@ -210,7 +239,8 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     params = np.exp(param_log)
     joint_cost, pk_cost, pd_cost = fcost_joint(params, model, PK_data, PD_data)
 
-    # Only accept parameter sets that are below BOTH chi2 limits
+    # Only accept parameter sets that are below the chi2 limit for PK
+    # In this case, parameter sets which exceed the chi2 limit for PD are still accepted, since the PD data was deemed not reliable enough
     if pk_cost < chi2_limit_PK:
         acceptable_params.append(params)
 
@@ -222,6 +252,7 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     return joint_cost
 
 # Perform optimization using differential evolution
+# This optimization runs multiple iterations to find the best parameters that minimize the cost function
 for i in range(5):  # Run the optimization 5 times
     res = differential_evolution(
         func=fcost_uncertainty,
@@ -245,18 +276,25 @@ with open(os.path.join(output_dir, 'acceptable_params_SLE.json'), 'w') as f:
 with open(os.path.join(output_dir, 'best_SLE_result.json'), 'w') as f:
     json.dump({'best_cost': best_cost, 'best_param': best_param.tolist()}, f, cls=NumpyArrayEncoder)
 
+# print the number of acceptable parameter sets collected
 print(f"Number of acceptable parameter sets collected: {len(acceptable_params)}")
 
-# Plot the uncertainty of PK in the model using the acceptable parameters
+# Define a function to plot uncertainty of PK and PD in the model
+# This function randomly selects a subset of 500 acceptable parameter sets and plots their simulations against PK and PD data
 def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_plot=500):
     random.shuffle(all_params)
 
+    # PK
     for experiment in PK_data:
         print(f"\nPlotting uncertainty for: {experiment}")
         plt.figure()
         timepoints = time_vectors_PK[experiment]
+
+        # Keep track of successful and failed simulations
         success_count = 0
         fail_count = 0
+
+        # Plot parameter sets until n_params_to_plot is reached or all parameters are exhausted
         for param in all_params:
             if success_count >= n_params_to_plot:
                 break
@@ -269,15 +307,21 @@ def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_
                     continue
                 else:
                     raise e
+
+        # Plot the PK data and title for the experiment
         plot_PK_dataset(PK_data[experiment])
         plt.title(experiment)
+
+        # Print the number of successful and failed simulations
         print(f"  Successful simulations: {success_count}")
         print(f"  Failed (CVODE) simulations: {fail_count}")
-
+    # PD
     for experiment in PD_data:
         print(f"\nPlotting uncertainty for: {experiment}")
         plt.figure()
         timepoints = time_vectors_PD[experiment]
+
+        # Keep track of successful and failed simulations
         success_count = 0
         fail_count = 0
         for param in all_params:
@@ -292,11 +336,16 @@ def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_
                     continue
                 else:
                     raise e
+        
+        # Plot the PD data and title for the experiment
         plot_PD_dataset(PD_data[experiment])
         plt.title(experiment)
+
+        # Print the number of successful and failed simulations
         print(f"  Successful simulations: {success_count}")
         print(f"  Failed (CVODE) simulations: {fail_count}")
 
+# Plot the uncertainty of the model simulations using the acceptable parameters
 plot_uncertainty(acceptable_params, model_sims, PK_data, PD_data)
 
 # Show the plots

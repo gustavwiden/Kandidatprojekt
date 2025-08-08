@@ -13,38 +13,84 @@ class NumpyArrayEncoder(JSONEncoder):
             return obj.tolist()
         return JSONEncoder.default(self, obj)
 
+# Open the mPBPK_model.txt file and read its contents
+with open("../../../Models/mPBPK_model.txt", "r") as f:
+    lines = f.readlines()
+
+# Load the acceptable parameters for HV
+with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
+    acceptable_params = json.load(f)
+
+with open("../../../Models/final_parameters.json", "r") as f:
+    params_HV = json.load(f)
+
 # Open the mPBPK_SLE_model.txt file and read its contents
 with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
     lines = f.readlines()
 
-# Open the data file and read its contents
+# Load the SLE PD data for plotting
 with open("../../../Data/SLE_PD_data_plotting.json", "r") as f:
-    PD_data = json.load(f)
+    SLE_PD_data = json.load(f)
 
+# Load the acceptable parameters for SLE
 with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
-    acceptable_params = json.load(f)
+    acceptable_params_SLE = json.load(f)
 
-def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PD', feature_to_plot='PD_sim'):
+with open("../../../Models/final_parameters_SLE.json", "r") as f:
+    params_SLE = json.load(f)
+
+# Define a function to plot all doses with uncertainty
+def plot_all_doses_with_uncertainty(params_HV, acceptable_params_HV, sims_HV, params_SLE, acceptable_params_SLE, sims_SLE, SLE_PD_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PD'):
     os.makedirs(save_dir, exist_ok=True)
 
-    colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
-    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
+    # Colors and markers for different doses
+    dose_colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
+    markers = ['o', 's', 'D', '^', 'P', 'X']
 
-    for i, experiment in enumerate(PD_data):
+    # Loop through each experiment in SLE_PD_data
+    for i, experiment in enumerate(SLE_PD_data):
         plt.figure()
-        color = colors[i % len(colors)]
-        marker = markers[i % len(markers)]
         timepoints = time_vectors[experiment]
-        y_min = np.full_like(timepoints, np.inf)
-        y_max = np.full_like(timepoints, -np.inf)
+        color = dose_colors[i % len(dose_colors)]
+        marker = markers[i % len(markers)]
+
+        # HV
+        y_min = np.full_like(timepoints, 10000)
+        y_max = np.full_like(timepoints, -10000)
 
         # Calculate uncertainty range
-        for params in acceptable_params:
+        for params in acceptable_params_HV:
             try:
-                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
-                y_sim = sims[experiment].feature_data[:, 1]
-                y_min = np.minimum(y_min, y_sim)
-                y_max = np.maximum(y_max, y_sim)
+                sims_HV[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                y_HV = sims_HV[experiment].feature_data[:, 1]
+                y_min = np.minimum(y_min, y_HV)
+                y_max = np.maximum(y_max, y_HV)
+            except RuntimeError as e:
+                if "CV_ERR_FAILURE" in str(e):
+                    print(f"Skipping unstable parameter set for {experiment}")
+                else:
+                    raise e
+
+        # Plot uncertainty range
+        plt.fill_between(timepoints, y_min, y_max, color='lightgrey', alpha=0.3)
+
+        # Plot optimal parameters
+        sims_HV[experiment].simulate(time_vector=timepoints, parameter_values=params_HV, reset=True)
+        y_HV = sims_HV[experiment].feature_data[:, 1]
+        plt.plot(timepoints, y_HV, color='black', linestyle='-', label='HV')
+
+        
+       # SLE
+        y_min = np.full_like(timepoints, 10000)
+        y_max = np.full_like(timepoints, -10000)
+
+        # Calculate uncertainty range
+        for params in acceptable_params_SLE:
+            try:
+                sims_SLE[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                y_SLE = sims_SLE[experiment].feature_data[:, 1]
+                y_min = np.minimum(y_min, y_SLE)
+                y_max = np.maximum(y_max, y_SLE)
             except RuntimeError as e:
                 if "CV_ERR_FAILURE" in str(e):
                     print(f"Skipping unstable parameter set for {experiment}")
@@ -54,65 +100,70 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         # Plot uncertainty range
         plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
 
-        # Plot selected parameter set
-        sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
-        y_selected = sims[experiment].feature_data[:, 1]
-        plt.plot(timepoints, y_selected, color=color)
+        # Plot optimal simulation
+        sims_SLE[experiment].simulate(time_vector=timepoints, parameter_values=params_SLE, reset=True)
+        y_SLE = sims_SLE[experiment].feature_data[:, 1]
+        plt.plot(timepoints, y_SLE, color=color, linestyle='-', label='SLE')
 
+        # Plot the only available SLE data set
         if experiment == 'IVdose_20_SLE':
-            plt.errorbar(
-                PD_data[experiment]['time'],
-                PD_data[experiment]['BDCA2_median'],
-                yerr=PD_data[experiment]['SEM'],
-                marker=marker,
-                color=color,
-                linestyle='None'
-            )
+            plt.errorbar(SLE_PD_data[experiment]['time'],
+                         SLE_PD_data[experiment]['BDCA2_median'],
+                         yerr=SLE_PD_data[experiment]['SEM'],
+                         fmt=marker,
+                         color=color,
+                         linestyle='None',
+                         label='SLE data')
 
+        # Set plot labels and legend
         plt.xlabel('Time [Hours]')
         plt.ylabel('BDCA2 expression on pDCs (% change from baseline)')
         plt.title(experiment)
-        plt.tick_params(axis='both', which='major')
+        plt.legend()
         plt.tight_layout()
 
-        save_path_svg = os.path.join(save_dir, f"{experiment}_PD_plot.svg")
-        save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.png")
-        plt.savefig(save_path_svg, format='svg', bbox_inches='tight')
-        plt.savefig(save_path_png, format='png', bbox_inches='tight', dpi=600)
+        # Save the figure
+        save_path = os.path.join(save_dir, f"{experiment}_vs_SLE_PD.png")
+        plt.savefig(save_path, format='png', bbox_inches='tight', dpi=600)
 
-## Setup of the model
-# Install the model
+
+# Install the models
+sund.install_model('../../../Models/mPBPK_model.txt')
 sund.install_model('../../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
 
-# Load the model object
-model = sund.load_model("mPBPK_SLE_model")
+# Load the model objects
+model = sund.load_model("mPBPK_model")
+SLE_model = sund.load_model("mPBPK_SLE_model")
 
-# Creating activities for the different doses
-bodyweight = 69 # Bodyweight for subject in kg
+# Average bodyweight for SLE patients (cohort 8 in the phase 1 trial)
+# Since HV plots are only for comparison, not to fit PD data, the same bodyweight is used
+bodyweight = 69
 
+# Creating activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
-IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_005_HV']['input']['IV_in']['f']))
+IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_005_HV']['input']['IV_in']['f']))
 
 IV_03_HV = sund.Activity(time_unit='h')
-IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_03_HV']['input']['IV_in']['f']))
+IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_03_HV']['input']['IV_in']['f']))
 
 IV_1_HV = sund.Activity(time_unit='h')
-IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_1_HV']['input']['IV_in']['f']))
+IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_1_HV']['input']['IV_in']['f']))
 
 IV_3_HV = sund.Activity(time_unit='h')
-IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_3_HV']['input']['IV_in']['f']))
+IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_3_HV']['input']['IV_in']['f']))
 
 IV_10_HV = sund.Activity(time_unit='h')
-IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_10_HV']['input']['IV_in']['f']))
+IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_10_HV']['input']['IV_in']['f']))
 
 IV_20_SLE = sund.Activity(time_unit='h')
-IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_20_SLE']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_20_SLE']['input']['IV_in']['f']))
+IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = SLE_PD_data['IVdose_20_SLE']['input']['IV_in']['t'],  f = bodyweight * np.array(SLE_PD_data['IVdose_20_SLE']['input']['IV_in']['f']))
 
 SC_50_HV = sund.Activity(time_unit='h')
-SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PD_data['SCdose_50_HV']['input']['SC_in']['f'])
+SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = SLE_PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = SLE_PD_data['SCdose_50_HV']['input']['SC_in']['f'])
 
-model_sims = {
+# Creating simulation objects for each dose in HV
+HV_model_sims = {
     'IVdose_005_HV': sund.Simulation(models = model, activities = IV_005_HV, time_unit = 'h'),
     'IVdose_03_HV': sund.Simulation(models = model, activities = IV_03_HV, time_unit = 'h'),
     'IVdose_1_HV': sund.Simulation(models = model, activities = IV_1_HV, time_unit = 'h'),
@@ -122,9 +173,29 @@ model_sims = {
     'SCdose_50_HV': sund.Simulation(models = model, activities = SC_50_HV, time_unit = 'h')
 }
 
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
+# Creating simulation objects for each dose in SLE
+SLE_model_sims = {
+    'IVdose_005_HV': sund.Simulation(models=SLE_model, activities=IV_005_HV, time_unit='h'),
+    'IVdose_03_HV': sund.Simulation(models=SLE_model, activities=IV_03_HV, time_unit='h'),
+    'IVdose_1_HV': sund.Simulation(models=SLE_model, activities=IV_1_HV, time_unit='h'),
+    'IVdose_3_HV': sund.Simulation(models=SLE_model, activities=IV_3_HV, time_unit='h'),
+    'IVdose_10_HV': sund.Simulation(models=SLE_model, activities=IV_10_HV, time_unit = 'h'),
+    'IVdose_20_SLE': sund.Simulation(models=SLE_model, activities=IV_20_SLE, time_unit='h'),
+    'SCdose_50_HV': sund.Simulation(models=SLE_model, activities=SC_50_HV, time_unit='h')
+}
 
-params = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.75, 0.95, 0.7467544604963505, 0.2, 0.006287779429323163, 0.9621937056820449, 0.9621937056820449, 5.539999999999999, 5.539999999999999, 2623.9999999999995]
+# Define the time vectors for each experiment
+time_vectors = {exp: np.arange(-10, SLE_PD_data[exp]["time"][-1] + 2000, 1) for exp in SLE_PD_data}
 
-# Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params, acceptable_params, model_sims, PD_data, time_vectors)
+# Call the function to plot all doses with uncertainty
+plot_all_doses_with_uncertainty(
+    params_HV=params_HV,
+    acceptable_params_HV=acceptable_params,
+    sims_HV=HV_model_sims,
+    params_SLE=params_SLE,
+    acceptable_params_SLE=acceptable_params_SLE,
+    sims_SLE=SLE_model_sims,
+    SLE_PD_data=SLE_PD_data,
+    time_vectors=time_vectors
+)
+

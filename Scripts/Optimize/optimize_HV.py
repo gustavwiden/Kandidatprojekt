@@ -24,15 +24,15 @@ class NumpyArrayEncoder(JSONEncoder):
 with open("../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
-# Open the data file and read its contents
+# Load PK data
 with open("../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
-# Open the data file and read its contents
+# Load PD data
 with open("../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
-# Define a function to plot one PK_dataset
+# Define a function to plot one PK dataset
 def plot_PK_dataset(PK_data, face_color='k'):
     plt.errorbar(PK_data['time'], PK_data['BIIB059_mean'], PK_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
     plt.xlabel('Time [Hours]')
@@ -44,7 +44,7 @@ def plot_PD_dataset(PD_data, face_color='k'):
     plt.xlabel('Time [Hours]')
     plt.ylabel('BDCA2 levels on pDCs, percentage change from baseline')
 
-# Definition of the function that plots all PK_datasets
+# Define a function to plots all PK datasets
 def plot_PK_data(PK_data, face_color='k'):
     for experiment in PK_data:
         plt.figure()
@@ -63,7 +63,7 @@ sund.install_model('../../Models/mPBPK_model.txt')
 print(sund.installed_models())
 model = sund.load_model("mPBPK_model")
 
-# Bodyweight for subject in kg
+# Average bodyweight for healthy volunteers (HV) (cohort 1-7 in the phase 1 trial)
 bodyweight = 73
 
 # Create activity objects for each dose
@@ -105,13 +105,12 @@ time_vectors_PK = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for e
 time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 
-# Define a function to plot the simulation results
-def plot_sim_PK(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
+# Define a function to plot the PK simulation results
+def plot_sim_PK(params, sim, timepoints, color='b'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
+    plt.plot(sim.time_vector, sim.feature_data[:, 0], color)
 
-# Define a function to plot the simulation results with PK data
+# Define a function to plot the PK simulation results with PK data
 def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
     for experiment in PK_data:
         plt.figure()
@@ -120,12 +119,12 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
         plot_sim_PK(params, sims[experiment], timepoints, color)
         plt.title(experiment)
 
-def plot_sim_PD(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
+# Define a function to plot the PD simulation results
+def plot_sim_PD(params, sim, timepoints, color='b'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
+    plt.plot(sim.time_vector, sim.feature_data[:, 1], color)
 
-# Define a function to plot the simulation results with PD data
+# Define a function to plot the PD simulation results with PD data
 def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
     for experiment in PD_data:
         plt.figure()
@@ -181,7 +180,7 @@ dgf_PD = sum(np.count_nonzero(np.isfinite(PD_data[exp]["SEM"])) for exp in PD_da
 chi2_limit_PK = chi2.ppf(0.95, dgf_PK)
 chi2_limit_PD = chi2.ppf(0.95, dgf_PD)
 
-# Print the chi-squared limit and whether the cost exceeds it
+# Print the chi2 limits
 print(f"PK Chi2 limit: {chi2_limit_PK}", f"PD Chi2 limit: {chi2_limit_PD}")
 
 # Plot the simulation results with PK and PD data
@@ -199,7 +198,6 @@ def callback(x, file_name):
         json.dump(out,file, cls=NumpyArrayEncoder)
 
 # Define the cost function arguments
-# This is a tuple containing the model simulations and PK data
 cost_function_args = (model_sims, PK_data, PD_data)
 
 # Convert the initial parameters to logarithmic scale for optimization
@@ -208,7 +206,6 @@ initial_params_log = np.log(initial_params)
 # Bounds for the parameters
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
-# Additionally, since this is an optimization of PK, parameters related to PD are also frozen
 bound_factors = [1.25, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 5, 1, 1]
 
 # Calculate the logarithmic bounds for the parameters
@@ -221,21 +218,17 @@ bounds_log = Bounds(lower_bounds, upper_bounds)
 print("Lower bounds:", np.exp(lower_bounds))
 print("Upper bounds:", np.exp(upper_bounds))
 
-# Define the cost function for the optimization in logarithmic scale
-# This function takes parameters in logarithmic scale, exponentiates them, and then calls the original cost function
-def fcost_log(params_log, sims, PK_data, PD_data):
-    return fcost(np.exp(params_log.copy()), sims, PK_data, PD_data)     
-
 # Define a callback function for logging the optimization progress
 # This function converts the parameter to original scale and calls the callback function to save the parameters
-def callback_log(x, file_name='PK-temp'):
+def callback_log(x, file_name='temp'):
     callback(np.exp(x), file_name=file_name)
 
 # Define a callback function for logging the evolution of the optimization
-# This function is called at each iteration of the optimization and calls the callback_log_PK function
+# This function is called at each iteration of the optimization and calls the callback_log function
 def callback_evolution_log(x,convergence):
-    callback_log(x, file_name='PK-temp-evolution')
+    callback_log(x, file_name='temp-evolution')
 
+# Create the output directory for saving results
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
 best_result_path = os.path.join(output_dir, 'best_result.json')
@@ -269,7 +262,7 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     params = np.exp(param_log)
     joint_cost, pk_cost, pd_cost = fcost_joint(params, model, PK_data, PD_data)
 
-    # Only accept parameter sets that are below BOTH chi2 limits
+    # Only accept parameter sets that are below BOTH chi2 limits and update the best cost if the joint cost is lower
     if pk_cost < chi2_limit_PK and pd_cost < chi2_limit_PD:
         acceptable_params.append(params)
 
@@ -282,8 +275,7 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
 
 # Perform optimization using differential evolution
 # This optimization runs multiple iterations to find the best parameters that minimize the cost function
-
-for i in range(2):  # Run the optimization 5 times
+for i in range(5):  # Run the optimization 5 times
     res = differential_evolution(
         func=fcost_uncertainty,
         bounds=bounds_log,
@@ -309,15 +301,15 @@ with open(os.path.join(output_dir, 'best_result.json'), 'w') as f:
 # print the number of acceptable parameter sets collected
 print(f"Number of acceptable parameter sets collected: {len(acceptable_params)}")
 
-# Define a function to plot uncertainty of PK in the model
-# This function randomly selects a subset of 500 acceptable parameter sets and plots their simulations against the PK data
+# Define a function to plot uncertainty of PK and PD in the model
+# This function randomly selects a subset of 500 acceptable parameter sets and plots their simulations against PK and PD data
 def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_plot=500):
     random.shuffle(all_params)
 
+    # PK
     for experiment in PK_data:
         print(f"\nPlotting uncertainty for: {experiment}")
         plt.figure()
-       
         timepoints = time_vectors_PK[experiment]
 
         # Keep track of successful and failed simulations
@@ -338,7 +330,7 @@ def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_
                 else:
                     raise e
 
-         # Plot the PK data and title for the experiment
+        # Plot the PK data and title for the experiment
         plot_PK_dataset(PK_data[experiment])
         plt.title(experiment)
 
@@ -346,6 +338,7 @@ def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_
         print(f"  Successful simulations: {success_count}")
         print(f"  Failed (CVODE) simulations: {fail_count}")
 
+    # PD
     for experiment in PD_data:
         print(f"\nPlotting uncertainty for: {experiment}")
         plt.figure()
@@ -377,7 +370,7 @@ def plot_uncertainty(all_params, sims, PK_data, PD_data, color='b', n_params_to_
         print(f"  Successful simulations: {success_count}")
         print(f"  Failed (CVODE) simulations: {fail_count}")
 
-# Plot the uncertainty of PK in the model using the acceptable parameters
+# Plot the uncertainty of the model simulations using the acceptable parameters
 plot_uncertainty(acceptable_params, model_sims, PK_data, PD_data)
 
 # Show the plots

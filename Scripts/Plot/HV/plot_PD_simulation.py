@@ -17,23 +17,29 @@ class NumpyArrayEncoder(JSONEncoder):
 with open("../../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
-# Open the data file and read its contents
+# Open the PD data file and read its contents
 with open("../../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
+# Load acceptable parameters for mPBPK-model
 with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
     acceptable_params = json.load(f)
 
-def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/HV/PD', feature_to_plot='PD_sim'):
+# Load final parameters for mPBPK-model
+with open("../../../Models/final_parameters.json", "r") as f:
+    params = json.load(f)
+
+# Define a function to plot all doses with uncertainty in different figures
+def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD_data, time_vectors, save_dir='../../../Results/HV/PD'):
     os.makedirs(save_dir, exist_ok=True)
 
+    # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
 
-    for i, experiment in enumerate(PD_data):
+    #Loop through each experiment
+    for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
         plt.figure()
-        color = colors[i % len(colors)]
-        marker = markers[i % len(markers)]
         timepoints = time_vectors[experiment]
         y_min = np.full_like(timepoints, np.inf)
         y_max = np.full_like(timepoints, -np.inf)
@@ -60,6 +66,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         plt.plot(timepoints, y_selected, color=color)
 
         # Plot experimental data
+        marker = markers[i]
         plt.errorbar(
             PD_data[experiment]['time'],
             PD_data[experiment]['BDCA2_median'],
@@ -69,12 +76,14 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
             linestyle='None'
         )
 
+        # Set labels
         plt.xlabel('Time [Hours]')
         plt.ylabel('BDCA2 expression on pDCs (% change from baseline)')
         plt.title(experiment)
         plt.tick_params(axis='both', which='major')
         plt.tight_layout()
 
+        # Save the figure
         save_path_png = os.path.join(save_dir, f"{experiment}_PD_plot.png")
         plt.savefig(save_path_png, format='png', dpi=600)
         plt.close()
@@ -87,9 +96,10 @@ print(sund.installed_models())
 # Load the model object
 model = sund.load_model("mPBPK_model")
 
-# Creating activities for the different doses
-bodyweight = 73 # Bodyweight for subject in kg
+# Average bodyweight for healthy volunteers (HV) (cohort 1-7 in the phase 1 trial)
+bodyweight = 73
 
+# Creating activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
 IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_005_HV']['input']['IV_in']['f']))
 
@@ -108,6 +118,7 @@ IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_20_HV
 SC_50_HV = sund.Activity(time_unit='h')
 SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PD_data['SCdose_50_HV']['input']['SC_in']['f'])
 
+# Creating simulation objects for each dose
 model_sims = {
     'IVdose_005_HV': sund.Simulation(models = model, activities = IV_005_HV, time_unit = 'h'),
     'IVdose_03_HV': sund.Simulation(models = model, activities = IV_03_HV, time_unit = 'h'),
@@ -117,9 +128,8 @@ model_sims = {
     'SCdose_50_HV': sund.Simulation(models = model, activities = SC_50_HV, time_unit = 'h')
 }
 
+# Define time vectors for each dose
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
-params_HV = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.95, 0.95, 0.7467544604963505, 0.2, 0.00549200604682213, 0.9621937056820449, 5.539999999999999, 2623.9999999999995]
-
 # Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params_HV, acceptable_params, model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params, acceptable_params, model_sims, PD_data, time_vectors)
