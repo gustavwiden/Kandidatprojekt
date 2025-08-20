@@ -21,7 +21,7 @@ with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
 with open("../../../Data/SLE_PK_data_plotting.json", "r") as f:
     PK_data = json.load(f)
 
-# Load acceptable parameters for mPBPK_SLE_model
+# Load acceptable parameters for mPBPK_model
 with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
     acceptable_params = json.load(f)
 
@@ -32,7 +32,7 @@ with open("../../../Models/final_parameters_SLE.json", "r") as f:
 # Define a function to plot all doses with uncertainty in the same figure
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/SLE/Plasma/PK'):
     os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(12, 7))
+    plt.figure(figsize=(12, 8))
 
     # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
@@ -51,19 +51,19 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
     label_positions = {
         'IVdose_005_HV': (250, 0.04),
-        'IVdose_03_HV':  (600, 0.3),
-        'IVdose_1_HV':   (2050, 0.04),
-        'IVdose_3_HV':   (2350, 0.01),
+        'IVdose_03_HV':  (580, 0.3),
+        'IVdose_1_HV':   (750, 3.8),
+        'IVdose_3_HV':   (2250, 0.01),
         'IVdose_10_HV':  (750, 14),
         'IVdose_20_SLE':  (1900, 30),
-        'SCdose_50_HV':  (1220, 0.05),
+        'SCdose_50_HV':  (1220, 0.025),
     }
     
     # Loop through each experiment
     for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
         timepoints = time_vectors[experiment]
-        y_min = np.full_like(timepoints, np.inf)
-        y_max = np.full_like(timepoints, -np.inf)
+        y_min = np.full_like(timepoints, 10000)
+        y_max = np.full_like(timepoints, -10000)
 
         # Calculate uncertainty range
         for params in acceptable_params:
@@ -108,12 +108,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
                      color=color, fontsize=18, weight='bold')
 
     # Set plot title and labels
-    plt.xlabel('Time [Hours]', fontsize=22)
-    plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
+    plt.xlabel('Time [Hours]', fontsize=20)
+    plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)', fontsize=20)
     plt.yscale('log')
     plt.ylim(0.002, 1000)
     plt.xlim(-25, 2750)
-    plt.tick_params(axis='both', which='major', labelsize=22)
+    plt.tick_params(axis='both', which='major', labelsize=18)
     plt.tight_layout()
 
     # Save the figure

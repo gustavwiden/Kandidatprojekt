@@ -117,7 +117,7 @@ def plot_all_doses_with_uncertainty(params_HV, acceptable_params_HV, sims_HV, pa
 
         # Set plot labels and legend
         plt.xlabel('Time [Hours]')
-        plt.ylabel('BDCA2 expression on pDCs (% change from baseline)')
+        plt.ylabel('Total BDCA2 Expression on pDCs (% Change from Baseline)')
         plt.title(experiment)
         plt.legend()
         plt.tight_layout()

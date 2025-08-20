@@ -21,18 +21,17 @@ with open("../../../Models/mPBPK_model.txt", "r") as f:
 with open("../../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
-# Load acceptable parameters for mPBPK_model
-with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
-    acceptable_params = json.load(f)
+# Load acceptable parameters for mPBPK_model from PL
+acceptable_params_PL = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
-# Load final parameters for mPBPK_model
+# Load final parameters for mPBPK_model from optimization
 with open("../../../Models/final_parameters.json", "r") as f:
     params = json.load(f)
 
 # Define a function to plot all doses with uncertainty in the same figure
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/HV/PK'):
     os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(12, 7))
+    plt.figure(figsize=(12, 8))
 
     # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
@@ -50,20 +49,20 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     }
 
     label_positions = {
-        'IVdose_005_HV': (400, 0.1),
-        'IVdose_03_HV':  (200, 0.6),
+        'IVdose_005_HV': (400, 0.06),
+        'IVdose_03_HV':  (300, 0.6),
         'IVdose_1_HV':   (1480, 0.11),
-        'IVdose_3_HV':   (1570, 2),
-        'IVdose_10_HV':  (780, 20),
+        'IVdose_3_HV':   (780, 7),
+        'IVdose_10_HV':  (780, 22),
         'IVdose_20_HV':  (1900, 66),
-        'SCdose_50_HV':  (820, 0.2),
+        'SCdose_50_HV':  (800, 0.16),
     }
     
     # Loop through each experiment
     for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
         timepoints = time_vectors[experiment]
-        y_min = np.full_like(timepoints, np.inf)
-        y_max = np.full_like(timepoints, -np.inf)
+        y_min = np.full_like(timepoints, 10000)
+        y_max = np.full_like(timepoints, -10000)
 
         # Calculate uncertainty range
         for params in acceptable_params:
@@ -106,12 +105,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
                      color=color, fontsize=18, weight='bold')
 
     # Set labels
-    plt.xlabel('Time [Hours]', fontsize=22)
-    plt.ylabel('BIIB059 Plasma Concentration (µg/ml)', fontsize=22)
+    plt.xlabel('Time [Hours]', fontsize=20)
+    plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)', fontsize=20)
     plt.yscale('log')
-    plt.ylim(0.01, 1000)
+    plt.ylim(0.005, 1000)
     plt.xlim(-25, 2750)
-    plt.tick_params(axis='both', which='major', labelsize=22)
+    plt.tick_params(axis='both', which='major', labelsize=18)
     plt.tight_layout()
 
     # Text to describe the figure
@@ -125,8 +124,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
     plt.annotate(
         'Uncertainty',
-        xy=(2500, 0.8), # Arrow's coordinates
-        xytext=(2100, 0.1),  # Text coordinates
+        xy=(2450, 0.8), # Arrow's coordinates
+        xytext=(2050, 0.1),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
@@ -140,8 +139,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     )
 
     # Save the figure
-    save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
-    plt.savefig(save_path, format='svg', bbox_inches='tight')
+    save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
+    plt.savefig(save_path, format='png', bbox_inches='tight', dpi=600)
     plt.close()
 
 # Install the model
@@ -191,4 +190,4 @@ model_sims = {
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
 # Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params, acceptable_params, model_sims, PK_data, time_vectors)
+plot_all_doses_with_uncertainty(params, acceptable_params_PL, model_sims, PK_data, time_vectors)

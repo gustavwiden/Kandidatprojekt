@@ -9,7 +9,7 @@ import sund
 import json
 from scipy.stats import chi2
 from scipy.optimize import Bounds
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, minimize
 from scipy.integrate import odeint
 import sys
 import csv
@@ -68,7 +68,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     for dose in PK_data:
         try:
             sims[dose].simulate(time_vector=PK_data[dose]["time"], parameter_values=params, reset=True)
-            PK_sim = sims[dose].feature_data[:, sims[dose].feature_names.index('PK_sim')]
+            PK_sim = sims[dose].feature_data[:, 0]
             y = PK_data[dose]["BIIB059_mean"]
             SEM = PK_data[dose]["SEM"]
             pk_cost += np.sum(np.square(((PK_sim - y) / SEM)))
@@ -82,7 +82,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     for dose in PD_data:
         try:
             sims[dose].simulate(time_vector=PD_data[dose]["time"], parameter_values=params, reset=True)
-            PD_sim = sims[dose].feature_data[:, sims[dose].feature_names.index('PD_sim')]
+            PD_sim = sims[dose].feature_data[:, 1]
             y = PD_data[dose]["BDCA2_median"]
             SEM = PD_data[dose]["SEM"]
             pd_cost += np.sum(np.square(((PD_sim - y) / SEM)))
@@ -95,7 +95,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.598, 0.0135, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.75, 0.95, 0.75, 0.2, 0.00549, 0.962, 0.1, 5.54, 5.54, 2624]
+initial_params = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.8, 0.95, 0.7467544604963505, 0.2, 0.00552, 0.9621937056820449, 0.05, 5.539999999999999, 5.539999999999999, 2623.9999999999995]
 
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
@@ -310,7 +310,7 @@ plt.xlabel('Parameter value')
 # Set x-axis to scientific notation
 formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
 plt.gca().xaxis.set_major_formatter(formatter)
-plt.gca().tick_params(axis='x', labelrotation=45, labelsize=8)
+plt.gca().tick_params(axis='x', labelsize=8)
 plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
 
 # Save the histogram
@@ -320,91 +320,4 @@ save_path = os.path.join(save_dir_histogram, "MCMC SLE mPBPK-model.png")
 plt.savefig(save_path, format='png', dpi=600)
 
 plt.tight_layout()
-plt.close
-
-
-# THIS PART IS FOR PROFILE LIKELIHOOD, HOWEVER IT IS NOT WORKING GREAT SO IT IS COMMENTED OUT FOR NOW
-
-# from scipy.optimize import minimize, differential_evolution
-# import numpy as np
-
-# def fcost_PL(param_log, model_sims, PK_data, PD_data, param_index, PL_revValue):
-#     params = np.exp(param_log)
-#     joint_cost, pk_cost, pd_cost = fcost_joint(params, model_sims, PK_data, PD_data)
-
-#     # Profile penalty in log-space
-#     penalty = 1e6 * (param_log[param_index] - PL_revValue)**2
-#     return joint_cost + penalty
-
-# # ---- Profile Likelihood Loop ----
-# parameterIdx = 14  
-# nSteps = 40
-# step_size = 0.005
-# best_param_log = np.log(best_param)
-
-# PL_revValues = np.zeros(nSteps * 2)
-# PL_costs = np.zeros(nSteps * 2)
-
-# count = 0
-# max_retries = 3  # Number of times to retry with perturbed initial guess if optimization fails
-
-# for direction in [-1, 1]:
-#     for step in range(nSteps):
-#         PL_revValue = best_param_log[parameterIdx] + direction * step_size * step
-#         PL_revValues[count] = PL_revValue
-
-#         success = False
-#         retry = 0
-
-#         while not success and retry <= max_retries:
-#             # Start from perturbed log-params
-#             x0 = best_param_log + np.random.normal(0, 0.01, size=best_param_log.shape)
-#             x0[parameterIdx] = PL_revValue  # Keep profiled parameter fixed
-
-#             res = minimize(
-#                 fun=fcost_PL,
-#                 x0=x0,
-#                 args=(model_sims, PK_data, PD_data, parameterIdx, PL_revValue),
-#                 method='L-BFGS-B',
-#                 bounds=bounds_log,
-#                 options={'disp': False, 'maxiter': 1000}
-#             )
-
-#             success = res.success
-#             retry += 1
-
-#         # Fallback: use differential evolution if local fails repeatedly
-#         if not success:
-#             print(f"Local optimization failed after {max_retries} retries at step {count}. Trying global optimization.")
-#             def wrapper_de(p):
-#                 return fcost_PL(p, model_sims, PK_data, PD_data, parameterIdx, PL_revValue)
-
-#             result = differential_evolution(
-#                 func=wrapper_de,
-#                 bounds=bounds_log,
-#                 strategy='best1bin',
-#                 maxiter=20,
-#                 popsize=10,
-#                 polish=True,
-#                 disp=False
-#             )
-#             PL_costs[count] = result.fun
-#         else:
-#             PL_costs[count] = res.fun
-
-#         count += 1
-
-# # Reorder profile for plotting
-# PL_revValues[0:nSteps] = PL_revValues[-(nSteps+1):-((2*nSteps)+1):-1]
-# PL_costs[0:nSteps] = PL_costs[-(nSteps+1):-((2*nSteps)+1):-1]
-
-# # Plot
-# plt.figure()
-# plt.plot(np.exp(PL_revValues), PL_costs, linestyle='--', marker='o', label='PL (fast)', color='k')
-# plt.axhline(y=chi2.ppf(0.95, dgf_PK + dgf_PD), linestyle='--', color='r', label='Chi² threshold')
-# plt.xlabel('Parameter value')
-# plt.ylabel('Objective function value')
-# plt.ylim(0, 100)
-# plt.legend()
-# plt.tight_layout()
-# plt.show()
+plt.close()

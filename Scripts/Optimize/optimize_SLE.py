@@ -80,10 +80,9 @@ time_vectors_PD = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for e
 
 
 # Define a function to plot the PK simulation results
-def plot_sim_PK(params, sim, timepoints, color='b', feature_to_plot='PK_sim'):
+def plot_sim_PK(params, sim, timepoints, color='b'):
     sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:,feature_idx], color)
+    plt.plot(sim.time_vector, sim.feature_data[:, 0], color)
 
 # Define a function to plot the PK simulation results with PK data
 def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
@@ -95,10 +94,9 @@ def plot_sim_with_PK_data(params, sims, PK_data, color='b'):
         plt.title(experiment)
 
 # Define a function to plot the PD simulation results
-def plot_sim_PD(params, sim, timepoints, color='b', feature_to_plot='PD_sim'):
+def plot_sim_PD(params, sim, timepoints, color='b'):
     sim.simulate(time_vector=timepoints, parameter_values=params, reset=True)
-    feature_idx = sim.feature_names.index(feature_to_plot)
-    plt.plot(sim.time_vector, sim.feature_data[:, feature_idx], color)
+    plt.plot(sim.time_vector, sim.feature_data[:, 1], color)
 
 # Define a function to plot PD the simulation results with PD data
 def plot_sim_with_PD_data(params, sims, PD_data, color='b'):
@@ -118,7 +116,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     for dose in PK_data:
         try:
             sims[dose].simulate(time_vector=PK_data[dose]["time"], parameter_values=params, reset=True)
-            PK_sim = sims[dose].feature_data[:, sims[dose].feature_names.index('PK_sim')]
+            PK_sim = sims[dose].feature_data[:, 0]
             y = PK_data[dose]["BIIB059_mean"]
             SEM = PK_data[dose]["SEM"]
             pk_cost += np.sum(np.square(((PK_sim - y) / SEM)))
@@ -132,7 +130,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     for dose in PD_data:
         try:
             sims[dose].simulate(time_vector=PD_data[dose]["time"], parameter_values=params, reset=True)
-            PD_sim = sims[dose].feature_data[:, sims[dose].feature_names.index('PD_sim')]
+            PD_sim = sims[dose].feature_data[:, 1]
             y = PD_data[dose]["BDCA2_median"]
             SEM = PD_data[dose]["SEM"]
             pd_cost += np.sum(np.square(((PD_sim - y) / SEM)))
@@ -145,7 +143,7 @@ def fcost_joint(params, sims, PK_data, PD_data, pk_weight=1.0, pd_weight=0.0):
     return joint_cost, pk_cost, pd_cost
 
 # Define the initial guesses for the parameters
-initial_params = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.75, 0.95, 0.7467544604963505, 0.2, 0.00549200604682213, 0.9621937056820449, 0.1, 5.539999999999999, 5.539999999999999, 2623.9999999999995]
+initial_params = [0.5982467918487137, 0.013501146489749132, 2.6, 1.125, 6.986999999999999, 4.368, 2.6, 0.006499999999999998, 0.033800000000000004, 0.08100000000000002, 0.8, 0.95, 0.7467544604963505, 0.2, 0.00552, 0.9621937056820449, 0.05, 5.539999999999999, 5.539999999999999, 2623.9999999999995]
 # Print cost for initial parameters
 cost = fcost_joint(initial_params, model_sims, PK_data, PD_data)
 print(f"Joint cost: {cost[0]:.2f}, PK cost: {cost[1]:.2f}, PD cost: {cost[2]:.2f}")
@@ -208,7 +206,7 @@ def callback_evolution_log(x,convergence):
 # Create the output directory for saving results
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
-best_result_path = os.path.join(output_dir, 'best_SLE_result.json')
+best_result_path = os.path.join(output_dir, 'best_SLE_result_500_pdc_mm2.json')
 
 # Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
@@ -224,7 +222,7 @@ else:
 acceptable_params = []
 
 # Load existing acceptable parameter sets if the file exists
-acceptable_params_path = os.path.join(output_dir, 'acceptable_params_SLE.json')
+acceptable_params_path = os.path.join(output_dir, 'acceptable_params_SLE_500_pdc_mm2.json')
 if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_path) > 0:
     with open(acceptable_params_path, 'r') as f:
         acceptable_params = json.load(f)
@@ -264,16 +262,16 @@ for i in range(5):  # Run the optimization 5 times
     )
 
 # Save all acceptable parameter sets to a CSV file
-with open(os.path.join(output_dir, 'acceptable_params_SLE.csv'), 'w', newline='') as csvfile:
+with open(os.path.join(output_dir, 'acceptable_params_SLE_500_pdc_mm2.csv'), 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerows(acceptable_params)
 
 # Save all acceptable parameter sets to a JSON file
-with open(os.path.join(output_dir, 'acceptable_params_SLE.json'), 'w') as f:
+with open(os.path.join(output_dir, 'acceptable_params_SLE_500_pdc_mm2.json'), 'w') as f:
     json.dump(acceptable_params, f, cls=NumpyArrayEncoder)
 
 # Save the best parameter set to a JSON file
-with open(os.path.join(output_dir, 'best_SLE_result.json'), 'w') as f:
+with open(os.path.join(output_dir, 'best_SLE_result_500_pdc_mm2.json'), 'w') as f:
     json.dump({'best_cost': best_cost, 'best_param': best_param.tolist()}, f, cls=NumpyArrayEncoder)
 
 # print the number of acceptable parameter sets collected

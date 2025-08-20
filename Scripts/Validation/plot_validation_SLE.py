@@ -29,17 +29,6 @@ with open("../../Results/Acceptable params/acceptable_params_SLE.json", "r") as 
 with open("../../Models/final_parameters_SLE.json", "r") as f:
     params = json.load(f)
 
-# Define a function to plot one PK_dataset
-def plot_PK_dataset(PK_data, face_color='k'):
-    plt.errorbar(PK_data['time'], PK_data['BIIB059_mean'], PK_data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
-    plt.xlabel('Time [Hours]')
-    plt.ylabel('BIIB059 serum conc. (µg/ml)')
-
-# Define a function to plot the PK simulation
-def plot_sim_PK(params, sim, timepoints, color='b'):
-    sim.simulate(time_vector = timepoints, parameter_values = params, reset = True)
-    plt.plot(sim.time_vector, sim.feature_data[:, 0], color)
-
 # Install and load the model
 sund.install_model('../../Models/mPBPK_SLE_model.txt')
 print(sund.installed_models())
@@ -116,7 +105,7 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
 
         # Labels and title
         plt.xlabel('Time [Hours]')
-        plt.ylabel('BIIB059 Plasma Concentration (µg/ml)')
+        plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)')
         plt.title(experiment)
         plt.tight_layout()
 

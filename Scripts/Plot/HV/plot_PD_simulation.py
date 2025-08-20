@@ -21,11 +21,10 @@ with open("../../../Models/mPBPK_model.txt", "r") as f:
 with open("../../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
-# Load acceptable parameters for mPBPK-model
-with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
-    acceptable_params = json.load(f)
+# Load acceptable parameters for mPBPK-model from PL
+acceptable_params_PL = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
-# Load final parameters for mPBPK-model
+# Load final parameters for mPBPK-model form optimization
 with open("../../../Models/final_parameters.json", "r") as f:
     params = json.load(f)
 
@@ -78,7 +77,7 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
 
         # Set labels
         plt.xlabel('Time [Hours]')
-        plt.ylabel('BDCA2 expression on pDCs (% change from baseline)')
+        plt.ylabel('Total BDCA2 Expression on pDCs (% Change from Baseline)')
         plt.title(experiment)
         plt.tick_params(axis='both', which='major')
         plt.tight_layout()
@@ -132,4 +131,4 @@ model_sims = {
 time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
 
 # Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params, acceptable_params, model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params, acceptable_params_PL, model_sims, PD_data, time_vectors)

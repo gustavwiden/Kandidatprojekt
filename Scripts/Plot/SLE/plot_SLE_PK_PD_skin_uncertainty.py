@@ -30,12 +30,13 @@ with open("../../../Data/CLE_Validation_PK_data.json", "r") as f:
     PK_data_phase_2B = json.load(f)
 
 # Load acceptable parameters for mPBPK_SLE_model
-with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
+with open("../../../Results/Acceptable params/acceptable_params_SLE_pre_skin_investigation.json", "r") as f:
     acceptable_params = json.load(f)
 
-# Load final parameters for mPBPK_SLE_model
-with open("../../../Models/final_parameters_SLE.json", "r") as f:
-    params = json.load(f)
+# Load best parameters found for the mPBPK_SLE_model yet
+with open("../../../Results/Acceptable params/best_SLE_result_pre_skin_investigation.json", "r") as f:
+    best_data = json.load(f)
+    best_params = np.array(best_data['best_param'])
 
 # Install the model
 sund.install_model('../../../Models/mPBPK_SLE_model.txt')
@@ -121,20 +122,21 @@ time_vectors_phase_2A = {exp: np.arange(-10, PK_data_phase_2A[exp]["time"][-1] +
 time_vectors_phase_2B = {exp: np.arange(-10, PK_data_phase_2B[exp]["time"][-1] + 0.01, 1) for exp in PK_data_phase_2B}
 
 # Define a function to change the value of skin-specific parameters
-def change_skin_specific_parameter(params, param_index, values):
+def change_skin_specific_parameters(best_params, param_indices, param_values, param_labels):
     new_skin_params = []
-    for v in values:
-        original_params = params.copy()
-        original_params[param_index] = v
-        new_skin_params.append(original_params)
+    for l in range(len(param_labels)):
+        best_params_copy = best_params.copy()
+        for i, index in enumerate(param_indices):
+            best_params_copy[index] = param_values[i][l]
+        new_skin_params.append(best_params_copy)
     return new_skin_params
 
 # Define a function to plot the influence of skin-specific parameters on PK or PD simulations
-def plot_skin_PK_with_uncertainty(model, new_skin_params, params, acceptable_params, PK_data_dicts, time_vectors_dicts, sim_dicts, param_labels, save_dir = '../../../Results/SLE/Skin/PD/Parameter sensitivity/RCS'):
+def plot_skin_PK_PD_with_uncertainty(model, new_skin_params, best_params, acceptable_params, PK_data_dicts, time_vectors_dicts, sim_dicts, param_labels, save_dir = '../../../Results/SLE/Skin/PD/Parameter sensitivity/Combination'):
     os.makedirs(save_dir, exist_ok=True)
 
     # Linestyles for different parameter sets
-    linestyles = ['--', ':']
+    linestyles = ['--', ':', '-.']
 
     # Colors for different doses
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf', '#6d65bf', '#6c5ce7', '#8c7ae6', '#6d65bf', '#6c5ce7', '#8c7ae6']
@@ -178,10 +180,10 @@ def plot_skin_PK_with_uncertainty(model, new_skin_params, params, acceptable_par
 
             # Plot uncertainty range and original parameter set
             plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
-            sims[experiment].simulate(time_vector=timepoints, parameter_values=SLE_params, reset=True)          
+            sims[experiment].simulate(time_vector=timepoints, parameter_values=best_params, reset=True)          
             # y = sims[experiment].feature_data[:, 2] # PK plots
             y = sims[experiment].feature_data[:, 3] # PD plots
-            plt.plot(timepoints, y, color=color, linewidth=2, label='RCS = 0.75')
+            plt.plot(timepoints, y, color=color, linewidth=2, label='kdegs = 0.96')
 
             # Set labels, title and legends
             plt.xlabel('Time [Hours]')
@@ -193,38 +195,49 @@ def plot_skin_PK_with_uncertainty(model, new_skin_params, params, acceptable_par
             plt.tight_layout()
 
             # Save the figure
-            save_path = os.path.join(save_dir, f"{experiment}_skin_PD_RCS_uncertainty.png")
+            save_path = os.path.join(save_dir, f"{experiment}_skin_PD_kdegs_RCS_combination.png")
             plt.savefig(save_path, format='png', bbox_inches='tight', dpi=600)
             plt.close()
 
 # Simulate the models sensitivity to changes in RCS
-param_index = 10
-parameter_values = [0.6, 0.9]
-param_labels = ['RCS = 0.6', 'RCS = 0.9']
+# param_indices = [10]
+# param_values = [[0.5, 0.75]]
+# param_labels = ['RCS = 0.5', 'RCS = 0.75']
 
 # Simulate the models sensitivity to changes in kdegs
-# param_index = 16
-# parameter_values = [0.1, 10]
-# param_labels = ['kdegs = 0.1 h-1', 'kdegs = 10 h-1']
+# param_indices = [16]
+# param_values = [[0.02, 0.5]]
+# param_labels = ['kdegs = 0.02 h-1', 'kdegs = 0.5 h-1']
 
 # Simulate the models sensitivity to changes in kints
-# param_index = 18
-# parameter_values = [0.5, 40]
+# param_indices = [18]
+# param_values = [[0.5, 40]]
 # param_labels = ['kints = 0.5 h-1', 'kints = 40 h-1']
 
-# Create new parameter sets with the changed skin-specific parameter
-new_skin_params = change_skin_specific_parameter(params, param_index, parameter_values)
+# Simulate the models sensitivity to changes in kints and RCS simultaneously
+param_indices = [10, 16]
+param_values = [[0.8, 0.8, 0.8], [0.2, 0.1, 0.05]]
+param_labels = ['kdegs = 0.2', 'kdegs = 0.1', 'kdegs = 0.05']
 
-# Create dictionaries for PK data, time vectors, and simulation objects
-PK_data_dicts = {'phase_1': PK_data_phase_1, 'phase_2A': PK_data_phase_2A, 'phase_2B': PK_data_phase_2B}
-time_vectors_dicts = { 'phase_1': time_vectors_phase_1, 'phase_2A': time_vectors_phase_2A, 'phase_2B': time_vectors_phase_2B}
-sim_dicts = { 'phase_1': model_sims_phase_1, 'phase_2A': model_sims_phase_2A, 'phase_2B': model_sims_phase_2B }
+
+# Create new parameter sets with the changed skin-specific parameter
+new_skin_params = change_skin_specific_parameters(best_params, param_indices, param_values, param_labels)
+
+# Create dictionaries for PK data, time vectors and simulation objects with only phase 1 (used for finding optimal skin-parameter values)
+PK_data_dicts = {'phase_1': PK_data_phase_1}
+time_vectors_dicts = { 'phase_1': time_vectors_phase_1}
+sim_dicts = { 'phase_1': model_sims_phase_1}
+
+# Create dictionaries for PK data, time vectors and simulation objects with phase 1 and 2AB (used to plot validations once optimal values for skin-parameters have been found)
+# PK_data_dicts = {'phase_1': PK_data_phase_1, 'phase_2A': PK_data_phase_2A, 'phase_2B': PK_data_phase_2B}
+# time_vectors_dicts = { 'phase_1': time_vectors_phase_1, 'phase_2A': time_vectors_phase_2A, 'phase_2B': time_vectors_phase_2B}
+# sim_dicts = { 'phase_1': model_sims_phase_1, 'phase_2A': model_sims_phase_2A, 'phase_2B': model_sims_phase_2B }
 
 # Plot the influence of skin-specific parameters on PK or PD simulations
-plot_skin_PK_with_uncertainty(
+plot_skin_PK_PD_with_uncertainty(
     model=model,
     new_skin_params= new_skin_params,
-    params=params,
+    best_params=best_params,
     acceptable_params=acceptable_params,
     PK_data_dicts=PK_data_dicts,
     time_vectors_dicts=time_vectors_dicts,
