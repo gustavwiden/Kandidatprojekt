@@ -7,19 +7,19 @@ import sund
 import matplotlib.pyplot as plt
 
 # Load SLE PK data
-# with open("../../../Data/SLE_PK_data.json", "r") as f:
-#     PK_data = json.load(f)
-
-# Load SLE Validation PK data
-with open("../../../Data/SLE_Validation_PK_data.json", "r") as f:
+with open("../../../Data/SLE_PK_data.json", "r") as f:
     PK_data = json.load(f)
 
+# Load SLE Validation PK data
+# with open("../../../Data/SLE_Validation_PK_data.json", "r") as f:
+#     PK_data = json.load(f)
+
 # Load the best parameters for SLE
-with open("../../../Results/Acceptable params/best_SLE_result_179_pdc_mm2.json", 'r') as f:
+with open("../../../Results/Acceptable params/best_SLE_result.json", 'r') as f:
     params = np.array(json.load(f)['best_param'])
 
 # Load acceptable parameters for SLE
-with open("../../../Results/Acceptable params/acceptable_params_SLE_179_pdc_mm2.json", "r") as f:
+with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
     acceptable_params = json.load(f)
 
 # Load the mPBPK_SLE_model
@@ -34,26 +34,26 @@ model = sund.load_model("mPBPK_SLE_model")
 bodyweight = 69
 
 # Creating activity objects for each dose
-# IV_20_SLE = sund.Activity(time_unit='h')
-# IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=PK_data['IVdose_20_SLE']['input']['IV_in']['t'],  f=bodyweight * np.array(PK_data['IVdose_20_SLE']['input']['IV_in']['f']))
+IV_20_SLE = sund.Activity(time_unit='h')
+IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=PK_data['IVdose_20_SLE']['input']['IV_in']['t'],  f=bodyweight * np.array(PK_data['IVdose_20_SLE']['input']['IV_in']['f']))
 
-SC_50_SLE = sund.Activity(time_unit='h')
-SC_50_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_50_SLE']['input']['SC_in']['f'])
+# SC_50_SLE = sund.Activity(time_unit='h')
+# SC_50_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_50_SLE']['input']['SC_in']['f'])
 
-SC_150_SLE = sund.Activity(time_unit='h')
-SC_150_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_150_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_150_SLE']['input']['SC_in']['f'])
+# SC_150_SLE = sund.Activity(time_unit='h')
+# SC_150_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_150_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_150_SLE']['input']['SC_in']['f'])
 
-SC_450_SLE = sund.Activity(time_unit='h')
-SC_450_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_450_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_450_SLE']['input']['SC_in']['f'])
+# SC_450_SLE = sund.Activity(time_unit='h')
+# SC_450_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_450_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_450_SLE']['input']['SC_in']['f'])
 
-# 'IVdose_20_SLE': sund.Simulation(models=model, activities=IV_20_SLE, time_unit='h')
+'IVdose_20_SLE': sund.Simulation(models=model, activities=IV_20_SLE, time_unit='h')
 
 # Creating simulation objects for each dose
-model_sims = {
-            'SCdose_50_SLE': sund.Simulation(models=model, activities=SC_50_SLE, time_unit='h'),
-            'SCdose_150_SLE': sund.Simulation(models=model, activities=SC_150_SLE, time_unit='h'),
-            'SCdose_450_SLE': sund.Simulation(models=model, activities=SC_450_SLE, time_unit='h')
-            }
+# model_sims = {
+#             'SCdose_50_SLE': sund.Simulation(models=model, activities=SC_50_SLE, time_unit='h'),
+#             'SCdose_150_SLE': sund.Simulation(models=model, activities=SC_150_SLE, time_unit='h'),
+#             'SCdose_450_SLE': sund.Simulation(models=model, activities=SC_450_SLE, time_unit='h')
+#             }
 
 # Define the time vectors for each dose
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 2000, 1) for exp in PK_data}
@@ -130,11 +130,11 @@ def plot_PK_PD_sim_with_data(params, acceptable_params, sims, PK_data, time_vect
         # Legends and title
         ax1.legend(bbox_to_anchor=(0.95, 0.60))
         ax2.legend(bbox_to_anchor=(0.95, 0.50))
-        plt.title(f"Simulation of a {label} for a patient with 179 pDCs/mm²")
+        plt.title(f"Simulation of a {label} for a patient with 32 pDCs/mm²")
         plt.tight_layout()
 
         # Save the figure
-        save_path = os.path.join(save_dir, f"{experiment}_PK_PD_sim_179_pDC_mm2.png")
+        save_path = os.path.join(save_dir, f"{experiment}_PK_PD_sim_32_pDC_mm2.png")
         plt.savefig(save_path, dpi=600)
         plt.show()
 

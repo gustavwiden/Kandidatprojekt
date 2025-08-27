@@ -23,7 +23,7 @@ Leaky(0) = 0                                            // Initial concentration
 Lymph(0) = 0                                            // Initial concentration of total BIIB059 in lymph compartment (pM).
 Depot(0) = 0                                            // Initial amount of total BIIB059 in depot compartment (pmol).
 BDCA2_plasma(0) = 15.9                                  // Initial concentration of total BDCA2 in plasma compartment (pM).
-BDCA2_skin(0) = 13442                                    // Initial concentration of total BDCA2 in skin compartment (pM).
+BDCA2_skin(0) = 2403                                    // Initial concentration of total BDCA2 in skin compartment (pM).
 
 ########## PARAMETERS
 F = 0.598                                               // Bioavailibility.
@@ -52,7 +52,7 @@ ksynp = kdegp*15.9                                                              
 Plasma_free = 0.5*((Plasma - kss - BDCA2_plasma) + sqrt((Plasma - kss - BDCA2_plasma)^2 + 4*Plasma*kss))        // Concentration of free BIIB059 in plasma compartment (pM).
 BDCA2_plasma_bound = (BDCA2_plasma * Plasma_free) / (kss + Plasma_free)                                         // Concentration of bound BDCA2 in plasma compartment (pM).
 
-ksyns = kdegs*13442                                                                                              // Synthesis rate of BDCA2 in skin compartment (pM/h).
+ksyns = kdegs*2403                                                                                              // Synthesis rate of BDCA2 in skin compartment (pM/h).
 Skin_free = 0.5*((Skin - kss - BDCA2_skin) + sqrt((Skin - kss - BDCA2_skin)^2 + 4*Skin*kss))                    // Concentration of free BIIB059 in skin compartment (pM).   
 BDCA2_skin_bound = (BDCA2_skin * Skin_free) / (kss + Skin_free)                                                 // Concentration of bound BDCA2 in skin compartment (pM).
 
@@ -89,4 +89,4 @@ SC = SC_in @ 0
 PK_sim = (Plasma_free*146600)/1e9                                  // Simulation: Concentration of free BIIB059 in plasma compartment (μg/mL).
 PD_sim = 100*(BDCA2_plasma-15.9)/15.9                              // Simulation: Expression of total BDCA2 on pDCs in plasma compartment (% change from baseline).
 PK_sim_skin = (Skin_free*146600)/1e9                               // Simulation: Concentration of free BIIB059 in skin compartment (μg/mL).
-PD_sim_skin = 100*(BDCA2_skin-BDCA2_skin_bound-13442)/13442          // Simulation: Expression of free BDCA2 on pDCs in skin compartment (% change from baseline).
+PD_sim_skin = 100*(BDCA2_skin-BDCA2_skin_bound-2403)/2403          // Simulation: Expression of free BDCA2 on pDCs in skin compartment (% change from baseline).
