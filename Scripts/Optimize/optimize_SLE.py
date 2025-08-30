@@ -206,7 +206,7 @@ def callback_evolution_log(x,convergence):
 # Create the output directory for saving results
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
-best_result_path = os.path.join(output_dir, 'best_SLE_result_500_pdc_mm2.json')
+best_result_path = os.path.join(output_dir, 'best_SLE_result_10_pdc_mm2.json')
 
 # Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
@@ -222,7 +222,7 @@ else:
 acceptable_params = []
 
 # Load existing acceptable parameter sets if the file exists
-acceptable_params_path = os.path.join(output_dir, 'acceptable_params_SLE_500_pdc_mm2.json')
+acceptable_params_path = os.path.join(output_dir, 'acceptable_params_SLE_10_pdc_mm2.json')
 if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_path) > 0:
     with open(acceptable_params_path, 'r') as f:
         acceptable_params = json.load(f)
@@ -262,16 +262,16 @@ for i in range(5):  # Run the optimization 5 times
     )
 
 # Save all acceptable parameter sets to a CSV file
-with open(os.path.join(output_dir, 'acceptable_params_SLE_500_pdc_mm2.csv'), 'w', newline='') as csvfile:
+with open(os.path.join(output_dir, 'acceptable_params_SLE_10_pdc_mm2.csv'), 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerows(acceptable_params)
 
 # Save all acceptable parameter sets to a JSON file
-with open(os.path.join(output_dir, 'acceptable_params_SLE_500_pdc_mm2.json'), 'w') as f:
+with open(os.path.join(output_dir, 'acceptable_params_SLE_10_pdc_mm2.json'), 'w') as f:
     json.dump(acceptable_params, f, cls=NumpyArrayEncoder)
 
 # Save the best parameter set to a JSON file
-with open(os.path.join(output_dir, 'best_SLE_result_500_pdc_mm2.json'), 'w') as f:
+with open(os.path.join(output_dir, 'best_SLE_result_10_pdc_mm2.json'), 'w') as f:
     json.dump({'best_cost': best_cost, 'best_param': best_param.tolist()}, f, cls=NumpyArrayEncoder)
 
 # print the number of acceptable parameter sets collected
