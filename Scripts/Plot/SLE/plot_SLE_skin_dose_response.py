@@ -510,10 +510,11 @@ def plot_skin_plasma_AUC_ratio(params, acceptable_params, models, time_vector):
         )
 
     plt.xticks(x + 1.5*bar_width, dose_sizes, fontsize=16)
+    plt.tick_params(axis='y', which='major', labelsize=16)
     plt.ylabel('AUC Skin/Plasma Ratio [%]', fontsize=18)
     plt.xlabel('IV Dose Size [mg/kg]', fontsize=18)
     plt.yscale('log')
-    plt.ylim(0.01, 60)
+    plt.ylim(0.001, 60)
     plt.suptitle('Simulated AUC Skin/Plasma Ratio of Litifilimab Concentration', fontsize=22)
     plt.title('Measured over 16 Weeks for a 70 kg SLE Patient', fontsize=18)
     plt.legend(title='pDC Density', title_fontsize=18, fontsize=16)
@@ -540,9 +541,9 @@ time_vectors_IV_SC = {'IV_20': time_vector_IV_20, 'SC_50': time_vector_SC_50, 'S
 
 # plot_dose_response_IV_doses_gradient(dose_response_datasets)
 
-plot_skin_PK_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
+# plot_skin_PK_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
 
 # plot_skin_PD_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
 
-# plot_skin_plasma_AUC_ratio(best_param_sets, acceptable_param_sets, models, time_vector_AUC)
+plot_skin_plasma_AUC_ratio(best_param_sets, acceptable_param_sets, models, time_vector_AUC)
 
