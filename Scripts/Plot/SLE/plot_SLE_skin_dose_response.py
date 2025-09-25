@@ -79,43 +79,46 @@ bodyweight = 70
 
 # Creating activity objects for each dose
 IV_005_SLE = sund.Activity(time_unit='h')
-IV_005_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 50]))
+IV_005_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 50]))
 
 IV_03_SLE = sund.Activity(time_unit='h')
-IV_03_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 300]))
+IV_03_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 300]))
 
 IV_1_SLE = sund.Activity(time_unit='h')
-IV_1_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 1000]))
+IV_1_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 1000]))
 
 IV_3_SLE = sund.Activity(time_unit='h')
-IV_3_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 3000]))
+IV_3_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 3000]))
 
 IV_10_SLE = sund.Activity(time_unit='h')
-IV_10_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 10000]))
+IV_10_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 10000]))
 
 IV_20_SLE = sund.Activity(time_unit='h')
-IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 20000]))
+IV_20_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 20000]))
 
 IV_40_SLE = sund.Activity(time_unit='h')
-IV_40_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 40000]))
+IV_40_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 40000]))
 
 IV_60_SLE = sund.Activity(time_unit='h')
-IV_60_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t=[0],  f=bodyweight*np.array([0, 60000]))
+IV_60_SLE.add_output("piecewise_constant", "IV_in",  t=[0],  f=bodyweight*np.array([0, 60000]))
 
 SC_50_SLE = sund.Activity(time_unit='h')
-SC_50_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_50_SLE']['input']['SC_in']['f'])
+SC_50_SLE.add_output("piecewise_constant", "SC_in",  t = PK_data['SCdose_50_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_50_SLE']['input']['SC_in']['f'])
 
 SC_150_SLE = sund.Activity(time_unit='h')
-SC_150_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_150_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_150_SLE']['input']['SC_in']['f'])
+SC_150_SLE.add_output("piecewise_constant", "SC_in",  t = PK_data['SCdose_150_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_150_SLE']['input']['SC_in']['f'])
 
 SC_450_SLE = sund.Activity(time_unit='h')
-SC_450_SLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_450_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_450_SLE']['input']['SC_in']['f'])
+SC_450_SLE.add_output("piecewise_constant", "SC_in",  t = PK_data['SCdose_450_SLE']['input']['SC_in']['t'],  f = PK_data['SCdose_450_SLE']['input']['SC_in']['f'])
 
 # Define the time vectors for each dose
 time_vector_low_IV_doses = np.arange(-10, 200, 1)
 time_vector_medium_IV_doses = np.arange(-10, 2000, 1)
-time_vector_high_IV_doses = np.arange(-10, 4500, 1)
-time_vector_multiple_SC_doses = np.arange(-10, 7000, 1)
+time_vector_high_IV_doses = np.arange(-10, 4600, 1)
+time_vector_IV_20 = np.arange(-10, 4200, 1)
+time_vector_SC_50 = np.arange(-10, 6000, 1)
+time_vector_SC_150 = np.arange(-10, 7000, 1)
+time_vector_SC_450 = np.arange(-10, 8000, 1)
 time_vector_AUC = np.arange(0, 2688, 1)
 
 # Define a function to plot PK and PD simulations in skin together
@@ -219,25 +222,20 @@ def plot_skin_PK_PD_simulations_together(params, acceptable_params, models, time
             plt.close()
 
 
-
 def plot_skin_PK_simulations(params, acceptable_params, models, time_vectors):
 
     doses = ['IV_20_SLE', 'SC_50_SLE', 'SC_150_SLE', 'SC_450_SLE']
     dose_labels = ['20 mg/kg IV dose', '50 mg SC dose', '150 mg SC dose', '450 mg SC dose']
 
-    for dose, dose_label in zip(doses, dose_labels):
+    for dose, dose_label, time_vector in zip(doses, dose_labels, time_vectors.values()):
         save_dir = '../../../Results/SLE/Skin/PK/Predictions'
         os.makedirs(save_dir, exist_ok=True)
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(12, 8))
 
-        if dose == 'IV_20_SLE':
-            time_vector = time_vectors['IV_dose']
-        else:
-            time_vector = time_vectors['SC_dose']
+        linestyles = ['--', '-', ':', '-.']
+        colors = plt.cm.Blues(np.linspace(0.6, 0.9, 4))
 
-        linestyles = [':', '-', '--', '-.']
-
-        for (patient_label, params), model, acceptable_params, linestyle in zip(best_param_sets.items(), models.values(), acceptable_param_sets.values(), linestyles):
+        for (patient_label, params), model, acceptable_params, linestyle, color in zip(best_param_sets.items(), models.values(), acceptable_param_sets.values(), linestyles, colors):
 
             sims = {'IV_20_SLE': sund.Simulation(models=model, activities=IV_20_SLE, time_unit='h'),
                     'SC_50_SLE': sund.Simulation(models=model, activities=SC_50_SLE, time_unit='h'),
@@ -261,16 +259,29 @@ def plot_skin_PK_simulations(params, acceptable_params, models, time_vectors):
                         raise e
 
             # Plot uncertainty range
-            plt.fill_between(time_vector, y_min, y_max, color='b', alpha=0.3)
+            plt.fill_between(time_vector, y_min, y_max, color=color, alpha=0.5)
 
             sims[dose].simulate(time_vector=time_vector, parameter_values=params, reset=True)
             y = sims[dose].feature_data[:, 2]
-            plt.plot(time_vector, y, color='b', label=f"{patient_label} pDCs/mm²", linestyle=linestyle,)
+            plt.plot(time_vector, y, color=color, label=f"{patient_label} pDCs/mm²", linestyle=linestyle, linewidth=2)
 
-            plt.xlabel('Time [Hours]')
-            plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)')
-            plt.title('PK Simulations in Skin of SLE Patients')
-            plt.legend( title = 'pDC Density in Skin Lesions')
+        plt.xlabel('Time [Hours]', fontsize = 18)
+        plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize = 18)
+        plt.yscale('log')
+        plt.title('PK Simulations in Skin of SLE Patients', fontsize = 22)
+        plt.tick_params(axis='both', which='major', labelsize=16)
+        plt.legend( title = 'pDC Skin Density', title_fontsize = 18, fontsize = 16, loc = 'upper right')
+
+        if dose == 'IV_20_SLE':
+            plt.ylim(0.001, 100)
+        elif dose == 'SC_50_SLE':
+            plt.ylim(0.00001, 1)
+        elif dose == 'SC_150_SLE':
+            plt.ylim(0.00001, 10)
+        elif dose == 'SC_450_SLE':
+            plt.ylim(0.00001, 100)
+
+        plt.tight_layout()
 
         save_path = os.path.join(save_dir, f"PK_skin_sim_{dose}.png")
         plt.savefig(save_path, dpi=600)
@@ -279,23 +290,18 @@ def plot_skin_PK_simulations(params, acceptable_params, models, time_vectors):
 
 def plot_skin_PD_simulations(params, acceptable_params, models, time_vectors):
 
-    patient_labels = ['10 pDCs/mm²', '32 pDCs/mm²', '179 pDCs/mm²', '500 pDCs/mm²']
     doses = ['IV_20_SLE', 'SC_50_SLE', 'SC_150_SLE', 'SC_450_SLE']
     dose_labels = ['20 mg/kg IV dose', '50 mg SC dose', '150 mg SC dose', '450 mg SC dose']
 
-    for dose, dose_label in zip(doses, dose_labels):
+    for dose, dose_label, time_vector in zip(doses, dose_labels, time_vectors.values()):
         save_dir = '../../../Results/SLE/Skin/PD/Predictions'
         os.makedirs(save_dir, exist_ok=True)
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(12, 8))
 
-        if dose == 'IV_20_SLE':
-            time_vector = time_vectors['IV_dose']
-        else:
-            time_vector = time_vectors['SC_dose']
+        linestyles = ['--', '-', ':', '-.']
+        colors = plt.cm.Reds(np.linspace(0.6, 0.9, 4))
 
-        linestyles = [':', '-', '--', '-.']
-
-        for (patient_label, params), model, acceptable_params, linestyle in zip(best_param_sets.items(), models.values(), acceptable_param_sets.values(), linestyles):   
+        for (patient_label, params), model, acceptable_params, linestyle, color in zip(best_param_sets.items(), models.values(), acceptable_param_sets.values(), linestyles, colors):   
             sims = {'IV_20_SLE': sund.Simulation(models=model, activities=IV_20_SLE, time_unit='h'),
                     'SC_50_SLE': sund.Simulation(models=model, activities=SC_50_SLE, time_unit='h'),
                     'SC_150_SLE': sund.Simulation(models=model, activities=SC_150_SLE, time_unit='h'),
@@ -318,16 +324,18 @@ def plot_skin_PD_simulations(params, acceptable_params, models, time_vectors):
                         raise e
 
             # Plot uncertainty range
-            plt.fill_between(time_vector, y_min, y_max, color='r', alpha=0.3)
+            plt.fill_between(time_vector, y_min, y_max, color=color, alpha=0.5)
 
             sims[dose].simulate(time_vector=time_vector, parameter_values=params, reset=True)
             y = sims[dose].feature_data[:, 3]
-            plt.plot(time_vector, y, color='r', label=f"{patient_label} pDCs/mm²", linestyle=linestyle,)
+            plt.plot(time_vector, y, color=color, label=f"{patient_label} pDCs/mm²", linestyle=linestyle, linewidth=2)
 
-            plt.xlabel('Time [Hours]')
-            plt.ylabel('Free BDCA2 Expression on pDCs (% Change from Baseline)')
-            plt.title('PD Simulations in Skin of SLE Patients')
-            plt.legend(title = 'pDC Density in Skin Lesions')
+            plt.xlabel('Time [Hours]', fontsize = 18)
+            plt.ylabel('Free BDCA2 Expression on pDCs [% Change]', fontsize = 18)
+            plt.title('PD Simulations in Skin of SLE Patients', fontsize = 22)
+            plt.tick_params(axis='both', which='major', labelsize=16)
+            plt.legend(title = 'pDC Skin Density', title_fontsize = 18, fontsize = 16, loc = 'lower right')
+            plt.tight_layout()
 
         save_path = os.path.join(save_dir, f"PD_skin_sim_{dose}.png")
         plt.savefig(save_path, dpi=600)
@@ -339,21 +347,23 @@ def plot_dose_response_IV_doses_separate(dose_response_datasets):
     os.makedirs(save_dir, exist_ok=True)
     plt.figure(figsize=(12,8))
 
-    colors = ['r', 'b', 'y', 'g']
+    colors = plt.cm.Purples(np.linspace(0.6, 0.9, 4))
+    linestyles = ['--', '-', ':', '-.']
 
 
-    for (patient_label, dataset), color in zip(dose_response_datasets.items(), colors):
+    for (patient_label, dataset), color, linestyle in zip(dose_response_datasets.items(), colors, linestyles):
 
-        plt.fill_between(dataset['IVdoses_SLE']['Dose'], dataset['IVdoses_SLE_lower']['Response'], dataset['IVdoses_SLE_higher']['Response'], color=color, alpha = 0.3) 
-        plt.plot(dataset['IVdoses_SLE']['Dose'], dataset['IVdoses_SLE']['Response'], color = color, linewidth = 2, label = f"{patient_label} pDCs/mm²")
+        plt.fill_between(dataset['IVdoses_SLE']['Dose'], dataset['IVdoses_SLE_lower']['Response'], dataset['IVdoses_SLE_higher']['Response'], color=color, alpha = 0.5) 
+        plt.plot(dataset['IVdoses_SLE']['Dose'], dataset['IVdoses_SLE']['Response'],linestyle=linestyle, color = color, linewidth = 2, label = f"{patient_label} pDCs/mm²")
 
-        plt.xlabel('IV dose size (mg/kg)', fontsize = 16)
-        plt.ylabel('Response time (weeks)', fontsize = 16)
+        plt.xlabel('IV Dose Size [mg/kg]', fontsize = 18)
+        plt.ylabel('Response Time [weeks]', fontsize = 18)
         plt.xlim(0, 60)
         plt.ylim(0, 27)
-        plt.tick_params(axis='both', which='major', labelsize=14)
-        plt.title(f"Simulated Dose-Response in a 70 kg SLE Patient", fontsize = 20)
-        plt.legend(loc = 'upper left', fontsize = 14, title = 'pDC Density in Skin Lesions', title_fontsize = 15)
+        plt.tick_params(axis='both', which='major', labelsize=16)
+        plt.title(f"Simulated Dose-Response in a 70 kg SLE Patient", fontsize = 22)
+        plt.legend(loc = 'upper left', fontsize = 16, title = 'pDC Skin Density', title_fontsize = 18)
+        plt.tight_layout()
 
     save_path = os.path.join(save_dir, f"Dose_response_pdc_density_separate.png")
     plt.savefig(save_path, dpi=600)
@@ -404,7 +414,7 @@ def plot_dose_response_IV_doses_gradient(dose_response_datasets):
 def plot_skin_plasma_AUC_ratio(params, acceptable_params, models, time_vector):
     save_dir = '../../../Results/SLE/Skin/PK/Predictions'
     os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(12,6))
+    plt.figure(figsize=(12,8))
 
     doses = ['IV_005_SLE', 'IV_03_SLE', 'IV_1_SLE', 'IV_3_SLE', 'IV_10_SLE', 'IV_20_SLE', 'IV_40_SLE', 'IV_60_SLE']
     dose_labels = ['0.05 mg/kg IV dose', '0.3 mg/kg IV dose', '1 mg/kg IV dose', '3 mg/kg IV dose', '10 mg/kg IV dose', '20 mg/kg IV dose', '40 mg/kg IV dose', '60 mg/kg IV dose']
@@ -483,10 +493,10 @@ def plot_skin_plasma_AUC_ratio(params, acceptable_params, models, time_vector):
 
     yerr = np.array([auc_matrix - auc_min_matrix, auc_max_matrix - auc_matrix])
 
-    plt.figure(figsize=(14, 7))
+    plt.figure(figsize=(12, 8))
     bar_width = 0.2
     x = np.arange(len(doses))
-    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+    colors = plt.cm.Blues(np.linspace(0.6, 0.9, 4))
 
     for i, patient_label in enumerate(patient_labels):
         plt.bar(
@@ -499,15 +509,18 @@ def plot_skin_plasma_AUC_ratio(params, acceptable_params, models, time_vector):
             capsize=6
         )
 
-    plt.xticks(x + 1.5*bar_width, dose_sizes, fontsize=14)
-    plt.ylabel('AUC Ratio Skin/Plasma (%)', fontsize=16)
-    plt.suptitle('Simulated AUC Ratio of Skin to Plasma Litifilimab Concentration over 16 Weeks', fontsize=22)
-    plt.title('Following Single IV Doses in a 70 kg SLE Patient', fontsize=16)
-    plt.legend(title='pDC Density', title_fontsize=16, fontsize=14)
+    plt.xticks(x + 1.5*bar_width, dose_sizes, fontsize=16)
+    plt.ylabel('AUC Skin/Plasma Ratio [%]', fontsize=18)
+    plt.xlabel('IV Dose Size [mg/kg]', fontsize=18)
+    plt.yscale('log')
+    plt.ylim(0.01, 60)
+    plt.suptitle('Simulated AUC Skin/Plasma Ratio of Litifilimab Concentration', fontsize=22)
+    plt.title('Measured over 16 Weeks for a 70 kg SLE Patient', fontsize=18)
+    plt.legend(title='pDC Density', title_fontsize=18, fontsize=16)
     plt.tight_layout()
 
     bar_save_path = os.path.join(save_dir, "AUC_skin_plasma_ratios_barplot.png")
-    plt.savefig(bar_save_path, dpi=300)
+    plt.savefig(bar_save_path, dpi=600)
     plt.close()
 
 
@@ -519,7 +532,7 @@ time_vectors_IV = {'low_dose': time_vector_low_IV_doses, 'medium_dose': time_vec
 
 dose_response_datasets = {'10': dose_response_10, '32': dose_response_32, '179': dose_response_179, '500': dose_response_500}
 
-time_vectors_IV_SC = {'IV_dose' : time_vector_high_IV_doses, 'SC_dose': time_vector_multiple_SC_doses}
+time_vectors_IV_SC = {'IV_20': time_vector_IV_20, 'SC_50': time_vector_SC_50, 'SC_150': time_vector_SC_150, 'SC_450': time_vector_SC_450}
 
 # plot_skin_PK_PD_simulations_together(best_param_sets, acceptable_param_sets, models, time_vectors_IV)
 
@@ -527,9 +540,9 @@ time_vectors_IV_SC = {'IV_dose' : time_vector_high_IV_doses, 'SC_dose': time_vec
 
 # plot_dose_response_IV_doses_gradient(dose_response_datasets)
 
-# plot_skin_PK_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
+plot_skin_PK_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
 
 # plot_skin_PD_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
 
-plot_skin_plasma_AUC_ratio(best_param_sets, acceptable_param_sets, models, time_vector_AUC)
+# plot_skin_plasma_AUC_ratio(best_param_sets, acceptable_param_sets, models, time_vector_AUC)
 

@@ -31,7 +31,7 @@ with open("../../../Models/final_parameters.json", "r") as f:
 # Define a function to plot all doses with uncertainty in the same figure
 def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../../Results/HV/PK'):
     os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(12, 8))
+    plt.figure(facecolor='#fcf5ed', figsize=(12, 8))
 
     # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
@@ -111,6 +111,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.ylim(0.005, 1000)
     plt.xlim(-25, 2750)
     plt.tick_params(axis='both', which='major', labelsize=18)
+    plt.gca().set_facecolor('#fcf5ed')
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
     plt.tight_layout()
 
     # Text to describe the figure
@@ -139,8 +142,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     )
 
     # Save the figure
-    save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
-    plt.savefig(save_path, format='png', bbox_inches='tight', dpi=600)
+    # save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
+    # plt.savefig(save_path, format='png', bbox_inches='tight', dpi=600)
+    # plt.close()
+
+    save_path_svg = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
+    plt.savefig(save_path_svg, format='svg')
     plt.close()
 
 # Install the model

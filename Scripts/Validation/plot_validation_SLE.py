@@ -14,7 +14,7 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../Models/mPBPK_SLE_model_32_pdc_mm2.txt", "r") as f:
     lines = f.readlines()
 
 # Load SLE Validation PK data
@@ -22,7 +22,7 @@ with open("../../Data/SLE_Validation_PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Load acceptable parameters for SLE
-with open("../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
+with open("../../Results/Acceptable params/acceptable_params_SLE_32_pdc_mm2.json", "r") as f:
     acceptable_params = json.load(f)
 
 # Load final parameters for SLE
@@ -30,9 +30,9 @@ with open("../../Models/final_parameters_SLE.json", "r") as f:
     params = json.load(f)
 
 # Install and load the model
-sund.install_model('../../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../Models/mPBPK_SLE_model_32_pdc_mm2.txt')
 print(sund.installed_models())
-model = sund.load_model("mPBPK_SLE_model")
+model = sund.load_model("mPBPK_SLE_model_32_pdc_mm2")
 
 # Create activity objects for each dose
 SC_50_SLE = sund.Activity(time_unit='h')
@@ -106,7 +106,6 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
         # Labels and title
         plt.xlabel('Time [Hours]')
         plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)')
-        plt.title(experiment)
         plt.tight_layout()
 
         # Save the plot
