@@ -14,7 +14,7 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../Models/mPBPK_SLE_model_32_pdc_mm2.txt", "r") as f:
     lines = f.readlines()
 
 # Load CLE Validation PK data
@@ -22,7 +22,7 @@ with open("../../Data/CLE_Validation_PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Load acceptable parameters for SLE
-with open("../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
+with open("../../Results/Acceptable params/acceptable_params_SLE_32_pdc_mm2.json", "r") as f:
     acceptable_params = json.load(f)
 
 # Load final parameters for SLE
@@ -30,19 +30,19 @@ with open("../../Models/final_parameters_SLE.json", "r") as f:
     params = json.load(f)
 
 # Install and load the model
-sund.install_model('../../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../Models/mPBPK_SLE_model_32_pdc_mm2.txt')
 print(sund.installed_models())
-model = sund.load_model("mPBPK_SLE_model")
+model = sund.load_model("mPBPK_SLE_model_32_pdc_mm2")
 
 # Create activity objects for each dose
 SC_50_CLE = sund.Activity(time_unit='h')
-SC_50_CLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_CLE']['input']['SC_in']['t'],  f = PK_data['SCdose_50_CLE']['input']['SC_in']['f'])
+SC_50_CLE.add_output('piecewise_constant', "SC_in",  t = PK_data['SCdose_50_CLE']['input']['SC_in']['t'],  f = PK_data['SCdose_50_CLE']['input']['SC_in']['f'])
 
 SC_150_CLE = sund.Activity(time_unit='h')
-SC_150_CLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_150_CLE']['input']['SC_in']['t'],  f = PK_data['SCdose_150_CLE']['input']['SC_in']['f'])
+SC_150_CLE.add_output('piecewise_constant', "SC_in",  t = PK_data['SCdose_150_CLE']['input']['SC_in']['t'],  f = PK_data['SCdose_150_CLE']['input']['SC_in']['f'])
 
 SC_450_CLE = sund.Activity(time_unit='h')
-SC_450_CLE.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_450_CLE']['input']['SC_in']['t'],  f = PK_data['SCdose_450_CLE']['input']['SC_in']['f'])
+SC_450_CLE.add_output('piecewise_constant', "SC_in",  t = PK_data['SCdose_450_CLE']['input']['SC_in']['t'],  f = PK_data['SCdose_450_CLE']['input']['SC_in']['f'])
 
 # Create simulation objects for each dose
 model_sims = {
@@ -61,10 +61,11 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
     # Colors and markers for the plots
     colors = ['#6d65bf', '#6c5ce7', '#8c7ae6']
     markers = ['X', 'X', 'X']
+    doses = ['50 mg SC', '150 mg SC', '450 mg SC']
 
     # Loop through each experiment and plot the uncertainty range and best parameter set
-    for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
-        plt.figure()
+    for i, (experiment, color, dose) in enumerate(zip(PK_data.keys(), colors, doses)):
+        plt.figure(figsize=(10, 8))
         timepoints = time_vectors[experiment]
         y_min = np.full_like(timepoints, np.inf)
         y_max = np.full_like(timepoints, -np.inf)
@@ -83,12 +84,12 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
                     raise e
 
         # Plot uncertainty range
-        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3, label='Uncertainty')
 
         # Plot best parameter set
         sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
         y = sims[experiment].feature_data[:, 0]
-        plt.plot(timepoints, y, color=color, linewidth=2)
+        plt.plot(timepoints, y, color=color, linewidth=3, label='Simulation')
 
         # Plot experimental data
         marker = markers[i]
@@ -97,16 +98,20 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
             PK_data[experiment]['BIIB059_mean'],
             yerr=PK_data[experiment]['SEM'],
             fmt=marker,
-            markersize=6,
+            markersize=8,
+            elinewidth=2,
             color=color,
             linestyle='None',
-            capsize=3
+            capsize=4,
+            label=' Validation Data'
         )
 
         # Labels and title
-        plt.xlabel('Time [Hours]')
-        plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)')
-        plt.title(experiment)
+        plt.xlabel('Time [Hours]', fontsize=18)
+        plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
+        plt.title(f'Validation of PK Simulation in Plasma of CLE Patients', fontsize=22)
+        plt.tick_params(axis='both', which='major', labelsize=16)
+        plt.legend(title=f'Multiple {dose} Doses', title_fontsize = 18, fontsize=16, loc='upper right')
         plt.tight_layout()
 
         # Save the plot

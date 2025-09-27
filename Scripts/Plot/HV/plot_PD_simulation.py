@@ -35,13 +35,14 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
     # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'P', 'X']
+    doses = ['0.05 mg/kg IV Dose', '0.3 mg/kg IV Dose', '1 mg/kg IV Dose', '3 mg/kg IV Dose', '20 mg/kg IV Dose', '50 mg SC Dose']
 
     #Loop through each experiment
-    for i, (experiment, color) in enumerate(zip(PD_data.keys(), colors)):
-        plt.figure()
+    for i, (experiment, color, dose) in enumerate(zip(PD_data.keys(), colors, doses)):
+        plt.figure(figsize=(10, 8))
         timepoints = time_vectors[experiment]
-        y_min = np.full_like(timepoints, np.inf)
-        y_max = np.full_like(timepoints, -np.inf)
+        y_min = np.full_like(timepoints, 10000)
+        y_max = np.full_like(timepoints, -10000)
 
         # Calculate uncertainty range
         for params in acceptable_params:
@@ -57,12 +58,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
                     raise e
 
         # Plot uncertainty range
-        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3, label='Uncertainty')
 
         # Plot selected parameter set
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
         y_selected = sims[experiment].feature_data[:, 1]
-        plt.plot(timepoints, y_selected, color=color)
+        plt.plot(timepoints, y_selected, color=color, label='Simulation', linewidth=3)
 
         # Plot experimental data
         marker = markers[i]
@@ -71,15 +72,33 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
             PD_data[experiment]['BDCA2_median'],
             yerr=PD_data[experiment]['SEM'],
             marker=marker,
+            markersize=8,
             color=color,
-            linestyle='None'
+            linestyle='None',
+            capsize=4,
+            elinewidth=2,
+            label='Data'
         )
 
         # Set labels
-        plt.xlabel('Time [Hours]')
-        plt.ylabel('Total BDCA2 Expression on pDCs (% Change from Baseline)')
-        plt.title(experiment)
-        plt.tick_params(axis='both', which='major')
+        plt.xlabel('Time [Hours]', fontsize=18)
+        plt.ylabel('Total BDCA2 Expression on pDCs [% Change]', fontsize=18)
+        plt.title('PD Simulation in Plasma of Healthy Volunteer', fontsize=22)
+        plt.tick_params(axis='both', which='major', labelsize=16)
+        plt.legend(title=f'{dose}', title_fontsize=18, fontsize=16, loc='lower right')
+
+        if experiment == 'IVdose_20_HV':
+            plt.xlim(-200, 7000)
+        elif experiment == 'IVdose_3_HV':
+            plt.xlim(-140, 4800)
+        else:
+            plt.xlim(-90, 3000)
+
+        if experiment == 'IVdose_03_HV':
+            plt.ylim(-118, 39)
+        else:
+            plt.ylim(-118, 19)
+
         plt.tight_layout()
 
         # Save the figure
@@ -100,22 +119,22 @@ bodyweight = 73
 
 # Creating activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
-IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_005_HV']['input']['IV_in']['f']))
+IV_005_HV.add_output('piecewise_constant', "IV_in",  t = PD_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_005_HV']['input']['IV_in']['f']))
 
 IV_03_HV = sund.Activity(time_unit='h')
-IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_03_HV']['input']['IV_in']['f']))
+IV_03_HV.add_output('piecewise_constant', "IV_in",  t = PD_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_03_HV']['input']['IV_in']['f']))
 
 IV_1_HV = sund.Activity(time_unit='h')
-IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_1_HV']['input']['IV_in']['f']))
+IV_1_HV.add_output('piecewise_constant', "IV_in",  t = PD_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_1_HV']['input']['IV_in']['f']))
 
 IV_3_HV = sund.Activity(time_unit='h')
-IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_3_HV']['input']['IV_in']['f']))
+IV_3_HV.add_output('piecewise_constant', "IV_in",  t = PD_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_3_HV']['input']['IV_in']['f']))
 
 IV_20_HV = sund.Activity(time_unit='h')
-IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PD_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_20_HV']['input']['IV_in']['f']))
+IV_20_HV.add_output('piecewise_constant', "IV_in",  t = PD_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PD_data['IVdose_20_HV']['input']['IV_in']['f']))
 
 SC_50_HV = sund.Activity(time_unit='h')
-SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PD_data['SCdose_50_HV']['input']['SC_in']['f'])
+SC_50_HV.add_output('piecewise_constant', "SC_in",  t = PD_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PD_data['SCdose_50_HV']['input']['SC_in']['f'])
 
 # Creating simulation objects for each dose
 model_sims = {
@@ -128,7 +147,7 @@ model_sims = {
 }
 
 # Define time vectors for each dose
-time_vectors = {exp: np.arange(-10, PD_data[exp]["time"][-1] + 0.01, 1) for exp in PD_data}
+time_vectors = {exp: np.arange(-400, PD_data[exp]["time"][-1] + 5000, 1) for exp in PD_data}
 
 # Plot all doses with uncertainty
 plot_all_doses_with_uncertainty(params, acceptable_params_PL, model_sims, PD_data, time_vectors)

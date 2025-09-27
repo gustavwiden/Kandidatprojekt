@@ -270,7 +270,7 @@ def plot_skin_PK_simulations(params, acceptable_params, models, time_vectors):
         plt.yscale('log')
         plt.title('PK Simulations in Skin of SLE Patients', fontsize = 22)
         plt.tick_params(axis='both', which='major', labelsize=16)
-        plt.legend( title = 'pDC Skin Density', title_fontsize = 18, fontsize = 16, loc = 'upper right')
+        plt.legend(title = 'pDC Skin Density', title_fontsize = 18, fontsize = 16, loc = 'upper right')
 
         if dose == 'IV_20_SLE':
             plt.ylim(0.001, 100)

@@ -14,7 +14,7 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../../../Models/mPBPK_SLE_model.txt", "r") as f:
+with open("../../../Models/mPBPK_SLE_model_32_pdc_mm2.txt", "r") as f:
     lines = f.readlines()
 
 # Load SLE PK data
@@ -22,7 +22,7 @@ with open("../../../Data/SLE_PK_data_plotting.json", "r") as f:
     PK_data = json.load(f)
 
 # Load acceptable parameters for mPBPK_model
-with open("../../../Results/Acceptable params/acceptable_params_SLE.json", "r") as f:
+with open("../../../Results/Acceptable params/acceptable_params_SLE_32_pdc_mm2.json", "r") as f:
     acceptable_params = json.load(f)
 
 # Load final parameters for mPBPK_SLE_model
@@ -36,7 +36,6 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
     # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
-    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
 
     # Define labels and positions for each dose
     dose_labels = {
@@ -52,8 +51,8 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     label_positions = {
         'IVdose_005_HV': (250, 0.04),
         'IVdose_03_HV':  (580, 0.3),
-        'IVdose_1_HV':   (750, 3.8),
-        'IVdose_3_HV':   (2250, 0.01),
+        'IVdose_1_HV':   (2100, 0.01),
+        'IVdose_3_HV':   (750, 3.8),
         'IVdose_10_HV':  (750, 14),
         'IVdose_20_SLE':  (1900, 30),
         'SCdose_50_HV':  (1220, 0.025),
@@ -86,15 +85,13 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
         y_selected = sims[experiment].feature_data[:, 0]
         plt.plot(timepoints, y_selected, color=color, linewidth=2)
 
-        # Plot experimental data
-        marker = markers[i]
         
         if experiment == 'IVdose_20_SLE':
             plt.errorbar(
                 PK_data[experiment]['time'],
                 PK_data[experiment]['BIIB059_mean'],
                 yerr=PK_data[experiment]['SEM'],
-                fmt=marker,
+                fmt='P',
                 markersize=6,
                 color=color,
                 linestyle='None',
@@ -108,50 +105,76 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
                      color=color, fontsize=18, weight='bold')
 
     # Set plot title and labels
-    plt.xlabel('Time [Hours]', fontsize=20)
-    plt.ylabel('Free Litifilimab Plasma Concentration (µg/ml)', fontsize=20)
+    plt.xlabel('Time [Hours]', fontsize=18)
+    plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
+    plt.title('PK Simulations in Plasma of SLE Patients', fontsize=22)
     plt.yscale('log')
     plt.ylim(0.002, 1000)
     plt.xlim(-25, 2750)
-    plt.tick_params(axis='both', which='major', labelsize=18)
+    plt.tick_params(axis='both', which='major', labelsize=16)
     plt.tight_layout()
+
+    # Text to describe the figure
+    plt.annotate(
+        'Simulation',
+        xy=(1250, 40),  # Arrow's coordinates
+        xytext=(1400, 150),  # Text coordinates
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
+
+    plt.annotate(
+        'Uncertainty',
+        xy=(1780, 0.05), # Arrow's coordinates
+        xytext=(1250, 0.006),  # Text coordinates
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
+
+    plt.annotate(
+        'Data',
+        xy=(350, 150),  # Arrow's coordinates
+        xytext=(600, 240),  # Text coordinates
+        arrowprops=dict(facecolor='black', arrowstyle='->'),
+        fontsize=18
+    )
 
     # Save the figure
     save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
-    plt.savefig(save_path, format='png', bbox_inches='tight', dpi=600)
+    plt.savefig(save_path, format='png', dpi=600)
     plt.close()
 
 # Install the model
-sund.install_model('../../../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model_32_pdc_mm2.txt')
 print(sund.installed_models())
 
 # Load the model object
-model = sund.load_model("mPBPK_SLE_model")
+model = sund.load_model("mPBPK_SLE_model_32_pdc_mm2")
 
 # Average bodyweight for SLE patients (cohort 8 in the phase 1 trial)
 bodyweight = 69
 
 # Creating activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
-IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_005_HV']['input']['IV_in']['f']))
+IV_005_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_005_HV']['input']['IV_in']['f']))
 
 IV_03_HV = sund.Activity(time_unit='h')
-IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_03_HV']['input']['IV_in']['f']))
+IV_03_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_03_HV']['input']['IV_in']['f']))
 
 IV_1_HV = sund.Activity(time_unit='h')
-IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_1_HV']['input']['IV_in']['f']))
+IV_1_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_1_HV']['input']['IV_in']['f']))
 
 IV_3_HV = sund.Activity(time_unit='h')
-IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_3_HV']['input']['IV_in']['f']))
+IV_3_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_3_HV']['input']['IV_in']['f']))
 
 IV_10_HV = sund.Activity(time_unit='h')
-IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_10_HV']['input']['IV_in']['f']))
+IV_10_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_10_HV']['input']['IV_in']['f']))
 
 IV_20_SLE = sund.Activity(time_unit='h')
-IV_20_SLE.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_20_SLE']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_20_SLE']['input']['IV_in']['f']))
+IV_20_SLE.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_20_SLE']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_20_SLE']['input']['IV_in']['f']))
 
 SC_50_HV = sund.Activity(time_unit='h')
-SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PK_data['SCdose_50_HV']['input']['SC_in']['f'])
+SC_50_HV.add_output('piecewise_constant', "SC_in",  t = PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PK_data['SCdose_50_HV']['input']['SC_in']['f'])
 
 # Creating simulation objects for each dose
 model_sims = {

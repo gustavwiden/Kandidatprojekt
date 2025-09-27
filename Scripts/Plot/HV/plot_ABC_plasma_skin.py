@@ -22,8 +22,7 @@ with open("../../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Load acceptable parameters for mPBPK_model
-with open("../../../Results/Acceptable params/acceptable_params.json", "r") as f:
-    acceptable_params = json.load(f)
+acceptable_params = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
 # Load final parameters for mPBPK_model
 with open("../../../Models/final_parameters.json", "r") as f:
@@ -41,25 +40,25 @@ bodyweight = 73
 
 # Creating activity objects for each dose
 IV_005_HV = sund.Activity(time_unit='h')
-IV_005_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_005_HV']['input']['IV_in']['f']))
+IV_005_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_005_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_005_HV']['input']['IV_in']['f']))
 
 IV_03_HV = sund.Activity(time_unit='h')
-IV_03_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_03_HV']['input']['IV_in']['f']))
+IV_03_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_03_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_03_HV']['input']['IV_in']['f']))
 
 IV_1_HV = sund.Activity(time_unit='h')
-IV_1_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_1_HV']['input']['IV_in']['f']))
+IV_1_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_1_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_1_HV']['input']['IV_in']['f']))
 
 IV_3_HV = sund.Activity(time_unit='h')
-IV_3_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_3_HV']['input']['IV_in']['f']))
+IV_3_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_3_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_3_HV']['input']['IV_in']['f']))
 
 IV_10_HV = sund.Activity(time_unit='h')
-IV_10_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_10_HV']['input']['IV_in']['f']))
+IV_10_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_10_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_10_HV']['input']['IV_in']['f']))
 
 IV_20_HV = sund.Activity(time_unit='h')
-IV_20_HV.add_output(sund.PIECEWISE_CONSTANT, "IV_in",  t = PK_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_20_HV']['input']['IV_in']['f']))
+IV_20_HV.add_output('piecewise_constant', "IV_in",  t = PK_data['IVdose_20_HV']['input']['IV_in']['t'],  f = bodyweight * np.array(PK_data['IVdose_20_HV']['input']['IV_in']['f']))
 
 SC_50_HV = sund.Activity(time_unit='h')
-SC_50_HV.add_output(sund.PIECEWISE_CONSTANT, "SC_in",  t = PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PK_data['SCdose_50_HV']['input']['SC_in']['f'])
+SC_50_HV.add_output('piecewise_constant', "SC_in",  t = PK_data['SCdose_50_HV']['input']['SC_in']['t'],  f = PK_data['SCdose_50_HV']['input']['SC_in']['f'])
 
 # Creating simulation objects for each dose
 model_sims = {
@@ -79,11 +78,11 @@ time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp 
 # Compare this value with the general ABC ratio of 0.157 by Shah and Betts (2012)
 def plot_ABC_plasma_vs_skin(selected_params, sims, PK_data, time_vectors, save_dir='../../../Results/HV/PK'):
     os.makedirs(save_dir, exist_ok=True)
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(12, 8))
 
     # Define colors and labels for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
-    dose_labels = ['0.05 mg/kg', '0.3 mg/kg', '1 mg/kg', '3 mg/kg', '10 mg/kg', '20 mg/kg', '50 mg/kg SC']
+    dose_labels = ['0.05 mg/kg IV', '0.3 mg/kg IV', '1 mg/kg IV', '3 mg/kg IV', '10 mg/kg IV', '20 mg/kg IV', '50 mg SC']
 
     # Create empty lists to store all skin and plasma concentrations
     all_skin = []
@@ -112,17 +111,18 @@ def plot_ABC_plasma_vs_skin(selected_params, sims, PK_data, time_vectors, save_d
     x_fit = np.logspace(np.log10(x_min), np.log10(x_max), 100)
 
     # Plot the reference lines for the general ABC ratio
-    plt.plot(x_fit, 0.157 * x_fit, 'k-')
-    plt.plot(x_fit, 0.0785 * x_fit, 'k--')
-    plt.plot(x_fit, 0.314 * x_fit, 'k--')
+    plt.plot(x_fit, 0.157 * x_fit, 'k-', linewidth=2, label='Skin ABC (15.7 %)')
+    plt.plot(x_fit, 0.0785 * x_fit, 'k--', linewidth=2, label='2-fold Error')
+    plt.plot(x_fit, 0.314 * x_fit, 'k--', linewidth=2)
 
     # Set scale, labels, title, and legend
     plt.xscale('log')
     plt.yscale('log')
-    plt.xlabel('Plasma Concentration (µg/ml)')
-    plt.ylabel('Skin Concentration (µg/ml)')
-    plt.title('Model Simulations for Skin vs Plasma Concentration in Healthy Volunteers')
-    plt.legend()
+    plt.xlabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
+    plt.ylabel('Free Litifilimab Skin Concentration [µg/ml]', fontsize=18)
+    plt.title('Model Simulations vs Antibody Biodistribution Coefficient', fontsize=22)
+    plt.legend(fontsize=15, loc='lower right', ncols=2)
+    plt.tick_params(axis='both', which='major', labelsize=16)
 
     # Save the plot
     save_path = os.path.join(save_dir, "Skin vs Plasma Concentration.png")
