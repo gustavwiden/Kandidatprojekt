@@ -40,7 +40,7 @@ RC2 = 0.75                                              // Reflection co-efficie
 RCL = 0.20                                              // Reflection co-efficient for lymph compartment.
 CL = 0.00549                                            // Linear clearance of BIIB059 from plasma compartment (L/h).
 kdegp = 0.962                                           // Degradation rate of BDCA2 in plasma compartment (1/h).
-kintp = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in plasma compartment (1/h).
+kint = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in plasma compartment (1/h).
 kss = 2624                                              // Steady state coefficient (pM).
 
 ########## VARIABLES
@@ -60,7 +60,7 @@ r9 = L2*(1-RCL)*Leaky                                              // Lymphatic 
 r10 = CL*Plasma_free                                               // Linear clearance of BIIB059 from plasma compartment (pmol/h).
 r11 = ksynp                                                        // Synthesis of free BDCA2 in plasma compartment (pM/h).
 r12 = kdegp*(BDCA2_plasma-BDCA2_plasma_bound)                      // Degradation of free BDCA2 in plasma compartment (pM/h).
-r13 = kintp*BDCA2_plasma_bound                                     // Internalization of BDCA2-BIIB059 complex in plasma compartment (pM/h).
+r13 = kint*BDCA2_plasma_bound                                     // Internalization of BDCA2-BIIB059 complex in plasma compartment (pM/h).
 
 ########## FUNCTIONS
 

@@ -1,5 +1,5 @@
 ########## NAME
-mPBPK_SLE_model_32_pdc_mm2
+mPBPK_SLE_model
 
 ########## METADATA
 time_unit = h
@@ -42,9 +42,7 @@ RC2 = 0.75                                              // Reflection co-efficie
 RCL = 0.20                                              // Reflection co-efficient for lymph compartment.
 CL = 0.00733                                            // Linear clearance of BIIB059 from plasma compartment (L/h).
 kdegp = 0.962                                           // Degradation rate of BDCA2 in plasma compartment (1/h).
-kdegs = 0.05                                             // Degradation rate of BDCA2 in skin compartment (1/h).
-kintp = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in plasma compartment (1/h).
-kints = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in skin compartment (1/h).
+kint = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in plasma compartment (1/h).
 kss = 2624                                              // Steady state coefficient (pM).
 
 ########## VARIABLES
@@ -68,10 +66,10 @@ r9 = L2*(1-RCL)*Leaky                                              // Lymphatic 
 r10 = CL*Plasma_free                                               // Linear clearance of BIIB059 from plasma compartment (pmol/h).
 r11 = ksynp                                                        // Synthesis of free BDCA2 in plasma compartment (pM/h).
 r12 = kdegp*(BDCA2_plasma-BDCA2_plasma_bound)                      // Degradation of free BDCA2 in plasma compartment (pM/h).
-r13 = kintp*BDCA2_plasma_bound                                     // Internalization of BDCA2-BIIB059 complex in plasma compartment (pM/h).
+r13 = kint*BDCA2_plasma_bound                                     // Internalization of BDCA2-BIIB059 complex in plasma compartment (pM/h).
 r14 = ksyns                                                        // Synthesis of free BDCA2 in skin compartment (pM/h).
 r15 = kdegs*(BDCA2_skin-BDCA2_skin_bound)                          // Degradation of free BDCA2 in skin compartment (pM/h).
-r16 = kints*BDCA2_skin_bound                                       // Internalization of BDCA2-BIIB059 complex in skin compartment (pM/h).
+r16 = kint*BDCA2_skin_bound                                       // Internalization of BDCA2-BIIB059 complex in skin compartment (pM/h).
 
 ########## FUNCTIONS
 
@@ -88,5 +86,5 @@ SC = SC_in @ 0
 ########## FEATURES
 PK_sim = (Plasma_free*146600)/1e9                                  // Simulation: Concentration of free BIIB059 in plasma compartment (μg/mL).
 PD_sim = 100*(BDCA2_plasma-15.9)/15.9                              // Simulation: Expression of total BDCA2 on pDCs in plasma compartment (% change from baseline).
-PK_sim_skin = (Skin_free*146600)/1e9                               // Simulation: Concentration of free BIIB059 in skin compartment (μg/mL).
-PD_sim_skin = 100*(BDCA2_skin-BDCA2_skin_bound-2403)/2403          // Simulation: Expression of free BDCA2 on pDCs in skin compartment (% change from baseline).
+PK_skin_sim = (Skin_free*146600)/1e9                               // Simulation: Concentration of free BIIB059 in skin compartment (μg/mL).
+PD_skin_sim = 100*(BDCA2_skin-BDCA2_skin_bound-2403)/2403          // Simulation: Expression of free BDCA2 on pDCs in skin compartment (% change from baseline).

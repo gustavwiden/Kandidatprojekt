@@ -260,6 +260,8 @@ def fcost_uncertainty(param_log, model, PK_data, PD_data):
     global best_param
 
     params = np.exp(param_log)
+
+
     joint_cost, pk_cost, pd_cost = fcost_joint(params, model, PK_data, PD_data)
 
     # Only accept parameter sets that are below BOTH chi2 limits and update the best cost if the joint cost is lower
