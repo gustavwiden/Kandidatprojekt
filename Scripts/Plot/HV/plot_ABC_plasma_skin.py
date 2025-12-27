@@ -120,9 +120,12 @@ def plot_ABC_plasma_vs_skin(selected_params, sims, PK_data, time_vectors, save_d
     plt.yscale('log')
     plt.xlabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
     plt.ylabel('Free Litifilimab Skin Concentration [µg/ml]', fontsize=18)
-    plt.title('Model Simulations vs Antibody Biodistribution Coefficient', fontsize=22)
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.title('Model Simulations vs Antibody Biodistribution Coefficient', fontsize=22, fontweight='bold')
     plt.legend(fontsize=15, loc='lower right', ncols=2)
     plt.tick_params(axis='both', which='major', labelsize=16)
+    plt.tight_layout()
 
     # Save the plot
     save_path = os.path.join(save_dir, "Skin vs Plasma Concentration.png")

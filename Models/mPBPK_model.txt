@@ -24,8 +24,8 @@ Depot(0) = 0                                            // Initial amount of tot
 BDCA2_plasma(0) = 23.1                                  // Initial concentration of total BDCA2 in plasma compartment (pM).
 
 ########## PARAMETERS
-F = 0.598                                               // Bioavailibility.
-ka = 0.0135                                             // Absorption rate (1/h).
+F = 0.601                                               // Bioavailibility.
+ka = 0.0133                                             // Absorption rate (1/h).
 Vp = 2.6                                                // Volume of plasma compartment (L).
 Vs = 1.125                                              // Volume of interstitial fluid in skin compartment (L).
 V1 = 6.987                                              // Volume of interstitial fluid in tight compartment (L).
@@ -36,15 +36,15 @@ L1 = 0.0338                                             // Lymph flow rate for t
 L2 = 0.081                                              // Lymph flow rate for leaky compartment (L/h).
 RCS = 0.95                                              // Reflection co-efficient for skin compartment.
 RC1 = 0.95                                              // Reflection co-efficient for tight compartment.
-RC2 = 0.75                                              // Reflection co-efficient for leaky compartment.
+RC2 = 0.73                                              // Reflection co-efficient for leaky compartment.
 RCL = 0.20                                              // Reflection co-efficient for lymph compartment.
-CL = 0.00549                                            // Linear clearance of BIIB059 from plasma compartment (L/h).
-kdegp = 0.962                                           // Degradation rate of BDCA2 in plasma compartment (1/h).
+CL = 0.00547                                            // Linear clearance of BIIB059 from plasma compartment (L/h).
+kdeg = 1.005                                           // Degradation rate of BDCA2 in plasma compartment (1/h).
 kint = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in plasma compartment (1/h).
 kss = 2624                                              // Steady state coefficient (pM).
 
 ########## VARIABLES
-ksynp = kdegp*23.1                                                                                              // Synthesis rate of BDCA2 in plasma compartment (pM/h).
+ksynp = kdeg*23.1                                                                                              // Synthesis rate of BDCA2 in plasma compartment (pM/h).
 Plasma_free = 0.5*((Plasma - kss - BDCA2_plasma) + sqrt((Plasma - kss - BDCA2_plasma)^2 + 4*Plasma*kss))        // Concentration of free BIIB059 in plasma compartment (pM).
 BDCA2_plasma_bound = (BDCA2_plasma * Plasma_free) / (kss + Plasma_free)                                         // Concentration of bound BDCA2 in plasma compartment (pM).
 
@@ -59,7 +59,7 @@ r8 = L1*(1-RCL)*Tight                                              // Lymphatic 
 r9 = L2*(1-RCL)*Leaky                                              // Lymphatic uptake of BIIB059 from leaky compartment (pmol/h).
 r10 = CL*Plasma_free                                               // Linear clearance of BIIB059 from plasma compartment (pmol/h).
 r11 = ksynp                                                        // Synthesis of free BDCA2 in plasma compartment (pM/h).
-r12 = kdegp*(BDCA2_plasma-BDCA2_plasma_bound)                      // Degradation of free BDCA2 in plasma compartment (pM/h).
+r12 = kdeg*(BDCA2_plasma-BDCA2_plasma_bound)                      // Degradation of free BDCA2 in plasma compartment (pM/h).
 r13 = kint*BDCA2_plasma_bound                                     // Internalization of BDCA2-BIIB059 complex in plasma compartment (pM/h).
 
 ########## FUNCTIONS

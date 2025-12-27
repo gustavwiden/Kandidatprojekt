@@ -35,27 +35,28 @@ with open("../../Data/SLE_PD_data.json", "r") as f:
     SLE_PD_data = json.load(f)
 
 # Load SLE PD skin observations
-with open("../../Data/SLE_PD_skin_data.json", "r") as f:
-    SLE_PD_skin_data = json.load(f)
+# with open("../../Data/SLE_PD_skin_data.json", "r") as f:
+#     SLE_PD_skin_data = json.load(f)
 
 # Open the mPBPK_model.txt file and read its contents
 with open("../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
 
-# Open the mPBPK_SLE_model.txt file and read its contents
-with open("../../Models/mPBPK_SLE_model.txt", "r") as f:
+# Open the mPBPK_SLE_model_80_pdc_mm2.txt file and read its contents
+with open("../../Models/mPBPK_SLE_model_80_pdc_mm2.txt", "r") as f:
     lines = f.readlines()
 
 # Install and load the models
 sund.install_model('../../Models/mPBPK_model.txt')
-sund.install_model('../../Models/mPBPK_SLE_model.txt')
+sund.install_model('../../Models/mPBPK_SLE_model_80_pdc_mm2.txt')
 print(sund.installed_models())
 
 HV_model = sund.load_model("mPBPK_model")
-SLE_model = sund.load_model("mPBPK_SLE_model")
+SLE_model = sund.load_model("mPBPK_SLE_model_80_pdc_mm2")
 
 HV_data = {'PK': HV_PK_data, 'PD': HV_PD_data}
-SLE_data = {'PK': SLE_PK_data, 'PD': SLE_PD_data, 'PD_skin': SLE_PD_skin_data}
+SLE_data = {'PK': SLE_PK_data, 'PD': SLE_PD_data}
+# SLE_data = {'PK': SLE_PK_data, 'PD': SLE_PD_data, 'PD_skin': SLE_PD_skin_data}
 
 all_models = {'HV': HV_model, 'SLE': SLE_model}
 all_datasets = {'HV': HV_data, 'SLE': SLE_data}
@@ -68,14 +69,18 @@ time_vectors_PK = {dose: np.arange(-10, HV_PK_data[dose]["time"][-1] + 0.01, 1) 
 time_vectors_PD = {dose: np.arange(-10, HV_PD_data[dose]["time"][-1] + 0.01, 1) for dose in HV_PD_data}
 time_vectors_SLE_PK = {dose: np.arange(-10, SLE_PK_data[dose]["time"][-1] + 0.01, 1) for dose in SLE_PK_data}
 time_vectors_SLE_PD = {dose: np.arange(-10, SLE_PD_data[dose]["time"][-1] + 0.01, 1) for dose in SLE_PD_data}
-time_vectors_SLE_PD_skin = {dose: np.arange(-10, SLE_PD_skin_data[dose]["time"][-1] + 3000, 1) for dose in SLE_PD_skin_data}
+# time_vectors_SLE_PD_skin = {dose: np.arange(-10, SLE_PD_skin_data[dose]["time"][-1] + 3000, 1) for dose in SLE_PD_skin_data}
 
 HV_time_vectors = {'PK': time_vectors_PK, 'PD': time_vectors_PD}
-SLE_time_vectors = {'PK': time_vectors_SLE_PK, 'PD': time_vectors_SLE_PD, 'PD_skin': time_vectors_SLE_PD_skin}
+SLE_time_vectors = {'PK': time_vectors_SLE_PK, 'PD': time_vectors_SLE_PD}
+# SLE_time_vectors = {'PK': time_vectors_SLE_PK, 'PD': time_vectors_SLE_PD, 'PD_skin': time_vectors_SLE_PD_skin}
+
 all_time_vectors = {'HV': HV_time_vectors, 'SLE': SLE_time_vectors}
 
-measurements = {'PK': 'BIIB059_mean', 'PD': 'BDCA2_median', 'PD_skin': 'BDCA2_median'}
-ylabels = {'PK': 'Free Litifilimab Plasma Concentration [µg/ml]', 'PD': 'Total BDCA2 Expression on pDCs [% Change]', 'PD_skin': 'Free BDCA2 Expression on pDCs [% Change]'}
+measurements = {'PK': 'BIIB059_mean', 'PD': 'BDCA2_median'}
+# measurements = {'PK': 'BIIB059_mean', 'PD': 'BDCA2_median', 'PD_skin': 'BDCA2_median'}
+ylabels = {'PK': 'Free Litifilimab Plasma Concentration [µg/ml]', 'PD': 'Total BDCA2 Expression on pDCs [% Change]'}
+# ylabels = {'PK': 'Free Litifilimab Plasma Concentration [µg/ml]', 'PD': 'Total BDCA2 Expression on pDCs [% Change]', 'PD_skin': 'Free BDCA2 Expression on pDCs [% Change]'}
 
 activity_objects_dict = {}
 # Create activity objects for each dose
@@ -148,9 +153,9 @@ def fcost_joint(params, sims, dataset):
 
 
 # Initial parameter values for optimization
-merged_initial_params = [0.713, 0.0096, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.95, 0.8, 0.95, 0.45, 0.2, 0.00552, 0.00552, 1, 5.54, 2624]
-initial_params_HV = np.delete(merged_initial_params.copy(), [11,16])  # Removing parameters for SLE clearance, kdegs and kints
-initial_params_SLE = np.delete(merged_initial_params.copy(), [10,15])  # Removing parameter for HV clearance
+merged_initial_params = [0.713, 0.0096, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.95, 0.8, 0.95, 0.45, 0.2, 0.00552, 0.00552, 0.28, 5.54, 2624]
+initial_params_HV = np.delete(merged_initial_params.copy(), [11,16])  # Removing parameters for SLE clearance and RCS
+initial_params_SLE = np.delete(merged_initial_params.copy(), [10,15])  # Removing parameter for HV clearance and RCS
 all_initial_params = {'HV': initial_params_HV, 'SLE': initial_params_SLE}
 
 for model_key in all_models.keys():
@@ -162,7 +167,7 @@ merged_initial_params_log = np.log(merged_initial_params)
 # Bounds for the parameters
 # The bound factors are chosen to allow some flexibility in the optimization while keeping parameters physiologically reasonable
 # Bounds for parameters which have reliable literature values are set to 1 (frozen parameters)
-bound_factors = [1.25, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 5, 1, 1]
+bound_factors = [1.25, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 2, 10, 1, 1]
 
 
 # Calculate the logarithmic bounds for the parameters
@@ -237,7 +242,7 @@ def callback_evolution_log(x,convergence):
 # Create the output directory for saving results
 output_dir = '../../Results/Acceptable params'
 os.makedirs(output_dir, exist_ok=True)
-best_result_path = os.path.join(output_dir, 'best_result_test.json')
+best_result_path = os.path.join(output_dir, 'best_result_80_pdc_mm2.json')
 
 # Load previous best result if available
 if os.path.exists(best_result_path) and os.path.getsize(best_result_path) > 0:
@@ -253,7 +258,7 @@ else:
 acceptable_params = []
 
 # Load existing acceptable parameter sets if the file exists
-acceptable_params_path = os.path.join(output_dir, 'acceptable_params_test.json')
+acceptable_params_path = os.path.join(output_dir, 'acceptable_params_80_pdc_mm2.json')
 if os.path.exists(acceptable_params_path) and os.path.getsize(acceptable_params_path) > 0:
     with open(acceptable_params_path, 'r') as f:
         acceptable_params = json.load(f)
@@ -267,8 +272,8 @@ def fcost_uncertainty(merged_params_log, simulation_objects_dict, all_datasets):
     global best_param
 
     merged_params = np.exp(merged_params_log)
-    HV_params = np.delete(merged_params.copy(), [11,16])  # Removing parameters for SLE clearance, kdegs and kints
-    SLE_params = np.delete(merged_params.copy(), [10,15])  # Removing parameter for HV clearance
+    HV_params = np.delete(merged_params.copy(), [11,16])  # Removing parameters for SLE clearance and RCS
+    SLE_params = np.delete(merged_params.copy(), [10,15])  # Removing parameter for HV clearance and RCS
     all_params = {'HV': HV_params, 'SLE': SLE_params}
 
     params_pass = True
@@ -304,7 +309,7 @@ def fcost_uncertainty(merged_params_log, simulation_objects_dict, all_datasets):
 
 # Perform optimization using differential evolution
 # This optimization runs multiple iterations to find the best parameters that minimize the cost function
-for i in range(3):  # Run the optimization 5 times
+for i in range(5):  # Run the optimization 5 times
     res = differential_evolution(
         func=fcost_uncertainty,
         bounds=bounds_log,
@@ -315,16 +320,16 @@ for i in range(3):  # Run the optimization 5 times
     )
 
 # Save all acceptable parameter sets to a CSV file
-with open(os.path.join(output_dir, 'acceptable_params_test.csv'), 'w', newline='') as csvfile:
+with open(os.path.join(output_dir, 'acceptable_params_80_pdc_mm2.csv'), 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     writer.writerows(acceptable_params)
 
 # Save all acceptable parameter sets to a JSON file
-with open(os.path.join(output_dir, 'acceptable_params_test.json'), 'w') as f:
+with open(os.path.join(output_dir, 'acceptable_params_80_pdc_mm2.json'), 'w') as f:
     json.dump(acceptable_params, f, cls=NumpyArrayEncoder)
 
 # Save the best parameter set to a JSON file
-with open(os.path.join(output_dir, 'best_result_test.json'), 'w') as f:
+with open(os.path.join(output_dir, 'best_result_80_pdc_mm2.json'), 'w') as f:
     json.dump({'best_cost': best_cost, 'best_param': best_param.tolist()}, f, cls=NumpyArrayEncoder)
 
 # print the number of acceptable parameter sets collected

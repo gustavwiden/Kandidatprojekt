@@ -3,6 +3,7 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import sund
 import json
 
@@ -22,7 +23,7 @@ with open("../../../Data/PD_data.json", "r") as f:
     PD_data = json.load(f)
 
 # Load acceptable parameters for mPBPK-model from PL
-acceptable_params_PL = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
+acceptable_params = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
 # Load final parameters for mPBPK-model form optimization
 with open("../../../Models/final_parameters.json", "r") as f:
@@ -46,8 +47,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
 
         # Calculate uncertainty range
         for params in acceptable_params:
+            HV_params = np.delete(params.copy(), [11,16])
             try:
-                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                sims[experiment].simulate(time_vector=timepoints, parameter_values=HV_params, reset=True)
                 y_sim = sims[experiment].feature_data[:, 1]
                 y_min = np.minimum(y_min, y_sim)
                 y_max = np.maximum(y_max, y_sim)
@@ -57,18 +59,23 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
                 else:
                     raise e
 
+        # Convert to weeks for plotting (1 week = 168 hours)
+        hours_per_week = 168.0
+        timepoints_weeks = timepoints / hours_per_week
+        
         # Plot uncertainty range
-        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3, label='Uncertainty')
+        plt.fill_between(timepoints_weeks, y_min, y_max, color=color, alpha=0.3, label='Uncertainty')
 
         # Plot selected parameter set
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
         y_selected = sims[experiment].feature_data[:, 1]
-        plt.plot(timepoints, y_selected, color=color, label='Simulation', linewidth=3)
+        plt.plot(timepoints_weeks, y_selected, color=color, label='Simulation', linewidth=3)
 
         # Plot experimental data
         marker = markers[i]
+        exp_times_weeks = np.array(PD_data[experiment]['time']) / hours_per_week
         plt.errorbar(
-            PD_data[experiment]['time'],
+            exp_times_weeks,
             PD_data[experiment]['BDCA2_median'],
             yerr=PD_data[experiment]['SEM'],
             marker=marker,
@@ -81,18 +88,23 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PD
         )
 
         # Set labels
-        plt.xlabel('Time [Hours]', fontsize=18)
+        plt.xlabel('Time [Weeks]', fontsize=18)
         plt.ylabel('Total BDCA2 Expression on pDCs [% Change]', fontsize=18)
-        plt.title('PD Simulation in Plasma of Healthy Volunteer', fontsize=22)
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.title('PD Simulation in Plasma of Healthy Volunteer', fontsize=22, fontweight='bold')
         plt.tick_params(axis='both', which='major', labelsize=16)
         plt.legend(title=f'{dose}', title_fontsize=18, fontsize=16, loc='lower right')
 
+        # Convert xlim from hours to weeks
         if experiment == 'IVdose_20_HV':
-            plt.xlim(-200, 7000)
+            plt.xlim(-200.0 / hours_per_week, 7000.0 / hours_per_week)
         elif experiment == 'IVdose_3_HV':
-            plt.xlim(-140, 4800)
+            plt.xlim(-140.0 / hours_per_week, 4400.0 / hours_per_week)
         else:
-            plt.xlim(-90, 3000)
+            plt.xlim(-90.0 / hours_per_week, 3100.0 / hours_per_week)
+
+        plt.gca().xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
         if experiment == 'IVdose_03_HV':
             plt.ylim(-118, 39)
@@ -150,4 +162,4 @@ model_sims = {
 time_vectors = {exp: np.arange(-400, PD_data[exp]["time"][-1] + 5000, 1) for exp in PD_data}
 
 # Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params, acceptable_params_PL, model_sims, PD_data, time_vectors)
+plot_all_doses_with_uncertainty(params, acceptable_params, model_sims, PD_data, time_vectors)

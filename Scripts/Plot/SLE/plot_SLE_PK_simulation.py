@@ -14,16 +14,15 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../../../Models/mPBPK_SLE_model_32_pdc_mm2.txt", "r") as f:
+with open("../../../Models/mPBPK_SLE_model_80_pdc_mm2.txt", "r") as f:
     lines = f.readlines()
 
 # Load SLE PK data
 with open("../../../Data/SLE_PK_data_plotting.json", "r") as f:
     PK_data = json.load(f)
 
-# Load acceptable parameters for mPBPK_model
-with open("../../../Results/Acceptable params/acceptable_params_SLE_32_pdc_mm2.json", "r") as f:
-    acceptable_params = json.load(f)
+# Load acceptable parameters for mPBPK_SLE_model from PL
+acceptable_params = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
 # Load final parameters for mPBPK_SLE_model
 with open("../../../Models/final_parameters_SLE.json", "r") as f:
@@ -49,13 +48,13 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     }
 
     label_positions = {
-        'IVdose_005_HV': (250, 0.04),
-        'IVdose_03_HV':  (580, 0.3),
-        'IVdose_1_HV':   (2100, 0.01),
+        'IVdose_005_HV': (360, 0.08),
+        'IVdose_03_HV':  (480, 0.3),
+        'IVdose_1_HV':   (2100, 0.02),
         'IVdose_3_HV':   (750, 3.8),
         'IVdose_10_HV':  (750, 14),
         'IVdose_20_SLE':  (1900, 30),
-        'SCdose_50_HV':  (1220, 0.025),
+        'SCdose_50_HV':  (1400, 0.025),
     }
     
     # Loop through each experiment
@@ -66,8 +65,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
         # Calculate uncertainty range
         for params in acceptable_params:
+            HV_params = np.delete(params.copy(), [10,15])
             try:
-                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                sims[experiment].simulate(time_vector=timepoints, parameter_values=HV_params, reset=True)
                 y_sim = sims[experiment].feature_data[:, 0]
                 y_min = np.minimum(y_min, y_sim)
                 y_max = np.maximum(y_max, y_sim)
@@ -77,18 +77,20 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
                 else:
                     raise e
 
-        # Plot uncertainty range
-        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+        # Plot uncertainty range (x in weeks)
+        time_weeks = timepoints / 168.0
+        plt.fill_between(time_weeks, y_min, y_max, color=color, alpha=0.3)
 
-        # Plot selected parameter set
+        # Plot selected parameter set (simulate using hours, plot using weeks)
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
         y_selected = sims[experiment].feature_data[:, 0]
-        plt.plot(timepoints, y_selected, color=color, linewidth=2)
+        plt.plot(time_weeks, y_selected, color=color, linewidth=2)
 
         
         if experiment == 'IVdose_20_SLE':
+            exp_times_weeks = np.array(PK_data[experiment]['time']) / 168.0
             plt.errorbar(
-                PK_data[experiment]['time'],
+                exp_times_weeks,
                 PK_data[experiment]['BIIB059_mean'],
                 yerr=PK_data[experiment]['SEM'],
                 fmt='P',
@@ -101,40 +103,42 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
         # Add manually placed labels
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
-            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+            plt.text(label_x / 168.0, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=18, weight='bold')
 
     # Set plot title and labels
-    plt.xlabel('Time [Hours]', fontsize=18)
+    plt.xlabel('Time [Weeks]', fontsize=18)
     plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
-    plt.title('PK Simulations in Plasma of SLE Patients', fontsize=22)
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.title('PK Simulations in Plasma of SLE Patients', fontsize=22, fontweight='bold')
     plt.yscale('log')
     plt.ylim(0.002, 1000)
-    plt.xlim(-25, 2750)
+    plt.xlim(-25.0 / 168.0, 2750.0 / 168.0)
     plt.tick_params(axis='both', which='major', labelsize=16)
     plt.tight_layout()
 
-    # Text to describe the figure
+    # Text to describe the figure (x coordinates converted to weeks)
     plt.annotate(
         'Simulation',
-        xy=(1250, 40),  # Arrow's coordinates
-        xytext=(1400, 150),  # Text coordinates
+        xy=(1250.0 / 168.0, 40),  # Arrow's coordinates
+        xytext=(1400.0 / 168.0, 150),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
     plt.annotate(
         'Uncertainty',
-        xy=(1780, 0.05), # Arrow's coordinates
-        xytext=(1250, 0.006),  # Text coordinates
+        xy=(1100.0 / 168.0, 0.05), # Arrow's coordinates
+        xytext=(700.0 / 168.0, 0.006),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
     plt.annotate(
         'Data',
-        xy=(350, 150),  # Arrow's coordinates
-        xytext=(600, 240),  # Text coordinates
+        xy=(350.0 / 168.0, 150),  # Arrow's coordinates
+        xytext=(600.0 / 168.0, 240),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
@@ -145,11 +149,11 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.close()
 
 # Install the model
-sund.install_model('../../../Models/mPBPK_SLE_model_32_pdc_mm2.txt')
+sund.install_model('../../../Models/mPBPK_SLE_model_80_pdc_mm2.txt')
 print(sund.installed_models())
 
 # Load the model object
-model = sund.load_model("mPBPK_SLE_model_32_pdc_mm2")
+model = sund.load_model("mPBPK_SLE_model_80_pdc_mm2")
 
 # Average bodyweight for SLE patients (cohort 8 in the phase 1 trial)
 bodyweight = 69

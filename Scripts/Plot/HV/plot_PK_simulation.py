@@ -22,7 +22,7 @@ with open("../../../Data/PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Load acceptable parameters for mPBPK_model from PL
-acceptable_params_PL = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
+acceptable_params = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
 # Load final parameters for mPBPK_model from optimization
 with open("../../../Models/final_parameters.json", "r") as f:
@@ -51,11 +51,11 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     label_positions = {
         'IVdose_005_HV': (400, 0.06),
         'IVdose_03_HV':  (300, 0.6),
-        'IVdose_1_HV':   (1480, 0.11),
+        'IVdose_1_HV':   (1750, 0.11),
         'IVdose_3_HV':   (780, 7),
         'IVdose_10_HV':  (780, 22),
         'IVdose_20_HV':  (1900, 66),
-        'SCdose_50_HV':  (800, 0.16),
+        'SCdose_50_HV':  (680, 0.16),
     }
     
     # Loop through each experiment
@@ -66,8 +66,9 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
         # Calculate uncertainty range
         for params in acceptable_params:
+            HV_params = np.delete(params.copy(), [11,16])
             try:
-                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                sims[experiment].simulate(time_vector=timepoints, parameter_values=HV_params, reset=True)
                 y_sim = sims[experiment].feature_data[:, 0]
                 y_min = np.minimum(y_min, y_sim)
                 y_max = np.maximum(y_max, y_sim)
@@ -77,18 +78,20 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
                 else:
                     raise e
 
-        # Plot uncertainty range
-        plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3)
+        # Plot uncertainty range (x in weeks)
+        time_weeks = timepoints / 168.0
+        plt.fill_between(time_weeks, y_min, y_max, color=color, alpha=0.3)
 
-        # Plot selected parameter set
+        # Plot selected parameter set (simulate using hours, plot using weeks)
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
         y_selected = sims[experiment].feature_data[:, 0]
-        plt.plot(timepoints, y_selected, color=color, linewidth=2)
+        plt.plot(time_weeks, y_selected, color=color, linewidth=2)
 
-        # Plot experimental data
+        # Plot experimental data (convert times to weeks)
         marker = markers[i]
+        exp_times_weeks = np.array(PK_data[experiment]['time']) / 168.0
         plt.errorbar(
-            PK_data[experiment]['time'],
+            exp_times_weeks,
             PK_data[experiment]['BIIB059_mean'],
             yerr=PK_data[experiment]['SEM'],
             fmt=marker,
@@ -98,43 +101,51 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
             capsize=3
         )
 
-        # Add manually placed labels
+        # Add manually placed labels (convert label x to weeks)
         if experiment in label_positions:
             label_x, label_y = label_positions[experiment]
-            plt.text(label_x, label_y, dose_labels.get(experiment, experiment),
+            plt.text(label_x / 168.0, label_y, dose_labels.get(experiment, experiment),
                      color=color, fontsize=18, weight='bold')
 
-    # Set labels
-    plt.xlabel('Time [Hours]', fontsize=18)
+    # Convert x-axis from hours to weeks (1 week = 168 hours)
+    hours_per_week = 168.0
+
+    # Convert plotted data and positions to weeks
+    # Update label positions (convert their x coordinates when used below)
+
+    plt.xlabel('Time [Weeks]', fontsize=18)
     plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
-    plt.title('PK Simulations in Plasma of Healthy Volunteers', fontsize=22)
+    plt.title('PK Simulations in Plasma of Healthy Volunteers', fontsize=22, fontweight='bold')
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
     plt.yscale('log')
     plt.ylim(0.005, 1000)
-    plt.xlim(-25, 2750)
+    # convert previous xlim from hours to weeks
+    plt.xlim(-25.0 / hours_per_week, 2750.0 / hours_per_week)
     plt.tick_params(axis='both', which='major', labelsize=16)
     plt.tight_layout()
 
-    # Text to describe the figure
+    # Text to describe the figure (x coordinates converted to weeks)
     plt.annotate(
         'Simulation',
-        xy=(1470, 60),  # Arrow's coordinates
-        xytext=(1500, 200),  # Text coordinates
+        xy=(1470.0 / hours_per_week, 60),  # Arrow's coordinates
+        xytext=(1500.0 / hours_per_week, 200),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
     plt.annotate(
         'Uncertainty',
-        xy=(2450, 0.8), # Arrow's coordinates
-        xytext=(2050, 0.1),  # Text coordinates
+        xy=(2500.0 / hours_per_week, 0.9), # Arrow's coordinates
+        xytext=(2100.0 / hours_per_week, 0.1),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
 
     plt.annotate(
         'Data',
-        xy=(1025, 94),  # Arrow's coordinates
-        xytext=(1250, 180),  # Text coordinates
+        xy=(1025.0 / hours_per_week, 94),  # Arrow's coordinates
+        xytext=(1250.0 / hours_per_week, 180),  # Text coordinates
         arrowprops=dict(facecolor='black', arrowstyle='->'),
         fontsize=18
     )
@@ -195,4 +206,4 @@ model_sims = {
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
 # Plot all doses with uncertainty
-plot_all_doses_with_uncertainty(params, acceptable_params_PL, model_sims, PK_data, time_vectors)
+plot_all_doses_with_uncertainty(params, acceptable_params, model_sims, PK_data, time_vectors)
