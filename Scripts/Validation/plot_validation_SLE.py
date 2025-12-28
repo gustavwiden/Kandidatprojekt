@@ -14,7 +14,7 @@ class NumpyArrayEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 # Open the mPBPK_model.txt file and read its contents
-with open("../../Models/mPBPK_SLE_model_32_pdc_mm2.txt", "r") as f:
+with open("../../Models/mPBPK_SLE_model_80_pdc_mm2.txt", "r") as f:
     lines = f.readlines()
 
 # Load SLE Validation PK data
@@ -22,17 +22,16 @@ with open("../../Data/SLE_Validation_PK_data.json", "r") as f:
     PK_data = json.load(f)
 
 # Load acceptable parameters for SLE
-with open("../../Results/Acceptable params/acceptable_params_SLE_32_pdc_mm2.json", "r") as f:
-    acceptable_params = json.load(f)
+acceptable_params = np.loadtxt("../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
 # Load final parameters for SLE
 with open("../../Models/final_parameters_SLE.json", "r") as f:
-    params = json.load(f)
+    best_params = json.load(f)
 
 # Install and load the model
-sund.install_model('../../Models/mPBPK_SLE_model_32_pdc_mm2.txt')
+sund.install_model('../../Models/mPBPK_SLE_model_80_pdc_mm2.txt')
 print(sund.installed_models())
-model = sund.load_model("mPBPK_SLE_model_32_pdc_mm2")
+model = sund.load_model("mPBPK_SLE_model_80_pdc_mm2")
 
 # Create activity objects for each dose
 SC_50_SLE = sund.Activity(time_unit='h')
@@ -55,7 +54,7 @@ model_sims = {
 # The time vectors are created based on the maximum time in the PK_data for each experiment
 time_vectors = {exp: np.arange(-10, PK_data[exp]["time"][-1] + 0.01, 1) for exp in PK_data}
 
-def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../Results/Validation'):
+def plot_model_uncertainty_with_validation_data(best_params, acceptable_params, sims, PK_data, time_vectors, save_dir='../../Results/Validation'):
     os.makedirs(save_dir, exist_ok=True)
 
     # Colors and markers for the plots
@@ -66,14 +65,18 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
     # Loop through each experiment and plot the uncertainty range and best parameter set
     for i, (experiment, color, dose) in enumerate(zip(PK_data.keys(), colors, doses)):
         plt.figure(figsize=(10, 8))
-        timepoints = time_vectors[experiment]
-        y_min = np.full_like(timepoints, 10000)
-        y_max = np.full_like(timepoints, -10000)
+        # simulation uses hours, but plots should be in weeks
+        timepoints_hours = time_vectors[experiment]
+        timepoints = timepoints_hours / 168.0  # convert hours to weeks
+        y_min = np.full_like(timepoints_hours, 10000)
+        y_max = np.full_like(timepoints_hours, -10000)
 
         # Calculate uncertainty range
         for params in acceptable_params:
+            SLE_params = np.delete(params.copy(), [10,15])
             try:
-                sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+                # simulate on the hourly time vector
+                sims[experiment].simulate(time_vector=timepoints_hours, parameter_values=SLE_params, reset=True)
                 y_sim = sims[experiment].feature_data[:, 0]
                 y_min = np.minimum(y_min, y_sim)
                 y_max = np.maximum(y_max, y_sim)
@@ -84,17 +87,19 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
                     raise e
 
         # Plot uncertainty range
+        # plot using weeks on the x-axis
         plt.fill_between(timepoints, y_min, y_max, color=color, alpha=0.3, label='Uncertainty')
 
         # Plot best parameter set
-        sims[experiment].simulate(time_vector=timepoints, parameter_values=params, reset=True)
+        sims[experiment].simulate(time_vector=timepoints_hours, parameter_values=best_params, reset=True)
         y = sims[experiment].feature_data[:, 0]
         plt.plot(timepoints, y, color=color, linewidth=3, label='Simulation')
 
         # Plot experimental data
         marker = markers[i]
         plt.errorbar(
-            PK_data[experiment]['time'],
+            # convert experimental timepoints to weeks for plotting
+            np.array(PK_data[experiment]['time']) / 168.0,
             PK_data[experiment]['BIIB059_mean'],
             yerr=PK_data[experiment]['SEM'],
             fmt=marker,
@@ -106,9 +111,11 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
         )
 
         # Labels and title
-        plt.xlabel('Time [Hours]', fontsize=18)
+        plt.xlabel('Time [weeks]', fontsize=18)
         plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
-        plt.title(f'Validation of PK Simulation in Plasma of SLE Patients', fontsize=22)
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['right'].set_visible(False)
+        plt.title(f'Validation of PK Simulation in Plasma of SLE Patients', fontsize=22, fontweight='bold')
         plt.tick_params(axis='both', which='major', labelsize=16)
         plt.legend(title=f'Multiple {dose} Doses', title_fontsize = 18, fontsize=16, loc='upper right')
         plt.tight_layout()
@@ -119,5 +126,5 @@ def plot_model_uncertainty_with_validation_data(params, acceptable_params, sims,
         plt.close()
 
 # Plot the model uncertainty with validation data
-plot_model_uncertainty_with_validation_data(params, acceptable_params, model_sims, PK_data, time_vectors)
+plot_model_uncertainty_with_validation_data(best_params, acceptable_params, model_sims, PK_data, time_vectors)
 
