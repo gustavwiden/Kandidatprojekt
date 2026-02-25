@@ -3,6 +3,8 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import sund
 import json
 
@@ -36,27 +38,6 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     # Define colors and markers for each dose
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
     markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
-
-    # Define labels and positions for each dose
-    dose_labels = {
-        'IVdose_005_HV': '0.05 IV',
-        'IVdose_03_HV':  '0.3 IV',
-        'IVdose_1_HV':   '1 IV',
-        'IVdose_3_HV':   '3 IV',
-        'IVdose_10_HV':  '10 IV',
-        'IVdose_20_HV':  '20 IV',
-        'SCdose_50_HV':  '50 SC'
-    }
-
-    label_positions = {
-        'IVdose_005_HV': (400, 0.06),
-        'IVdose_03_HV':  (300, 0.6),
-        'IVdose_1_HV':   (1750, 0.11),
-        'IVdose_3_HV':   (780, 7),
-        'IVdose_10_HV':  (780, 22),
-        'IVdose_20_HV':  (1900, 66),
-        'SCdose_50_HV':  (680, 0.16),
-    }
     
     # Loop through each experiment
     for i, (experiment, color) in enumerate(zip(PK_data.keys(), colors)):
@@ -80,12 +61,12 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
 
         # Plot uncertainty range (x in weeks)
         time_weeks = timepoints / 168.0
-        plt.fill_between(time_weeks, y_min, y_max, color=color, alpha=0.3)
+        plt.fill_between(time_weeks, y_min, y_max, color=color, alpha=0.3, label="Uncertainty")
 
         # Plot selected parameter set (simulate using hours, plot using weeks)
         sims[experiment].simulate(time_vector=timepoints, parameter_values=selected_params, reset=True)
         y_selected = sims[experiment].feature_data[:, 0]
-        plt.plot(time_weeks, y_selected, color=color, linewidth=2)
+        plt.plot(time_weeks, y_selected, color=color, linewidth=2, label="Simulation")
 
         # Plot experimental data (convert times to weeks)
         marker = markers[i]
@@ -98,20 +79,11 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
             markersize=6,
             color=color,
             linestyle='None',
-            capsize=3
+            capsize=3,
+            label='Data'
         )
 
-        # Add manually placed labels (convert label x to weeks)
-        if experiment in label_positions:
-            label_x, label_y = label_positions[experiment]
-            plt.text(label_x / 168.0, label_y, dose_labels.get(experiment, experiment),
-                     color=color, fontsize=18, weight='bold')
-
-    # Convert x-axis from hours to weeks (1 week = 168 hours)
     hours_per_week = 168.0
-
-    # Convert plotted data and positions to weeks
-    # Update label positions (convert their x coordinates when used below)
 
     plt.xlabel('Time [Weeks]', fontsize=18)
     plt.ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
@@ -122,42 +94,50 @@ def plot_all_doses_with_uncertainty(selected_params, acceptable_params, sims, PK
     plt.ylim(0.005, 1000)
     # convert previous xlim from hours to weeks
     plt.xlim(-25.0 / hours_per_week, 2750.0 / hours_per_week)
-    plt.tick_params(axis='both', which='major', labelsize=16)
+    plt.tick_params(axis='both', which='major', labelsize=16)   
     plt.tight_layout()
+    plt.subplots_adjust(bottom=0.25) 
 
-    # Text to describe the figure (x coordinates converted to weeks)
-    plt.annotate(
-        'Simulation',
-        xy=(1470.0 / hours_per_week, 60),  # Arrow's coordinates
-        xytext=(1500.0 / hours_per_week, 200),  # Text coordinates
-        arrowprops=dict(facecolor='black', arrowstyle='->'),
-        fontsize=18
-    )
+    column_labels = ["0.05 mg/kg", "0.3 mg/kg", "1 mg/kg", "3 mg/kg", "10 mg/kg", "20 mg/kg", "SC 50 mg"]
 
-    plt.annotate(
-        'Uncertainty',
-        xy=(2500.0 / hours_per_week, 0.9), # Arrow's coordinates
-        xytext=(2100.0 / hours_per_week, 0.1),  # Text coordinates
-        arrowprops=dict(facecolor='black', arrowstyle='->'),
-        fontsize=18
-    )
+    legend_handles = []
+    for i, label in enumerate(column_labels):
+        color = colors[i]
+        marker = markers[i]
+        legend_handles.append(Patch(facecolor=color, alpha=0.3, edgecolor='none'))
+        legend_handles.append(Line2D([0], [0], color=color, lw=3))
+        legend_handles.append(Line2D([0], [0], color=color, marker=marker, 
+                                     linestyle='None', markersize=10))
 
-    plt.annotate(
-        'Data',
-        xy=(1025.0 / hours_per_week, 94),  # Arrow's coordinates
-        xytext=(1250.0 / hours_per_week, 180),  # Text coordinates
-        arrowprops=dict(facecolor='black', arrowstyle='->'),
-        fontsize=18
+    ax = plt.gca()
+    legend = ax.legend(
+        legend_handles, 
+        [''] * 21, 
+        ncol=7, 
+        loc='upper center', 
+        bbox_to_anchor=(0.54, -0.11),
+        labelspacing=0.9,
+        columnspacing=7.2,
+        handletextpad=0.0,
+        title="0.05 mg/kg  0.3 mg/kg  1.0 mg/kg  3.0 mg/kg  10 mg/kg  20 mg/kg  SC 50 mg", 
+        title_fontsize=16,
+        frameon=False
     )
+    legend._legend_box.align = "center"
+
+    row_labels = ["IV", "Uncertainty", "Simulation", "Data"]
+    for i, label in enumerate(row_labels):
+        ax.text(0.13, -0.152 - (i * 0.05), label, # Adjusted offsets
+                transform=ax.transAxes, ha='right', fontsize=16, va='center')
 
     # Save the figure
-    save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
-    plt.savefig(save_path, format='png', dpi=600)
-    plt.close()
-
-    # save_path_svg = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
-    # plt.savefig(save_path_svg, format='svg')
+    # save_path = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.png")
+    # plt.savefig(save_path, format='png', dpi=600)
     # plt.close()
+
+    save_path_svg = os.path.join(save_dir, "PK_all_doses_together_with_uncertainty.svg")
+    plt.savefig(save_path_svg, format='svg')
+    plt.close()
 
 # Install the model
 sund.install_model('../../../Models/mPBPK_model.txt')

@@ -1,0 +1,63 @@
+########## NAME
+mPBPK_starting_model
+
+########## METADATA
+time_unit = h
+
+########## MACROS
+
+########## STATES
+d/dt(Plasma) = (r2+r3-r4-r5-r8)/Vp       // Change in concentration of total antibody over time in plasma compartment (pM/h).
+d/dt(Tight) = (r4-r6)/V1                 // Change in concentration of total antibody over time in tight compartment (pM/h).
+d/dt(Leaky) = (r5-r7)/V2                 // Change in concentration of total antibody over time in leaky compartment (pM/h).
+d/dt(Lymph) = (-r3+r6+r7)/VL             // Change in concentration of total antibody over time in lymph compartment (pM/h).
+d/dt(Depot) = -r1                        // Change in amount of total antibody over time in depot compartment (pmol/h).
+
+Plasma(0) = 0                            // Initial concentration of total antibody in plasma compartment (pM).
+Skin(0) = 0                              // Initial concentration of total antibody in skin compartment (pM).
+Tight(0) = 0                             // Initial concentration of total antibody in tight compartment (pM).
+Leaky(0) = 0                             // Initial concentration of total antibody in leaky compartment (pM).
+Lymph(0) = 0                             // Initial concentration of total antibody in lymph compartment (pM).
+Depot(0) = 0                             // Initial amount of total antibody in depot compartment (pmol).
+
+########## PARAMETERS
+F =                                      // Bioavailibility.
+ka =                                     // Absorption rate (1/h).
+Vp =                                     // Volume of plasma compartment (L).
+V1 =                                     // Volume of interstitial fluid in tight compartment (L).
+V2 =                                     // Volume of interstitial fluid in leaky compartment (L).
+VL =                                     // Volume of lymph compartment (L).
+L1 =                                     // Lymph flow rate for tight compartment (L/h).
+L2 =                                     // Lymph flow rate for leaky compartment (L/h).
+RC1 =                                    // Reflection co-efficient for tight compartment.
+RC2 =                                    // Reflection co-efficient for leaky compartment.
+RCL =                                    // Reflection co-efficient for lymph compartment.
+CL =                                     // Linear clearance of antibody from plasma compartment (L/h).
+
+########## VARIABLES
+r1 = ka*Depot                            // Depletion of antibody in depot compartment (pM/h).
+r2 = F*ka*Depot                          // Absorption of antibody in plasma compartment (pM/h).
+r3 = (Ls+L1+L2)*Lymph                    // Lymphatic return of antibody to plasma compartment (pmol/h).
+r4 = L1*(1-RC1)*Plasma                   // Distribution of antibody to tight compartment (pmol/h).
+r5 = L2*(1-RC2)*Plasma                   // Distribution of antibody to leaky compartment (pmol/h).
+r6 = L1*(1-RCL)*Tight                    // Lymphatic uptake of antibody from tight compartment (pmol/h).
+r7 = L2*(1-RCL)*Leaky                    // Lymphatic uptake of antibody from leaky compartment (pmol/h).
+r8 = CL*Plasma                           // Linear clearance of antibody from plasma compartment (pmol/h).
+
+########## FUNCTIONS
+
+########## EVENTS
+# These calculations are currently adjusted for IV-doses of unit μg/kg and SC-doses of unit μg
+# The molecular weight of the antibody is currently assumed to be 146.6 kDa
+
+IV_dose = IV > 0, Plasma, Plasma + IV*1e6/(146600*Vp)          // Intravenous (IV) dose of antibody in plasma compartment (pM).
+SC_dose = SC > 0, Depot, Depot + SC*1e6/(146600)               // Subcutaneous (SC) dose of antibody in depot compartment (pmol).
+
+########## OUTPUTS
+
+########## INPUTS
+IV = IV_in @ 0
+SC = SC_in @ 0
+
+########## FEATURES
+PK_sim = (Plasma*146600)/1e9             // Simulation: Concentration of total antibody in plasma compartment (μg/mL).

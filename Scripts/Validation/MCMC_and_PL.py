@@ -243,23 +243,23 @@ sampler = sample.AdaptiveMetropolisSampler()
 # result_sampling = sample.sample(problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=param_init)
 
 # Save or load sampling trace to/from CSV (prefer existing CSV)
-csv_path = os.path.join(output_dir, 'sampling_result_model.csv')
-if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
-    try:
-        trace = np.loadtxt(csv_path, delimiter=',')
-        print('Loaded existing sampling trace from', csv_path)
-    except Exception as e:
-        raise RuntimeError(f'Failed loading existing sampling CSV {csv_path}: {e}')
-else:
-    # If CSV doesn't exist, attempt to extract trace from in-memory result_sampling
-    try:
-        trace = np.array(result_sampling.sample_result['trace_x'])[0]
-        # Ensure directory exists then save
-        os.makedirs(output_dir, exist_ok=True)
-        np.savetxt(csv_path, trace, delimiter=',')
-        print('MCMC sampling finished. Saved trace to', csv_path)
-    except Exception as e:
-        raise RuntimeError('No sampling CSV found and no in-memory sampling result available: {}'.format(e))
+# csv_path = os.path.join(output_dir, 'sampling_result_model_1.csv')
+# if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
+#     try:
+#         trace = np.loadtxt(csv_path, delimiter=',')
+#         print('Loaded existing sampling trace from', csv_path)
+#     except Exception as e:
+#         raise RuntimeError(f'Failed loading existing sampling CSV {csv_path}: {e}')
+# else:
+#     # If CSV doesn't exist, attempt to extract trace from in-memory result_sampling
+#     try:
+#         trace = np.array(result_sampling.sample_result['trace_x'])[0]
+#         # Ensure directory exists then save
+#         os.makedirs(output_dir, exist_ok=True)
+#         np.savetxt(csv_path, trace, delimiter=',')
+#         print('MCMC sampling finished. Saved trace to', csv_path)
+#     except Exception as e:
+#         raise RuntimeError('No sampling CSV found and no in-memory sampling result available: {}'.format(e))
 
 
 # ---------------------- Plot histograms as in original script ----------------------
@@ -408,7 +408,7 @@ for i, (idx, step_size) in enumerate(zip(selected_indices, step_sizes)):
                 PL_params_to_save.append(step_params.tolist())
 
     # Save acceptable params to CSV
-    pl_csv = os.path.join(output_dir, f"acceptable_params_PL_{selected_names[i]}_test.csv")
+    pl_csv = os.path.join(output_dir, f"acceptable_params_PL_{selected_names[i]}_test_80.csv")
     with open(pl_csv, 'w', newline='') as f:
         writer = _csv.writer(f)
         writer.writerows(PL_params_to_save)
@@ -447,8 +447,8 @@ for i, (idx, step_size) in enumerate(zip(selected_indices, step_sizes)):
     plt.ylim(0, chi2_total_limit * 1.15)
         
     plt.legend(fontsize='small')
-    save_path = os.path.join(save_dir, f"PL_{selected_names[i]}_model_test.png")
-    plt.savefig(save_path, format='png', dpi=600)
+    save_path = os.path.join(save_dir, f"PL_{selected_names[i]}_model_test_80.svg")
+    plt.savefig(save_path, format='svg')
     plt.close()
 
 print('MCMC and PL done.')

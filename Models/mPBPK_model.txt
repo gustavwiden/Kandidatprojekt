@@ -12,7 +12,7 @@ d/dt(Skin) = (r4-r7)/Vs                                 // Change in concentrati
 d/dt(Tight) = (r5-r8)/V1                                // Change in concentration of total BIIB059 over time in tight compartment (pM/h).
 d/dt(Leaky) = (r6-r9)/V2                                // Change in concentration of total BIIB059 over time in leaky compartment (pM/h).
 d/dt(Lymph) = (-r3+r7+r8+r9)/VL                         // Change in concentration of total BIIB059 over time in lymph compartment (pM/h).
-d/dt(Depot) = -r1                                       // Change in amount of total BIIB059 over time in depot compartment (pM/h).
+d/dt(Depot) = -r1                                       // Change in amount of total BIIB059 over time in depot compartment (pmol/h).
 d/dt(BDCA2_plasma) = r11-r12-r13                        // Change in concentration of total BDCA2 over time in plasma compartment (pM/h).
 
 Plasma(0) = 0                                           // Initial concentration of total BIIB059 in plasma compartment (pM).
@@ -24,7 +24,7 @@ Depot(0) = 0                                            // Initial amount of tot
 BDCA2_plasma(0) = 23.1                                  // Initial concentration of total BDCA2 in plasma compartment (pM).
 
 ########## PARAMETERS
-F = 0.601                                               // Bioavailibility.
+F = 0.603                                               // Bioavailibility.
 ka = 0.0133                                             // Absorption rate (1/h).
 Vp = 2.6                                                // Volume of plasma compartment (L).
 Vs = 1.125                                              // Volume of interstitial fluid in skin compartment (L).

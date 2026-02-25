@@ -12,7 +12,7 @@ d/dt(Skin) = (r4-r7)/Vs-r16                             // Change in concentrati
 d/dt(Tight) = (r5-r8)/V1                                // Change in concentration of total BIIB059 over time in tight compartment (pM/h).
 d/dt(Leaky) = (r6-r9)/V2                                // Change in concentration of total BIIB059 over time in leaky compartment (pM/h).
 d/dt(Lymph) = (-r3+r7+r8+r9)/VL                         // Change in concentration of total BIIB059 over time in lymph compartment (pM/h).
-d/dt(Depot) = -r1                                       // Change in amount of total BIIB059 over time in depot compartment (pM/h).
+d/dt(Depot) = -r1                                       // Change in amount of total BIIB059 over time in depot compartment (pmol/h).
 d/dt(BDCA2_plasma) = r11-r12-r13                        // Change in concentration of total BDCA2 over time in plasma compartment (pM/h).
 d/dt(BDCA2_skin) = r14-r15-r16                          // Change in concentration of total BDCA2 over time in skin compartment (pM/h).
 
@@ -26,7 +26,7 @@ BDCA2_plasma(0) = 15.9                                  // Initial concentration
 BDCA2_skin(0) = 3.8                                    // Initial concentration of total BDCA2 in skin compartment (pM).
 
 ########## PARAMETERS
-F = 0.598                                               // Bioavailibility.
+F = 0.603                                               // Bioavailibility.
 ka = 0.0135                                             // Absorption rate (1/h).
 Vp = 2.6                                                // Volume of plasma compartment (L).
 Vs = 1.125                                              // Volume of interstitial fluid in skin compartment (L).
@@ -40,7 +40,7 @@ RCS = 0.8                                              // Reflection co-efficien
 RC1 = 0.95                                              // Reflection co-efficient for tight compartment.
 RC2 = 0.75                                              // Reflection co-efficient for leaky compartment.
 RCL = 0.20                                              // Reflection co-efficient for lymph compartment.
-CL = 0.00733                                            // Linear clearance of BIIB059 from plasma compartment (L/h).
+CL = 0.00731                                            // Linear clearance of BIIB059 from plasma compartment (L/h).
 kdeg = 0.962                                           // Degradation rate of BDCA2 in plasma compartment (1/h).
 kint = 5.54                                            // Internalization rate of BDCA2-BIIB059 complex in plasma compartment (1/h).
 kss = 2624                                              // Steady state coefficient (pM).

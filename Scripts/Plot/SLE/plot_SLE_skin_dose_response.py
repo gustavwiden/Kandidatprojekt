@@ -21,13 +21,13 @@ with open("../../../Results/Acceptable params/best_result_400_pdc_mm2.json", 'r'
     params_400 = np.array(json.load(f)['best_param'])
 
 # Load acceptable parameters
-acceptable_params_1 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_1_pdc_mm2.csv", delimiter=",").tolist()
+acceptable_params_1 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
-acceptable_params_10 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_10_pdc_mm2.csv", delimiter=",").tolist()
+acceptable_params_10 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
-acceptable_params_80 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_80_pdc_mm2.csv", delimiter=",").tolist()
+acceptable_params_80 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
-acceptable_params_400 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_400_pdc_mm2.csv", delimiter=",").tolist()
+acceptable_params_400 = np.loadtxt("../../../Results/Acceptable params/acceptable_params_PL.csv", delimiter=",").tolist()
 
 # Load dose response data
 with open("../../../Data/SLE_skin_dose_response_1_pdc_mm2.json", "r") as f:
@@ -297,7 +297,7 @@ def plot_skin_PK_simulations(params, acceptable_params, models, time_vectors):
 
         plt.tight_layout()
 
-        save_path = os.path.join(save_dir, f"PK_skin_sim_{dose}.png")
+        save_path = os.path.join(save_dir, f"PK_skin_sim_{dose}_test.png")
         plt.savefig(save_path, dpi=600)
         plt.close()
 
@@ -543,9 +543,9 @@ time_vectors_IV_SC = {'IV_20': time_vector_IV_20, 'SC_50': time_vector_SC_50, 'S
 
 # plot_dose_response_IV_doses_separate(dose_response_datasets)
 
-# plot_skin_PK_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
+plot_skin_PK_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
 
 # plot_skin_PD_simulations(best_param_sets, acceptable_param_sets, models, time_vectors_IV_SC)
 
-plot_skin_plasma_AUC_ratio(best_param_sets, acceptable_param_sets, models, time_vector_AUC)
+# plot_skin_plasma_AUC_ratio(best_param_sets, acceptable_param_sets, models, time_vector_AUC)
 
