@@ -75,6 +75,6 @@ IV = IV_in @ 0
 SC = SC_in @ 0
 
 ########## FEATURES
-PK_sim = (Plasma_free*146600)/1e9                                  // Simulation: Concentration of free BIIB059 in plasma compartment (μg/mL).
-PD_sim = 100*(BDCA2_plasma-23.1)/23.1                              // Simulation: Expression of total BDCA2 on pDCs in plasma compartment (% change from baseline).
-PK_sim_skin = Skin*146600/1e9                                      // Simulation: Concentration of total BIIB059 in skin compartment (μg/mL).
+PK_sim = (Plasma_free*146600)/1e9                                           // Simulation: Concentration of free BIIB059 in plasma compartment (μg/mL).
+PD_sim = 100*(BDCA2_plasma-23.1)/23.1                                       // Simulation: Expression of total BDCA2 on pDCs in plasma compartment (% change from baseline).
+PK_sim_skin = Skin*146600/1e9                                               // Simulation: Concentration of total BIIB059 in skin compartment (μg/mL).

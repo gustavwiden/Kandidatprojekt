@@ -54,12 +54,12 @@ def plot_model_uncertainty_with_validation_data(best_params, acceptable_params, 
         'SCdose_50_SLE': '50 mg SC (SLE)', 'SCdose_150_SLE': '150 mg SC (SLE)', 'SCdose_450_SLE': '450 mg SC (SLE)'
     }
     
-    colors = ['#6d65bf', '#6c5ce7', '#8c7ae6', '#6d65bf', '#6c5ce7', '#8c7ae6']
+    color = '#6d65bf'
 
     for i, experiment in enumerate(PK_data.keys()):
         plt.figure(figsize=(10, 8))
-        color = colors[i % len(colors)]
         dose_label = dose_map.get(experiment, experiment)
+        dose_size = dose_label.split()[0]  # Extract the dose size (e.g., '50', '150', '450')
         
         timepoints_hours = time_vectors[experiment]
         timepoints = timepoints_hours / 168.0  # convert hours to weeks
@@ -103,17 +103,17 @@ def plot_model_uncertainty_with_validation_data(best_params, acceptable_params, 
         plt.gca().spines['right'].set_visible(False)
         
         # Adjust title based on whether it is CLE or SLE
-        sub_title = 'CLE Patients' if 'CLE' in experiment else 'SLE Patients'
-        plt.title(f'PK Simulation in Plasma of {sub_title}', fontsize=18)
+        sub_title = 'CLE Patient' if 'CLE' in experiment else 'SLE Patient'
+        plt.title(f'PK Simulation of Repeated {dose_size} SC Doses in Plasma of {sub_title}', fontsize=18)
         plt.suptitle('Validation of Model Against Phase 2 PK Data', fontsize=22, fontweight='bold', x=0.54)
         
         plt.tick_params(axis='both', which='major', labelsize=16)
-        plt.legend(title=f'Multiple {dose_label.split(" (")[0]} Doses', title_fontsize=18, fontsize=16, loc='upper right')
+        plt.legend(fontsize=16, loc='upper right')
         plt.tight_layout()
 
         # Save the plots
-        for fmt in ['svg', 'png']:
-            plt.savefig(os.path.join(save_dir, f"PK_validation_with_{experiment}.{fmt}"), format=fmt, dpi=600)
+        plt.savefig(os.path.join(save_dir, f"PK_validation_with_{experiment}.png"), format='png', dpi=600)
+        plt.savefig(os.path.join(save_dir, f"PK_validation_with_{experiment}.svg"), format='svg')
         plt.close()
 
 # Run combined plotting

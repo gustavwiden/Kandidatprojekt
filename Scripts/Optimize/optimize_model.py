@@ -34,10 +34,6 @@ with open("../../Data/SLE_PK_data.json", "r") as f:
 with open("../../Data/SLE_PD_data.json", "r") as f:
     SLE_PD_data = json.load(f)
 
-# Load SLE PD skin observations
-# with open("../../Data/SLE_PD_skin_data.json", "r") as f:
-#     SLE_PD_skin_data = json.load(f)
-
 # Open the mPBPK_model.txt file and read its contents
 with open("../../Models/mPBPK_model.txt", "r") as f:
     lines = f.readlines()
