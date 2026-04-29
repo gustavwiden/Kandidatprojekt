@@ -18,9 +18,12 @@ params = load_params('final_params', 'acceptable_params_80')
 # Overall average bodyweight for healthy volunteers (cohort 1-7) and SLE patients (cohort 8) in the phase 1 trial
 bodyweight = 73
 
-HV_sims = create_simulation_objects(data['HV_PK_data'], models['HV_model'], 'HV', bodyweight=bodyweight)
-SLE_sims = create_simulation_objects(data['HV_PK_data'], models['SLE_model_80'], 'SLE', bodyweight=bodyweight)
-SLE_CLE_sims = create_simulation_objects(data['SLE_CLE_PK_validation_data'], models['SLE_model_80'], 'SLE', bodyweight=bodyweight)
+IV_doses = [0.05, 0.3, 1, 3, 10, 20]
+SC_doses = [{'size_mg': 50, 'interval_weeks': None}]
+
+HV_sims = create_simulation_objects(models['HV_model'], 'HV', bodyweight, dataset=data['HV_PK_data'])
+SLE_sims = create_simulation_objects(models['SLE_model_80'], 'SLE', bodyweight, dataset=data['SLE_PK_data'], custom_IV_doses=IV_doses, custom_SC_doses=SC_doses)
+SLE_CLE_sims = create_simulation_objects(models['SLE_model_80'], 'SLE', bodyweight, dataset=data['SLE_CLE_PK_validation_data'])
 
 
 def plot_HV_PK_simulations(final_params, acceptable_params, sims, PK_data):
@@ -87,27 +90,40 @@ def plot_HV_PK_simulations(final_params, acceptable_params, sims, PK_data):
     save_plot(save_dir, "HV_PK_plasma_simulations")
 
 
-def plot_HV_PD_simulations(final_params, acceptable_params, sims, PD_data):
+def plot_HV_PD_simulations(final_params, acceptable_params, sims, PD_data, subset_doses=None):
     save_dir = os.path.join(base_dir, 'Results', 'HV', 'PD')
     time_vectors = {exp: np.arange(-400, PD_data[exp]["time"][-1] + 5000, 1) for exp in PD_data}
 
     colors = ['#1b7837', '#01947b', '#628759', '#70b5aa', '#35978f', '#76b56e', '#6d65bf']
-    markers = ['o', 's', 'D', '^','v', 'P', 'X']
-    dose_sizes = ['0.05', '0.3', '1', '3', '10', '20', '50']
+    markers = ['o', 's', 'D', '^', 'v', 'P', 'X']
 
-    bar_labels = []
-    bar_colors = []
-    best_times = []
-    fast_times = []
-    slow_times = []
+    bar_labels, bar_colors = [], []
+    best_times, fast_times, slow_times = [], [], []
 
-    # Loop through each dose
-    for (dose, color, marker, dose_size) in zip(PD_data.keys(), colors, markers, dose_sizes):
+    all_keys = list(PD_data.keys())
+
+    for dose in all_keys:
         fig, ax = plt.subplots(figsize=(10, 8))
 
-        dose_times_weeks = np.array(PD_data[dose]['time']) / 168.0
+        if subset_doses and dose not in subset_doses:
+            continue
+
+        if 'SC' in dose:
+            dose_size = dose.split('_')[1]
+            label = f"SC {dose_size}"
+        else:
+            dose_size = dose.split('_')[1]
+            if dose_size.startswith('0'):
+                dose_size = dose_size[0] + '.' + dose_size[1:]
+            label = f"IV {dose_size}"
+
+        idx = all_keys.index(dose)
+        color = colors[idx]
+        marker = markers[idx]
+
         time_vector = time_vectors[dose]
         time_weeks = time_vector / 168.0
+        dose_times_weeks = np.array(PD_data[dose]['time']) / 168.0
 
         y_min, y_max = calculate_uncertainty(sims[dose], time_vector, acceptable_params, 'HV', 'PD_sim')
         y_best = simulate(final_params, sims[dose], time_vector, 'PD_sim')
@@ -119,7 +135,6 @@ def plot_HV_PD_simulations(final_params, acceptable_params, sims, PD_data):
         fast_times.append(get_response_time(y_max, response_threshold, startpoint, time_weeks, 'PD'))
         slow_times.append(get_response_time(y_min, response_threshold, startpoint, time_weeks, 'PD'))
         
-        label = "SC 50" if dose == 'SCdose_50_HV' else f"IV {dose_size}"
         bar_labels.append(label)
         bar_colors.append(color)
 
@@ -141,31 +156,34 @@ def plot_HV_PD_simulations(final_params, acceptable_params, sims, PD_data):
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
+        plt.tight_layout()
         save_plot(save_dir, f"HV_PD_plasma_simulation_{dose_size}")
-
-    fig_bar, ax_bar = plt.subplots(figsize=(8, 4), layout='constrained')
     
-    best_arr = np.array(best_times, dtype=float)
-    fast_arr = np.array(fast_times, dtype=float)
-    slow_arr = np.array(slow_times, dtype=float)
+    if bar_labels:
+        fig_bar, ax_bar = plt.subplots(figsize=(8, max(2, len(bar_labels) * 0.6)), layout='constrained')
 
-    xerr = [best_arr - fast_arr, slow_arr - best_arr]
-    y_pos = np.arange(len(bar_labels))
+        best_arr = np.array(best_times, dtype=float)
+        fast_arr = np.array(fast_times, dtype=float)
+        slow_arr = np.array(slow_times, dtype=float)
 
-    ax_bar.barh(y_pos, best_arr, xerr=xerr, color=bar_colors, capsize=5, height=0.6, align='center', alpha=0.8)
+        xerr = [best_arr - fast_arr, slow_arr - best_arr]
+        y_pos = np.arange(len(bar_labels))
 
-    plt.suptitle('PD Response in Plasma', fontsize=22, fontweight='bold', x=0.54)
-    ax_bar.set_title('BDCA2 Expression on pDCs Starts Returning to Baseline', fontsize=17)
-    ax_bar.set_xlabel('Time [Weeks]', fontsize=18)
-    ax_bar.tick_params(axis='both', which='major', labelsize=16)
-    ax_bar.set_xlim(-1.2, 42)
-    ax_bar.set_yticks(y_pos)
-    ax_bar.set_yticklabels(bar_labels, fontsize=16)
-    ax_bar.invert_yaxis() 
-    ax_bar.spines['top'].set_visible(False)
-    ax_bar.spines['right'].set_visible(False)
+        ax_bar.barh(y_pos, best_arr, xerr=xerr, color=bar_colors, capsize=5, height=0.6, align='center', alpha=0.8)
 
-    save_plot(save_dir, "HV_PD_plasma_response_all_doses")
+        plt.suptitle('PD Response in Plasma', fontsize=22, fontweight='bold', x=0.54)
+        ax_bar.set_title('Time to 25 % Recovery from Peak BDCA2 Suppression', fontsize=17)
+        ax_bar.set_xlabel('Time [Weeks]', fontsize=18)
+        ax_bar.tick_params(axis='both', which='major', labelsize=16)
+        ax_bar.set_xlim(-1.2, 42)
+        ax_bar.set_yticks(y_pos)
+        ax_bar.set_yticklabels(bar_labels, fontsize=16)
+        ax_bar.invert_yaxis() 
+        ax_bar.spines['top'].set_visible(False)
+        ax_bar.spines['right'].set_visible(False)
+
+        suffix = "subset" if subset_doses else "all_doses"
+        save_plot(save_dir, f"HV_PD_plasma_response_{suffix}")
 
 
 def plot_HV_PD_simulations_comparison(final_params, acceptable_params, sims, PD_data, selected_doses):
@@ -293,11 +311,12 @@ def plot_HV_vs_SLE_PK_simulations(HV_final_params, SLE_final_params, acceptable_
     colors = plt.cm.Blues(np.linspace(0.7, 0.9, 2))
     labels = ["0.05 mg/kg IV Dose", "0.3 mg/kg IV Dose", "1 mg/kg IV Dose", "3 mg/kg IV Dose", "10 mg/kg IV Dose", "20 mg/kg IV Dose", "50 mg SC Dose"]
 
-    for i, (HV_dose, SLE_dose, label) in enumerate(zip(HV_sims.keys(), SLE_sims.keys(), labels)):
+    for i, (HV_dose, label) in enumerate(zip(HV_sims.keys(), labels)):
         fig, ax = plt.subplots(figsize=(10, 8))
 
+        SLE_dose = HV_dose.replace('HV', 'SLE')
+
         HV_dose_times_weeks = np.array(HV_PK_data[HV_dose]['time']) / 168.0
-        SLE_dose_times_weeks = np.array(SLE_PK_data['IVdose_20_SLE']['time']) / 168.0
         time_vector = time_vectors[HV_dose]
         time_weeks = time_vector / 168.0
 
@@ -325,8 +344,8 @@ def plot_HV_vs_SLE_PK_simulations(HV_final_params, SLE_final_params, acceptable_
 
         ax.errorbar(HV_dose_times_weeks, HV_PK_data[HV_dose]['BIIB059_mean'], yerr=HV_PK_data[HV_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[0], capsize=3, label='HV_Data')
 
-        if SLE_dose == 'IVdose_20_SLE':
-            ax.errorbar(SLE_dose_times_weeks, SLE_PK_data[SLE_dose]['BIIB059_mean'], yerr=SLE_PK_data[SLE_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[1], capsize=3, label='SLE_Data')
+        if SLE_dose in SLE_PK_data:
+            ax.errorbar(np.array(SLE_PK_data[SLE_dose]['time']) / 168.0, SLE_PK_data[SLE_dose]['BIIB059_mean'], yerr=SLE_PK_data[SLE_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[1], capsize=3, label='SLE_Data')
 
         plt.suptitle('PK Simulations in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold', x=0.54)
         ax.set_title(f'{label}', fontsize=18)
@@ -388,8 +407,8 @@ def plot_HV_vs_SLE_PK_simulations(HV_final_params, SLE_final_params, acceptable_
     ax_bar.set_xticklabels(bar_labels, fontsize=16)
     ax_bar.set_ylabel('Time [Weeks]', fontsize=18)
     
-    ax_bar.set_title('Litfilimab Plasma Concentration Drops Below 1 µg/ml', fontsize=17)
-    plt.suptitle('PK Response in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold', x=0.54)
+    ax_bar.set_title('Time with Litifilimab Concentration >1 µg/ml', fontsize=17)
+    plt.suptitle('PK Response in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold', x=0.52)
     
     ax_bar.set_ylim(-1.2, 35)
     
@@ -400,9 +419,9 @@ def plot_HV_vs_SLE_PK_simulations(HV_final_params, SLE_final_params, acceptable_
 
     save_plot(save_dir, "HV_vs_SLE_plasma_PK_response")
 
-    data_save_path = os.path.join(base_dir, 'Data', 'HV_vs_SLE_plasma_PK_response_data.json')
-    with open(data_save_path, "w") as f:
-        json.dump(response_results, f, indent=4)
+    # data_save_path = os.path.join(base_dir, 'Data', 'HV_vs_SLE_plasma_PK_response_data.json')
+    # with open(data_save_path, "w") as f:
+    #     json.dump(response_results, f, indent=4)
 
 
 def plot_HV_vs_SLE_PD_simulations(HV_final_params, SLE_final_params, acceptable_params, HV_sims, SLE_sims, HV_PD_data, SLE_PD_data):
@@ -418,11 +437,12 @@ def plot_HV_vs_SLE_PD_simulations(HV_final_params, SLE_final_params, acceptable_
     colors = plt.cm.Reds(np.linspace(0.7, 0.9, 2))
     labels = ["0.05 mg/kg IV Dose", "0.3 mg/kg IV Dose", "1 mg/kg IV Dose", "3 mg/kg IV Dose", "10 mg/kg IV Dose", "20 mg/kg IV Dose", "50 mg SC Dose"]
 
-    for i, (HV_dose, SLE_dose, label) in enumerate(zip(HV_sims.keys(), SLE_sims.keys(), labels)):
+    for i, (HV_dose, label) in enumerate(zip(HV_sims.keys(), labels)):
         fig, ax = plt.subplots(figsize=(10, 8))
 
+        SLE_dose = HV_dose.replace('HV', 'SLE')
+
         HV_dose_times_weeks = np.array(HV_PD_data[HV_dose]['time']) / 168.0
-        SLE_dose_times_weeks = np.array(SLE_PD_data['IVdose_20_SLE']['time']) / 168.0
         time_vector = time_vectors[HV_dose]
         time_weeks = time_vector / 168.0
 
@@ -448,12 +468,13 @@ def plot_HV_vs_SLE_PD_simulations(HV_final_params, SLE_final_params, acceptable_
         ax.plot(time_weeks, HV_y_best, color=colors[0], linewidth=2)
         ax.plot(time_weeks, SLE_y_best, color=colors[1], linewidth=2, linestyle='dashed')
 
-        ax.errorbar(HV_dose_times_weeks, HV_PD_data[HV_dose]['BDCA2_median'], yerr=HV_PD_data[HV_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[0], capsize=3, label='HV_Data')
+        if HV_dose != 'IVdose_10_HV':
+            ax.errorbar(HV_dose_times_weeks, HV_PD_data[HV_dose]['BDCA2_median'], yerr=HV_PD_data[HV_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[0], capsize=3, label='HV_Data')
 
-        if SLE_dose == 'IVdose_20_SLE':
-            ax.errorbar(SLE_dose_times_weeks, SLE_PD_data[SLE_dose]['BDCA2_median'], yerr=SLE_PD_data[SLE_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[1], capsize=3, label='SLE_Data')
+        if SLE_dose in SLE_PD_data:
+            ax.errorbar(np.array(SLE_PD_data[SLE_dose]['time']) / 168.0, SLE_PD_data[SLE_dose]['BDCA2_median'], yerr=SLE_PD_data[SLE_dose]['SEM'], marker='o', linestyle='None', markersize=6, color=colors[1], capsize=3, label='SLE_Data')
 
-        plt.suptitle('PD Simulations in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold', x=0.54)
+        plt.suptitle('PD Simulations in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold', x=0.52)
         ax.set_title(f'{label}', fontsize=18)
         ax.set_xlabel('Time [Weeks]', fontsize=18)
         ax.set_ylabel('Total BDCA2 Expression on pDCs [% Change]', fontsize=18)
@@ -508,8 +529,8 @@ def plot_HV_vs_SLE_PD_simulations(HV_final_params, SLE_final_params, acceptable_
     ax_bar.invert_yaxis() 
 
     ax_bar.set_xlabel('Time [Weeks]', fontsize=18)
-    ax_bar.set_title('BDCA2 Expression on pDCs Starts Returning to Baseline', fontsize=17)
-    plt.suptitle('PD Response in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold', x=0.54)
+    ax_bar.set_title('Time to 25 % Recovery from Peak BDCA2 Suppression', fontsize=17, x=0.48)
+    plt.suptitle('PD Response in Plasma - HV vs SLE Patient', fontsize=22, fontweight='bold')
     
     ax_bar.set_xlim(-1.2, 42)
     ax_bar.spines['top'].set_visible(False)
@@ -519,9 +540,9 @@ def plot_HV_vs_SLE_PD_simulations(HV_final_params, SLE_final_params, acceptable_
 
     save_plot(save_dir, "HV_vs_SLE_plasma_PD_response")
 
-    data_save_path = os.path.join(base_dir, 'Data', 'HV_vs_SLE_plasma_PD_response_data.json')
-    with open(data_save_path, "w") as f:
-        json.dump(response_results, f, indent=4)
+    # data_save_path = os.path.join(base_dir, 'Data', 'HV_vs_SLE_plasma_PD_response_data.json')
+    # with open(data_save_path, "w") as f:
+    #     json.dump(response_results, f, indent=4)
 
 
 def plot_SLE_PK_validation_simulations(final_params, acceptable_params, sims, PK_data):
@@ -556,8 +577,11 @@ def plot_SLE_PK_validation_simulations(final_params, acceptable_params, sims, PK
         ax.plot(time_weeks, y_best, color=color, linewidth=3, label="Simulation")
         ax.errorbar(dose_times_weeks, PK_data[dose]['BIIB059_mean'], yerr=PK_data[dose]['SEM'], marker=marker, linestyle='None', elinewidth=2, markersize=8, color=color, capsize=4, label='Validation Data')
 
-        plt.suptitle('Validation of Model Against Phase 2 PK Data', fontsize=22, fontweight='bold', x=0.54)
-        ax.set_title(f'PK Simulation of Repeated {dose_size} SC Doses in Plasma of {patient} Patient', fontsize=18)
+        plt.suptitle(f'PK Validation in Plasma of {patient} Patient', fontsize=22, fontweight='bold', x=0.54)
+        if patient == 'SLE':
+            ax.set_title(f'Phase 2: {dose_size} mg SC (W0, 2, 4 + Q4W to W20)', fontsize=18)
+        else:
+            ax.set_title(f'Phase 2: {dose_size} mg SC (W0, 2, 4 + Q4W to W12)', fontsize=18)
         ax.set_xlabel('Time [weeks]', fontsize=18)
         ax.set_ylabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
         ax.tick_params(axis='both', which='major', labelsize=16)
@@ -567,17 +591,17 @@ def plot_SLE_PK_validation_simulations(final_params, acceptable_params, sims, PK
         ax.spines['right'].set_visible(False)
         plt.tight_layout()
 
-        save_plot(save_dir, f"SLE_PK_validation_{dose}")
+        save_plot(save_dir, f"{patient}_PK_validation_{dose}")
 
 
-plot_HV_PK_simulations(params['final_params']['HV'], params['acceptable_params_80'], HV_sims, data['HV_PK_data'])
+# plot_HV_PK_simulations(params['final_params']['HV'], params['acceptable_params_80'], HV_sims, data['HV_PK_data'])
 
-plot_HV_PD_simulations(params['final_params']['HV'], params['acceptable_params_80'], HV_sims, data['HV_PD_data'])
+# plot_HV_PD_simulations(params['final_params']['HV'], params['acceptable_params_80'], HV_sims, data['HV_PD_data'])
 
-plot_HV_PD_simulations_comparison(params['final_params']['HV'], params['acceptable_params_80'], HV_sims, data['HV_PD_data'], selected_doses = ['IVdose_03_HV', 'IVdose_20_HV'])
+# plot_HV_PD_simulations_comparison(params['final_params']['HV'], params['acceptable_params_80'], HV_sims, data['HV_PD_data'], selected_doses = ['IVdose_03_HV', 'IVdose_20_HV'])
 
 plot_HV_vs_SLE_PK_simulations(params['final_params']['HV'], params['final_params']['SLE_80'], params['acceptable_params_80'], HV_sims, SLE_sims, data['HV_PK_data'], data['SLE_PK_data'])
 
-plot_HV_vs_SLE_PD_simulations(params['final_params']['HV'], params['final_params']['SLE_80'], params['acceptable_params_80'], HV_sims, SLE_sims, data['HV_PD_data'], data['SLE_PD_data'])
+# plot_HV_vs_SLE_PD_simulations(params['final_params']['HV'], params['final_params']['SLE_80'], params['acceptable_params_80'], HV_sims, SLE_sims, data['HV_PD_data'], data['SLE_PD_data'])
 
-plot_SLE_PK_validation_simulations(params['final_params']['SLE_80'], params['acceptable_params_80'], SLE_CLE_sims, data['SLE_CLE_PK_validation_data'])
+# plot_SLE_PK_validation_simulations(params['final_params']['SLE_80'], params['acceptable_params_80'], SLE_CLE_sims, data['SLE_CLE_PK_validation_data'])

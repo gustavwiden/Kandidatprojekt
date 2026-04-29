@@ -98,34 +98,68 @@ def load_params(*param_keys):
     return loaded_params
 
 
-def create_simulation_objects(dataset, model, model_key, bodyweight):
+def create_simulation_objects(model, model_key, bodyweight, dataset=None, custom_IV_doses=None, custom_SC_doses=None):
     simulation_objects = {}
     
-    for dose_key, data in dataset.items():
-        act = sund.Activity(time_unit='h')
-        
-        # Add IV input if it exists
-        if 'IV_in' in data['input']:
-            act.add_output(
-                'piecewise_constant', "IV_in",  
-                t=data['input']['IV_in']['t'],  
-                f=bodyweight * np.array(data['input']['IV_in']['f'])
-            )
+    if dataset:
+        for dose_key, data in dataset.items():
+            act = sund.Activity(time_unit='h')
             
-        # Add SC input if it exists
-        if 'SC_in' in data['input']:
-            act.add_output(
-                'piecewise_constant', "SC_in",  
-                t=data['input']['SC_in']['t'],  
-                f=np.array(data['input']['SC_in']['f'])
-            )
-        
-        if model_key == 'SLE' and "HV" in dose_key:
-            final_key = dose_key.replace("HV", "SLE")
-        else:
-            final_key = dose_key
+            # Add IV input if it exists
+            if 'IV_in' in data['input']:
+                act.add_output('piecewise_constant', "IV_in", t=data['input']['IV_in']['t'], f=bodyweight * np.array(data['input']['IV_in']['f']))
+                
+            # Add SC input if it exists
+            if 'SC_in' in data['input']:
+                act.add_output('piecewise_constant', "SC_in", t=data['input']['SC_in']['t'], f=np.array(data['input']['SC_in']['f']))
+            
+            if model_key == 'SLE' and "HV" in dose_key:
+                final_key = dose_key.replace("HV", "SLE")
+            else:
+                final_key = dose_key
 
-        simulation_objects[final_key] = sund.Simulation(models=model, activities=act, time_unit='h')
+            simulation_objects[final_key] = sund.Simulation(models=model, activities=act, time_unit='h')
+
+    if custom_IV_doses:
+        for dose_mgkg in custom_IV_doses:
+            custom_key = f"IVdose_{str(dose_mgkg).replace('.', '')}_{model_key}"
+
+            act = sund.Activity(time_unit='h')
+            act.add_output("piecewise_constant", "IV_in", t=[0], f=bodyweight * np.array([0, dose_mgkg * 1000]))
+
+            simulation_objects[custom_key] = sund.Simulation(models=model, activities=act, time_unit='h')
+            
+    if custom_SC_doses:
+        for dose in custom_SC_doses:
+            size = dose['size_mg'] * 1000  # Convert mg to ug
+            infusion_duration = 0.25 # 15 minutes in hours
+
+            interval_weeks = dose.get('interval_weeks')
+
+            t_list, f_list = [], [0]
+
+
+            if interval_weeks is None:
+                t_list = [0, infusion_duration]
+                f_list = [0, size, 0]
+                custom_key = f"SCdose_{dose['size_mg']}_{model_key}"
+            else:
+                interval = dose['interval_weeks'] * 168  # Convert weeks to hours
+                total_duration = dose['total_weeks'] * 168  # Convert weeks to hours 
+    
+                for dose_event in np.arange(0, total_duration, interval):
+                    t_list.append(dose_event)
+                    f_list.append(size)
+        
+                    t_list.append(dose_event + infusion_duration)
+                    f_list.append(0) 
+            
+                custom_key = f"SCdose_{dose['size_mg']}_q{dose['interval_weeks']}w_{model_key}"
+
+            act = sund.Activity(time_unit='h')
+            act.add_output("piecewise_constant", "SC_in", t=t_list, f=f_list)
+
+            simulation_objects[custom_key] = sund.Simulation(models=model, activities=act, time_unit='h')
         
     return simulation_objects
 
@@ -143,6 +177,9 @@ def save_plot(save_dir, filename):
 
 
 def simulate(params, sim, time_vector, feature_to_plot):
+    if isinstance(sim, dict):
+        sim = list(sim.values())[0]
+
     feature_idx = sim.feature_names.index(feature_to_plot)
 
     sim.simulate(time_vector = time_vector, parameter_values = params, reset = True)
@@ -191,3 +228,21 @@ def get_response_time(y_data, response_threshold, startpoint, time_weeks, data_t
 
         return round(float(time_weeks[suppression_end_idx[0]]), 2) if len(suppression_end_idx) > 0 else np.nan
     raise ValueError("data_type must be either 'PK' or 'PD'")
+
+
+def check_suppression_maintained(y_data, time_vector, threshold, maintenance_end, start_week=10):
+    # Create mask for the maintenance window (e.g., Week 10 to End of Dosing)
+    mask = (time_vector >= start_week * 168.0) & (time_vector <= maintenance_end)
+    y_check = y_data[mask]
+    
+    if len(y_check) == 0:
+        return False
+    
+    # 1. Must be suppressed at the end of the window
+    is_suppressed_end = y_check[-1] <= threshold
+    
+    # 2. Crossing Criteria: Once in the maintenance window, it should not cross
+    # back above the threshold (0 crossings if already suppressed, 1 if it dips in).
+    crossings = np.sum(np.diff(np.sign(y_check - threshold)) != 0)
+    
+    return is_suppressed_end and crossings <= 1
