@@ -131,36 +131,53 @@ def create_simulation_objects(model, model_key, bodyweight, dataset=None, custom
             
     if custom_SC_doses:
         for dose in custom_SC_doses:
-            size = dose['size_mg'] * 1000  # Convert mg to ug
             infusion_duration = 0.25 # 15 minutes in hours
-
-            interval_weeks = dose.get('interval_weeks')
-
             t_list, f_list = [], [0]
 
+            if 'custom_times_h' in dose:
+                # Scenario C.3: Explicit custom times (Seamless Loading + Maintenance)
+                if 'custom_sizes_mg' in dose:
+                    sizes_ug = [s * 1000 for s in dose['custom_sizes_mg']]
+                else:
+                    sizes_ug = [dose['size_mg'] * 1000] * len(dose['custom_times_h'])
+                
+                for dose_event, dose_ug in zip(dose['custom_times_h'], sizes_ug):
+                    t_list.extend([dose_event, dose_event + infusion_duration])
+                    f_list.extend([dose_ug, 0])
+                custom_key = f"SCdose_{dose.get('size_mg', 'mixed')}_custom_{model_key}"
 
-            if interval_weeks is None:
+            elif dose.get('interval_weeks') is None:
+                # Scenario A: Single dose
+                size = dose['size_mg'] * 1000  # Convert mg to ug
                 t_list = [0, infusion_duration]
                 f_list = [0, size, 0]
                 custom_key = f"SCdose_{dose['size_mg']}_{model_key}"
+
+            elif 'num_doses' in dose:
+                # Scenario C.2: Fixed number of doses to reach perfect steady-state
+                size = dose['size_mg'] * 1000  # Convert mg to ug
+                interval = dose['interval_weeks'] * 168.0
+                for i in range(dose['num_doses']):
+                    dose_event = i * interval
+                    t_list.extend([dose_event, dose_event + infusion_duration])
+                    f_list.extend([size, 0])
+                custom_key = f"SCdose_{dose['size_mg']}_{dose['num_doses']}doses_{model_key}"
+               
             else:
-                interval = dose['interval_weeks'] * 168  # Convert weeks to hours
-                total_duration = dose['total_weeks'] * 168  # Convert weeks to hours 
-    
+                # Scenario C: Standard repeating continuous doses
+                size = dose['size_mg'] * 1000  # Convert mg to ug
+                interval = dose['interval_weeks'] * 168.0
+                total_duration = dose['total_weeks'] * 168.0
                 for dose_event in np.arange(0, total_duration, interval):
-                    t_list.append(dose_event)
-                    f_list.append(size)
-        
-                    t_list.append(dose_event + infusion_duration)
-                    f_list.append(0) 
-            
+                    t_list.extend([dose_event, dose_event + infusion_duration])
+                    f_list.extend([size, 0])
+                    
                 custom_key = f"SCdose_{dose['size_mg']}_q{dose['interval_weeks']}w_{model_key}"
 
             act = sund.Activity(time_unit='h')
             act.add_output("piecewise_constant", "SC_in", t=t_list, f=f_list)
-
             simulation_objects[custom_key] = sund.Simulation(models=model, activities=act, time_unit='h')
-        
+            
     return simulation_objects
 
 
@@ -230,9 +247,9 @@ def get_response_time(y_data, response_threshold, startpoint, time_weeks, data_t
     raise ValueError("data_type must be either 'PK' or 'PD'")
 
 
-def check_suppression_maintained(y_data, time_vector, threshold, maintenance_end, start_week=10):
-    # Create mask for the maintenance window (e.g., Week 10 to End of Dosing)
-    mask = (time_vector >= start_week * 168.0) & (time_vector <= maintenance_end)
+def check_suppression_maintained(y_data, time_vector, threshold, window_start_h, window_end_h):
+    # Create mask for the exact evaluation window in hours
+    mask = (time_vector >= window_start_h) & (time_vector <= window_end_h)
     y_check = y_data[mask]
     
     if len(y_check) == 0:
@@ -241,7 +258,7 @@ def check_suppression_maintained(y_data, time_vector, threshold, maintenance_end
     # 1. Must be suppressed at the end of the window
     is_suppressed_end = y_check[-1] <= threshold
     
-    # 2. Crossing Criteria: Once in the maintenance window, it should not cross
+    # 2. Crossing Criteria: Once in the window, it should not cross
     # back above the threshold (0 crossings if already suppressed, 1 if it dips in).
     crossings = np.sum(np.diff(np.sign(y_check - threshold)) != 0)
     

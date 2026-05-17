@@ -1,0 +1,33 @@
+{
+    "base_intervals": [
+        14,
+        28,
+        42,
+        56,
+        70
+    ],
+    "interval_labels": [
+        "Every 2 Weeks",
+        "Every 4 Weeks",
+        "Every 6 Weeks",
+        "Every 8 Weeks",
+        "Every 10 Weeks"
+    ],
+    "required_doses": [
+        40.0,
+        80.0,
+        160.0,
+        280.0,
+        480.0
+    ],
+    "maint_burdens": [
+        400.0,
+        400.0,
+        640.0,
+        840.0,
+        960.0
+    ],
+    "loading_dose": 10.0,
+    "loading_int_days": 2.0,
+    "loading_w": 4.0
+}

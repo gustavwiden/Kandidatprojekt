@@ -1,0 +1,29 @@
+{
+    "base_intervals": [
+        1,
+        2,
+        4,
+        7
+    ],
+    "interval_labels": [
+        "Every Day",
+        "Every 2 Days",
+        "Every 4 Days",
+        "Every Week"
+    ],
+    "required_doses": [
+        110.0,
+        210.0,
+        420.0,
+        760.0
+    ],
+    "maint_burdens": [
+        15400.0,
+        14700.0,
+        14700.0,
+        15200.0
+    ],
+    "loading_dose": 500.0,
+    "loading_int_days": 3.0,
+    "loading_w": 4.0
+}
