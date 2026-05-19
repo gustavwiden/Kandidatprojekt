@@ -1027,7 +1027,7 @@ def plot_minimum_maintenance_menu(params, models, density_labels):
             
             # Add shared Y-label to the middle plot
             if i == N // 2:
-                ax_pd.set_ylabel('Free BDCA2 Expression [% Change]', fontsize=18, labelpad=15)
+                ax_pd.set_ylabel('Free BDCA2 Expression on pDCs [% Change]', fontsize=18, labelpad=15)
         
         # --- Layout & Colorbar ---
         # CHANGED: Colorbar is now attached to ax_left (the cheat sheet) instead of forced to the far right.
