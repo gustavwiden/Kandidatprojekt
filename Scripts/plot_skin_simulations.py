@@ -335,23 +335,31 @@ def plot_skin_plasma_concentration_ratio(params, models, time_vector):
     save_dir = os.path.join(base_dir, 'Results', 'SLE', 'PK')
     os.makedirs(save_dir, exist_ok=True)
 
-    # Scenarios we want to compare
-    scenarios = {
-        "SLE Patient (1 pDCs/mm² in Skin)": ('SLE_model_1', '1'),
-        "SLE Patient (80 pDCs/mm² in Skin)": ('SLE_model_80', '80'),
-        "SLE Patient (400 pDCs/mm² in Skin)": ('SLE_model_400', '400'),
-        "HV (12000 pDCs/mL in Blood)":       ('HV_model_high', '80'),
-        "HV (5100 pDCs/mL in Blood)":        ('HV_model', '80')
+    SLE_scenarios = {
+        "Simulation (1 pDCs/mm² in Skin)": ('SLE_model_1', '1'),
+        "Simulation (80 pDCs/mm² in Skin)": ('SLE_model_80', '80'),
+        "Simulation (400 pDCs/mm² in Skin)": ('SLE_model_400', '400')
+    }
+
+    HV_scenarios = {
+        "Simulation (5100 pDCs/mL in Plasma)": ('HV_model', '80'),
+        "Simulation (10200 pDCs/mL in Plasma)": ('HV_model_high', '80')
     }
     
-    blue_shades = plt.cm.Blues(np.linspace(0.7, 0.9, 2))
-    linestyles = ['--', '-', ':', '--', '-']
+    colors = plt.cm.Blues(np.linspace(0.6, 0.9, 3))
+    linestyles = ['--', '-', ':']
     common_plasma_range = np.logspace(-3, 3, 500)
     start_index = np.searchsorted(time_vector, 12)
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    for i, (label, (m_key, p_suffix)) in enumerate(scenarios.items()):
+    # Literature references
+    ref_x = np.logspace(-3, 3, 100) 
+    ax.plot(ref_x, 0.157 * ref_x, 'k-', linewidth=3, label='Estimate for Non-Binding mAbs (15.7%)')
+    ax.plot(ref_x, 0.0785 * ref_x, 'k--', linewidth=2, label='2-fold Error Margin')
+    ax.plot(ref_x, 0.314 * ref_x, 'k--', linewidth=2)
+
+    for i, (label, (m_key, p_suffix)) in enumerate(SLE_scenarios.items()):
         model = models[m_key]
         p_type = 'HV' if 'HV' in m_key else 'SLE'
         
@@ -375,31 +383,25 @@ def plot_skin_plasma_concentration_ratio(params, models, time_vector):
 
         if all_interp_skin:
             ax.fill_between(common_plasma_range, np.nanmin(all_interp_skin, axis=0), np.nanmax(all_interp_skin, axis=0), 
-                             color=blue_shades[0] if p_type == 'HV' else blue_shades[1], alpha=0.3)
+                             color=colors[i], alpha=0.3)
 
         # Best Fit Calculation
         plasma_best = simulate(best_p, sim, time_vector, 'PK_sim')[start_index:]
         skin_best = simulate(best_p, sim, time_vector, 'PK_skin_sim')[start_index:]
-        ax.plot(plasma_best, skin_best, label=label, color=blue_shades[0] if p_type == 'HV' else blue_shades[1], 
+        ax.plot(plasma_best, skin_best, label=label, color=colors[i], 
                 linestyle=linestyles[i], linewidth=3)
-
-    # Literature references
-    ref_x = np.logspace(-3, 3, 100) 
-    ax.plot(ref_x, 0.157 * ref_x, 'k-', linewidth=3, label='Skin Distribution in Literature (15.7%)')
-    ax.plot(ref_x, 0.0785 * ref_x, 'k--', linewidth=2, label='2-fold Error')
-    ax.plot(ref_x, 0.314 * ref_x, 'k--', linewidth=2)
 
     ax.set_xscale('log'); ax.set_yscale('log')
     ax.set_xlim(1e-3, 4e2); ax.set_ylim(1e-4, 4e2)
     ax.set_xlabel('Free Litifilimab Plasma Concentration [µg/ml]', fontsize=18)
     ax.set_ylabel('Free Litifilimab Skin Concentration [µg/ml]', fontsize=18)
-    ax.set_title('Divergence from Literature Estimates due to pDC-driven TMDD', fontsize=18)
-    plt.suptitle('Non-Linear Biodistribution of Litifilimab', fontsize=22, fontweight='bold', x=0.54)
+    ax.set_title('Agreement with Literature Estimate >0.1 µg/ml in Plasma', fontsize=18)
+    plt.suptitle('Biodistribution of Litifilimab in Healthy Volunteers', fontsize=22, fontweight='bold', x=0.54)
     ax.legend(fontsize=16, loc='upper left'); ax.tick_params(axis='both', which='major', labelsize=16)
     ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
     
     plt.tight_layout()
-    save_plot(save_dir, "Skin_vs_plasma_distribution")
+    save_plot(save_dir, "Skin_vs_plasma_distribution_SLE")
 
 
 def simulate_SC_dose_response_frequency(params, model, density_label):
@@ -1052,7 +1054,7 @@ def plot_minimum_maintenance_menu(params, models, density_labels):
 
 # plot_plasma_AUC(params, models, time_vectors['AUC'])
 
-# plot_skin_plasma_concentration_ratio(params, models, time_vectors['Ratio'])
+plot_skin_plasma_concentration_ratio(params, models, time_vectors['Ratio'])
 
 density_labels = ['1', '80', '400']
 
@@ -1066,7 +1068,7 @@ density_labels = ['1', '80', '400']
 
 # simulate_minimum_maintenance_menu(params, models, density_labels)
 
-plot_minimum_maintenance_menu(params, models, density_labels)
+# plot_minimum_maintenance_menu(params, models, density_labels)
 
 # plot_SC_dose_response(data['SLE_SC_dose_skin_PD_response_data'], inverse=False)
 

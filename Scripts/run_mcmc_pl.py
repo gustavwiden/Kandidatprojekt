@@ -243,212 +243,212 @@ sampler = sample.AdaptiveMetropolisSampler()
 # result_sampling = sample.sample(problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=param_init)
 
 # Save or load sampling trace to/from CSV (prefer existing CSV)
-# csv_path = os.path.join(output_dir, 'sampling_result_model_1.csv')
-# if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
-#     try:
-#         trace = np.loadtxt(csv_path, delimiter=',')
-#         print('Loaded existing sampling trace from', csv_path)
-#     except Exception as e:
-#         raise RuntimeError(f'Failed loading existing sampling CSV {csv_path}: {e}')
-# else:
-#     # If CSV doesn't exist, attempt to extract trace from in-memory result_sampling
-#     try:
-#         trace = np.array(result_sampling.sample_result['trace_x'])[0]
-#         # Ensure directory exists then save
-#         os.makedirs(output_dir, exist_ok=True)
-#         np.savetxt(csv_path, trace, delimiter=',')
-#         print('MCMC sampling finished. Saved trace to', csv_path)
-#     except Exception as e:
-#         raise RuntimeError('No sampling CSV found and no in-memory sampling result available: {}'.format(e))
+csv_path = os.path.join(output_dir, 'MCMC_sampling_result_model_backup.csv')
+if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
+    try:
+        trace = np.loadtxt(csv_path, delimiter=',')
+        print('Loaded existing sampling trace from', csv_path)
+    except Exception as e:
+        raise RuntimeError(f'Failed loading existing sampling CSV {csv_path}: {e}')
+else:
+    # # If CSV doesn't exist, attempt to extract trace from in-memory result_sampling
+    # try:
+    #     trace = np.array(result_sampling.sample_result['trace_x'])[0]
+    #     # Ensure directory exists then save
+    #     os.makedirs(output_dir, exist_ok=True)
+    #     np.savetxt(csv_path, trace, delimiter=',')
+    #     print('MCMC sampling finished. Saved trace to', csv_path)
+    # except Exception as e:
+    #     raise RuntimeError('No sampling CSV found and no in-memory sampling result available: {}'.format(e))
 
 
 # ---------------------- Plot histograms as in original script ----------------------
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-# trace_array = trace
-# rows, cols = 2, 3
-# fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
-# axes = axs.flatten()
-# num_params = trace_array.shape[1]
+trace_array = trace
+rows, cols = 2, 3
+fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
+axes = axs.flatten()
+num_params = trace_array.shape[1]
 
-# for i in range(num_params):
-#     ax = axes[i]
-#     data_for_hist = trace_array[:, i]
-#     ax.hist(data_for_hist, bins='auto', color='green')
-#     ax.set_title(parameter_names[i])
-#     ax.set_ylabel('Frequency')
-#     ax.set_xlabel('Parameter value')
-#     formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
-#     ax.xaxis.set_major_formatter(formatter)
-#     ax.tick_params(axis='x', labelrotation=45, labelsize=8)
-#     ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+for i in range(num_params):
+    ax = axes[i]
+    data_for_hist = trace_array[:, i]
+    ax.hist(data_for_hist, bins='auto', color='blue')
+    # ax.set_title(parameter_names[i])
+    ax.set_ylabel('Frequency')
+    ax.set_xlabel(f'{parameter_names[i]} Value')
+    formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
+    ax.xaxis.set_major_formatter(formatter)
+    ax.tick_params(axis='x', labelrotation=45, labelsize=8)
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
 
-# for j in range(num_params, len(axes)):
-#     fig.delaxes(axes[j])
+for j in range(num_params, len(axes)):
+    fig.delaxes(axes[j])
 
 save_dir = os.path.join(os.path.dirname(output_dir), 'Validation')
 os.makedirs(save_dir, exist_ok=True)
-# save_path = os.path.join(save_dir, "MCMC_mPBPK-model_model.png")
-# plt.savefig(save_path, format='png', dpi=600)
-# plt.tight_layout()
-# plt.show()
+save_path = os.path.join(save_dir, "MCMC_mPBPK-model_model.svg")
+plt.savefig(save_path, format='svg')
+plt.tight_layout()
+plt.show()
 
 
 # ---------------------- Profile Likelihood (PL) ----------------------
-def fcost_PL(param_log, param_index, PL_revValue):
-    params = np.exp(param_log)
-    # penalty in log-space
-    joint_cost = evaluate_merged_cost(params)
-    # Penalty to keep parameter close to stepped value
-    penalty = 1e6 * (param_log[param_index] - PL_revValue) ** 2
-    return joint_cost + penalty
+# def fcost_PL(param_log, param_index, PL_revValue):
+#     params = np.exp(param_log)
+#     # penalty in log-space
+#     joint_cost = evaluate_merged_cost(params)
+#     # Penalty to keep parameter close to stepped value
+#     penalty = 1e6 * (param_log[param_index] - PL_revValue) ** 2
+#     return joint_cost + penalty
 
-import csv as _csv
+# import csv as _csv
 
-# Use best_param as starting point
-best_param_log = np.log(best_param)
-step_sizes = [0.04, 0.1, 0.04, 0.02, 0.04, 0.04]
+# # Use best_param as starting point
+# best_param_log = np.log(best_param)
+# step_sizes = [0.04, 0.1, 0.04, 0.02, 0.04, 0.04]
 
-# For each selected parameter, perform PL scan
-for i, (idx, step_size) in enumerate(zip(selected_indices, step_sizes)):
-    parameterIdx = idx
-    nSteps = 25 
+# # For each selected parameter, perform PL scan
+# for i, (idx, step_size) in enumerate(zip(selected_indices, step_sizes)):
+#     parameterIdx = idx
+#     nSteps = 25 
     
-    # Check if the start point itself is valid
-    start_params = np.exp(best_param_log)
-    initial_cost = evaluate_merged_cost(start_params)
+#     # Check if the start point itself is valid
+#     start_params = np.exp(best_param_log)
+#     initial_cost = evaluate_merged_cost(start_params)
     
-    # Helper to check validity (Is it saved to CSV?)
-    def check_validity(p):
-        try:
-            p_HV, p_SLE = merged_to_model_params(p)
-            hv = fcost_joint(p_HV, simulation_objects_dict['HV'], all_datasets['HV'])
-            sle = fcost_joint(p_SLE, simulation_objects_dict['SLE'], all_datasets['SLE'])
+#     # Helper to check validity (Is it saved to CSV?)
+#     def check_validity(p):
+#         try:
+#             p_HV, p_SLE = merged_to_model_params(p)
+#             hv = fcost_joint(p_HV, simulation_objects_dict['HV'], all_datasets['HV'])
+#             sle = fcost_joint(p_SLE, simulation_objects_dict['SLE'], all_datasets['SLE'])
             
-            pk_hv = hv.get('PK', sum(hv.values())) if isinstance(hv, dict) else float(hv)
-            pd_hv = hv.get('PD', 0) if isinstance(hv, dict) else 0
-            pk_sle = sle.get('PK', sum(sle.values())) if isinstance(sle, dict) else float(sle)
-            pd_sle = sle.get('PD', 0) if isinstance(sle, dict) else 0
+#             pk_hv = hv.get('PK', sum(hv.values())) if isinstance(hv, dict) else float(hv)
+#             pd_hv = hv.get('PD', 0) if isinstance(hv, dict) else 0
+#             pk_sle = sle.get('PK', sum(sle.values())) if isinstance(sle, dict) else float(sle)
+#             pd_sle = sle.get('PD', 0) if isinstance(sle, dict) else 0
             
-            # Strict individual checks
-            if (pk_hv < chi2_limits['HV']['PK'] and pd_hv < chi2_limits['HV']['PD'] and 
-                pk_sle < chi2_limits['SLE']['PK'] and pd_sle < chi2_limits['SLE']['PD']):
-                return True
-        except:
-            return False
-        return False
+#             # Strict individual checks
+#             if (pk_hv < chi2_limits['HV']['PK'] and pd_hv < chi2_limits['HV']['PD'] and 
+#                 pk_sle < chi2_limits['SLE']['PK'] and pd_sle < chi2_limits['SLE']['PD']):
+#                 return True
+#         except:
+#             return False
+#         return False
 
-    # Store: (value, cost, is_valid_boolean)
-    start_valid = check_validity(start_params)
-    plot_data = [(start_params[parameterIdx], initial_cost, start_valid)]
+#     # Store: (value, cost, is_valid_boolean)
+#     start_valid = check_validity(start_params)
+#     plot_data = [(start_params[parameterIdx], initial_cost, start_valid)]
     
-    PL_params_to_save = []
-    if start_valid: 
-        PL_params_to_save.append(start_params.tolist())
+#     PL_params_to_save = []
+#     if start_valid: 
+#         PL_params_to_save.append(start_params.tolist())
 
-    print(f"--- Scanning {selected_names[i]} ---")
+#     print(f"--- Scanning {selected_names[i]} ---")
 
-    for direction in [-1, 1]:
-        x_opt_prev = best_param_log.copy()
+#     for direction in [-1, 1]:
+#         x_opt_prev = best_param_log.copy()
         
-        for step in range(1, nSteps + 1): 
-            PL_revValue = best_param_log[parameterIdx] + direction * step_size * step
+#         for step in range(1, nSteps + 1): 
+#             PL_revValue = best_param_log[parameterIdx] + direction * step_size * step
             
-            x0 = x_opt_prev.copy()
-            x0[parameterIdx] = PL_revValue 
+#             x0 = x_opt_prev.copy()
+#             x0[parameterIdx] = PL_revValue 
 
-            # 1. Try Fast Gradient Descent (L-BFGS-B)
-            try:
-                res = minimize(
-                    fun=fcost_PL,
-                    x0=x0,
-                    args=(parameterIdx, PL_revValue),
-                    method='L-BFGS-B',
-                    bounds=bounds_log_pairs,
-                    options={'disp': False, 'maxiter': 100}
-                )
-                success = res.success
-                current_res = res
-            except Exception:
-                success = False
+#             # 1. Try Fast Gradient Descent (L-BFGS-B)
+#             try:
+#                 res = minimize(
+#                     fun=fcost_PL,
+#                     x0=x0,
+#                     args=(parameterIdx, PL_revValue),
+#                     method='L-BFGS-B',
+#                     bounds=bounds_log_pairs,
+#                     options={'disp': False, 'maxiter': 100}
+#                 )
+#                 success = res.success
+#                 current_res = res
+#             except Exception:
+#                 success = False
 
-            # 2. Fallback: Nelder-Mead (Run if failed OR if cost jumped suspiciously)
-            # Check cost jump
-            cost_jump = res.fun - initial_cost
-            if not success or (step > 1 and cost_jump > 20):
-                try:
-                    res_nm = minimize(
-                        fun=fcost_PL,
-                        x0=current_res.x if success else x0, 
-                        args=(parameterIdx, PL_revValue),
-                        method='Nelder-Mead',
-                        bounds=bounds_log_pairs,
-                        options={'disp': False, 'maxiter': 500}
-                    )
-                    # Only accept fallback if it improved cost
-                    if not success or res_nm.fun < res.fun:
-                        current_res = res_nm
-                except Exception:
-                    pass
+#             # 2. Fallback: Nelder-Mead (Run if failed OR if cost jumped suspiciously)
+#             # Check cost jump
+#             cost_jump = res.fun - initial_cost
+#             if not success or (step > 1 and cost_jump > 20):
+#                 try:
+#                     res_nm = minimize(
+#                         fun=fcost_PL,
+#                         x0=current_res.x if success else x0, 
+#                         args=(parameterIdx, PL_revValue),
+#                         method='Nelder-Mead',
+#                         bounds=bounds_log_pairs,
+#                         options={'disp': False, 'maxiter': 500}
+#                     )
+#                     # Only accept fallback if it improved cost
+#                     if not success or res_nm.fun < res.fun:
+#                         current_res = res_nm
+#                 except Exception:
+#                     pass
             
-            x_opt_prev = current_res.x.copy()
-            step_params = np.exp(current_res.x)
+#             x_opt_prev = current_res.x.copy()
+#             step_params = np.exp(current_res.x)
             
-            # Calculate Pure Cost
-            pure_cost = evaluate_merged_cost(step_params)
+#             # Calculate Pure Cost
+#             pure_cost = evaluate_merged_cost(step_params)
             
-            # Check Validity (Individual Limits)
-            is_valid = check_validity(step_params)
+#             # Check Validity (Individual Limits)
+#             is_valid = check_validity(step_params)
             
-            plot_data.append((np.exp(PL_revValue), pure_cost, is_valid))
-            print(f"  Step {step} dir {direction}: pure cost={pure_cost:.3f}, valid={is_valid}")
+#             plot_data.append((np.exp(PL_revValue), pure_cost, is_valid))
+#             print(f"  Step {step} dir {direction}: pure cost={pure_cost:.3f}, valid={is_valid}")
 
-            if is_valid:
-                PL_params_to_save.append(step_params.tolist())
+#             if is_valid:
+#                 PL_params_to_save.append(step_params.tolist())
 
-    # Save acceptable params to CSV
-    pl_csv = os.path.join(output_dir, f"acceptable_params_PL_{selected_names[i]}_test_80.csv")
-    with open(pl_csv, 'w', newline='') as f:
-        writer = _csv.writer(f)
-        writer.writerows(PL_params_to_save)
+#     # Save acceptable params to CSV
+#     pl_csv = os.path.join(output_dir, f"acceptable_params_PL_{selected_names[i]}_test_80.csv")
+#     with open(pl_csv, 'w', newline='') as f:
+#         writer = _csv.writer(f)
+#         writer.writerows(PL_params_to_save)
 
-    # --- Plotting ---
-    # Sort by parameter value
-    plot_data.sort(key=lambda x: x[0])
+#     # --- Plotting ---
+#     # Sort by parameter value
+#     plot_data.sort(key=lambda x: x[0])
     
-    x_vals = [p[0] for p in plot_data]
-    y_vals = [p[1] for p in plot_data]
+#     x_vals = [p[0] for p in plot_data]
+#     y_vals = [p[1] for p in plot_data]
     
-    # Separate valid and invalid points for different markers
-    x_valid = [p[0] for p in plot_data if p[2]]
-    y_valid = [p[1] for p in plot_data if p[2]]
+#     # Separate valid and invalid points for different markers
+#     x_valid = [p[0] for p in plot_data if p[2]]
+#     y_valid = [p[1] for p in plot_data if p[2]]
     
-    x_invalid = [p[0] for p in plot_data if not p[2]]
-    y_invalid = [p[1] for p in plot_data if not p[2]]
+#     x_invalid = [p[0] for p in plot_data if not p[2]]
+#     y_invalid = [p[1] for p in plot_data if not p[2]]
 
-    plt.figure()
-    # Plot the profile line (dashed)
-    plt.plot(x_vals, y_vals, 'k--', alpha=0.5, label='PL Profile')
+#     plt.figure()
+#     # Plot the profile line (dashed)
+#     plt.plot(x_vals, y_vals, 'k--', alpha=0.5, label='PL Profile')
     
-    # Plot Valid points (Black Circles)
-    if x_valid:
-        plt.scatter(x_valid, y_valid, color='black', zorder=5, label='Accepted (Passed All)')
+#     # Plot Valid points (Black Circles)
+#     if x_valid:
+#         plt.scatter(x_valid, y_valid, color='black', zorder=5, label='Accepted (Passed All)')
         
-    # Plot Invalid points (Red X)
-    if x_invalid:
-        plt.scatter(x_invalid, y_invalid, color='red', marker='x', zorder=5, label='Rejected (Failed Individual)')
+#     # Plot Invalid points (Red X)
+#     if x_invalid:
+#         plt.scatter(x_invalid, y_invalid, color='red', marker='x', zorder=5, label='Rejected (Failed Individual)')
 
-    plt.axhline(y=chi2_total_limit, linestyle='--', color='r', label='Total Chi² Limit')
-    plt.xlabel(f'{selected_names[i]} Value')
-    plt.ylabel('Total Cost')
+#     plt.axhline(y=chi2_total_limit, linestyle='--', color='r', label='Total Chi² Limit')
+#     plt.xlabel(f'{selected_names[i]} Value')
+#     plt.ylabel('Total Cost')
     
-    # Smart Y-limit
-    plt.ylim(0, chi2_total_limit * 1.15)
+#     # Smart Y-limit
+#     plt.ylim(0, chi2_total_limit * 1.15)
         
-    plt.legend(fontsize='small')
-    save_path = os.path.join(save_dir, f"PL_{selected_names[i]}_model_test_80.svg")
-    plt.savefig(save_path, format='svg')
-    plt.close()
+#     plt.legend(fontsize='small')
+#     save_path = os.path.join(save_dir, f"PL_{selected_names[i]}_model_test_80.svg")
+#     plt.savefig(save_path, format='svg')
+#     plt.close()
 
-print('MCMC and PL done.')
+# print('MCMC and PL done.')

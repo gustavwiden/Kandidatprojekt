@@ -21,7 +21,7 @@ Tight(0) = 0                                            // Initial concentration
 Leaky(0) = 0                                            // Initial concentration of total BIIB059 in leaky compartment (pM).
 Lymph(0) = 0                                            // Initial concentration of total BIIB059 in lymph compartment (pM).
 Depot(0) = 0                                            // Initial amount of total BIIB059 in depot compartment (pmol).
-BDCA2_plasma(0) = 54.4                                  // Initial concentration of total BDCA2 in plasma compartment (pM).
+BDCA2_plasma(0) = 46.2                                  // Initial concentration of total BDCA2 in plasma compartment (pM).
 
 ########## PARAMETERS
 F = 0.603                                               // Bioavailibility.
@@ -44,7 +44,7 @@ kint = 5.54                                            // Internalization rate o
 kss = 2624                                              // Steady state coefficient (pM).
 
 ########## VARIABLES
-ksynp = kdeg*54.4                                                                                              // Synthesis rate of BDCA2 in plasma compartment (pM/h).
+ksynp = kdeg*46.2                                                                                              // Synthesis rate of BDCA2 in plasma compartment (pM/h).
 Plasma_free = 0.5*((Plasma - kss - BDCA2_plasma) + sqrt((Plasma - kss - BDCA2_plasma)^2 + 4*Plasma*kss))        // Concentration of free BIIB059 in plasma compartment (pM).
 BDCA2_plasma_bound = (BDCA2_plasma * Plasma_free) / (kss + Plasma_free)                                         // Concentration of bound BDCA2 in plasma compartment (pM).
 
@@ -76,5 +76,5 @@ SC = SC_in @ 0
 
 ########## FEATURES
 PK_sim = (Plasma_free*146600)/1e9                                           // Simulation: Concentration of free BIIB059 in plasma compartment (μg/mL).
-PD_sim = 100*(BDCA2_plasma-54.4)/54.4                                       // Simulation: Expression of total BDCA2 on pDCs in plasma compartment (% change from baseline).
+PD_sim = 100*(BDCA2_plasma-46.2)/46.2                                       // Simulation: Expression of total BDCA2 on pDCs in plasma compartment (% change from baseline).
 PK_skin_sim = Skin*146600/1e9                                               // Simulation: Concentration of total BIIB059 in skin compartment (μg/mL).
