@@ -14,20 +14,20 @@
         "Every 10 Weeks"
     ],
     "required_doses": [
-        40.0,
+        35.0,
         80.0,
-        160.0,
-        280.0,
-        480.0
+        145.0,
+        260.0,
+        440.0
     ],
     "maint_burdens": [
+        350.0,
         400.0,
-        400.0,
-        640.0,
-        840.0,
-        960.0
+        580.0,
+        780.0,
+        880.0
     ],
-    "loading_dose": 10.0,
-    "loading_int_days": 2.0,
+    "loading_dose": 150.0,
+    "loading_int_days": 28.0,
     "loading_w": 4.0
 }

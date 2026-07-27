@@ -37,28 +37,31 @@ import sund
 import matplotlib.pyplot as plt
 
 # Output directory
-output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'Results', 'Acceptable params'))
-os.makedirs(output_dir, exist_ok=True)
+output_dir_MCMC = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Results', 'MCMC'))
+os.makedirs(output_dir_MCMC, exist_ok=True)
+
+output_dir_PL = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Results', 'Profile_likelihood'))
+os.makedirs(output_dir_PL, exist_ok=True)
 
 # Minimal setup (avoid importing optimize_model to prevent executing its heavy top-level code)
 # Load datasets
-with open(os.path.join(os.path.dirname(__file__), '..', '..', 'Data', 'PK_data.json'), 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), '..', 'Data', 'HV_PK_data.json'), 'r') as f:
     HV_PK_data = json.load(f)
-with open(os.path.join(os.path.dirname(__file__), '..', '..', 'Data', 'PD_data.json'), 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), '..', 'Data', 'HV_PD_data.json'), 'r') as f:
     HV_PD_data = json.load(f)
-with open(os.path.join(os.path.dirname(__file__), '..', '..', 'Data', 'SLE_PK_data.json'), 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), '..', 'Data', 'SLE_PK_data.json'), 'r') as f:
     SLE_PK_data = json.load(f)
-with open(os.path.join(os.path.dirname(__file__), '..', '..', 'Data', 'SLE_PD_data.json'), 'r') as f:
+with open(os.path.join(os.path.dirname(__file__), '..', 'Data', 'SLE_PD_data.json'), 'r') as f:
     SLE_PD_data = json.load(f)
 
 # Install and load the models (use relative paths from script location)
 # Change to script directory to ensure relative path resolution
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
-sund.install_model('../../Models/mPBPK_model.txt')
-sund.install_model('../../Models/mPBPK_SLE_model_80_pdc_mm2.txt')
-HV_model = sund.load_model('mPBPK_model')
-SLE_model = sund.load_model('mPBPK_SLE_model_80_pdc_mm2')
+sund.install_model('../Models/HV_model.txt')
+sund.install_model('../Models/SLE_model_400.txt')
+HV_model = sund.load_model('HV_model')
+SLE_model = sund.load_model('SLE_model_400')
 
 # Build dataset dicts and simulation objects similar to optimize_model.py
 all_datasets = {'HV': {'PK': HV_PK_data, 'PD': HV_PD_data}, 'SLE': {'PK': SLE_PK_data, 'PD': SLE_PD_data}}
@@ -85,7 +88,7 @@ for model_key, model in [('HV', HV_model), ('SLE', SLE_model)]:
     simulation_objects_dict[model_key] = sims
 
 # Load merged initial params and bounds (use same defaults as optimize_model)
-merged_initial_params = np.array([0.713, 0.0096, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0065, 0.0338, 0.081, 0.95, 0.8, 0.95, 0.45, 0.2, 0.00552, 0.00552, 0.28, 5.54, 2624])
+merged_initial_params = np.array([0.713, 0.0096, 2.6, 1.125, 6.987, 4.368, 2.6, 0.0055, 0.0343, 0.081, 0.95, 0.8, 0.95, 0.45, 0.2, 0.00552, 0.00552, 0.28, 5.54, 2387])
 bound_factors = [5, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 5, 5, 20, 1, 1]
 lower_bounds = np.log(merged_initial_params) - np.log(bound_factors)
 upper_bounds = np.log(merged_initial_params) + np.log(bound_factors)
@@ -171,9 +174,10 @@ import csv
 import pypesto
 import pypesto.sample as sample
 
+best_result_dir = os.path.join(os.path.dirname(__file__), '..', 'Results', 'Parameter_estimation')
 
-# Load best parameter from best_result_80_pdc_mm2.json
-best_result_file = os.path.join(output_dir, 'best_result_80_pdc_mm2.json')
+# Load best parameter from best_result_400_pdc_mm2.json
+best_result_file = os.path.join(best_result_dir, 'best_result_400_pdc_mm2.json')
 if not os.path.exists(best_result_file) or os.path.getsize(best_result_file) == 0:
     raise RuntimeError(f'Best result file not found or empty: {best_result_file}; run optimizer first')
 with open(best_result_file, 'r') as f:
@@ -238,217 +242,240 @@ custom_objective = pypesto.Objective(fun=proxy_f, grad=None)
 custom_problem = pypesto.Problem(objective=custom_objective, lb=lb, ub=ub, x_guesses=[param_init], x_scales=parameter_scales, x_names=parameter_names)
 
 # Run Adaptive Metropolis sampling (as in original)
-n_samples = int(1e6)
+n_samples = int(1e3)
 sampler = sample.AdaptiveMetropolisSampler()
 # result_sampling = sample.sample(problem=custom_problem, n_samples=n_samples, sampler=sampler, result=None, x0=param_init)
 
 # Save or load sampling trace to/from CSV (prefer existing CSV)
-csv_path = os.path.join(output_dir, 'MCMC_sampling_result_model_backup.csv')
+csv_path = os.path.join(output_dir_MCMC, 'MCMC_sampling_result_model_backup_v2.csv')
 if os.path.exists(csv_path) and os.path.getsize(csv_path) > 0:
     try:
         trace = np.loadtxt(csv_path, delimiter=',')
         print('Loaded existing sampling trace from', csv_path)
     except Exception as e:
         raise RuntimeError(f'Failed loading existing sampling CSV {csv_path}: {e}')
-else:
-    # # If CSV doesn't exist, attempt to extract trace from in-memory result_sampling
-    # try:
-    #     trace = np.array(result_sampling.sample_result['trace_x'])[0]
-    #     # Ensure directory exists then save
-    #     os.makedirs(output_dir, exist_ok=True)
-    #     np.savetxt(csv_path, trace, delimiter=',')
-    #     print('MCMC sampling finished. Saved trace to', csv_path)
-    # except Exception as e:
-    #     raise RuntimeError('No sampling CSV found and no in-memory sampling result available: {}'.format(e))
+# else:
+#     # If CSV doesn't exist, attempt to extract trace from in-memory result_sampling
+#     try:
+#         trace = np.array(result_sampling.sample_result['trace_x'])[0]
+#         # Ensure directory exists then save
+#         os.makedirs(output_dir_MCMC, exist_ok=True)
+#         np.savetxt(csv_path, trace, delimiter=',')
+#         print('MCMC sampling finished. Saved trace to', csv_path)
+#     except Exception as e:
+#         raise RuntimeError('No sampling CSV found and no in-memory sampling result available: {}'.format(e))
 
 
 # ---------------------- Plot histograms as in original script ----------------------
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+# import matplotlib.pyplot as plt
+# import matplotlib.ticker as ticker
 
-trace_array = trace
-rows, cols = 2, 3
-fig, axs = plt.subplots(rows, cols, figsize=(8, 6))
-axes = axs.flatten()
-num_params = trace_array.shape[1]
+# trace_array = trace
+# rows, cols = 2, 3
+# fig, axs = plt.subplots(rows, cols, figsize=(8, 8))
+# axes = axs.flatten()
+# num_params = trace_array.shape[1]
 
-for i in range(num_params):
-    ax = axes[i]
-    data_for_hist = trace_array[:, i]
-    ax.hist(data_for_hist, bins='auto', color='blue')
-    # ax.set_title(parameter_names[i])
-    ax.set_ylabel('Frequency')
-    ax.set_xlabel(f'{parameter_names[i]} Value')
-    formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
-    ax.xaxis.set_major_formatter(formatter)
-    ax.tick_params(axis='x', labelrotation=45, labelsize=8)
-    ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
+# for i in range(num_params):
+#     ax = axes[i]
+#     data_for_hist = trace_array[:, i]
+#     ax.hist(data_for_hist, bins='auto', color='blue')
+#     # ax.set_title(parameter_names[i])
+#     ax.set_ylabel('Frequency')
+#     ax.set_xlabel(f'{parameter_names[i]} Value')
+#     formatter = ticker.FuncFormatter(lambda x, _: f"{x:.2e}")
+#     ax.xaxis.set_major_formatter(formatter)
+#     ax.tick_params(axis='x', labelrotation=45, labelsize=8)
+#     ax.xaxis.set_major_locator(ticker.MaxNLocator(nbins=5))
 
-for j in range(num_params, len(axes)):
-    fig.delaxes(axes[j])
+# for j in range(num_params, len(axes)):
+#     fig.delaxes(axes[j])
 
-save_dir = os.path.join(os.path.dirname(output_dir), 'Validation')
-os.makedirs(save_dir, exist_ok=True)
-save_path = os.path.join(save_dir, "MCMC_mPBPK-model_model.svg")
-plt.savefig(save_path, format='svg')
-plt.tight_layout()
-plt.show()
+# os.makedirs(save_dir, exist_ok=True)
+# save_path = os.path.join(output_dir_MCMC, "MCMC_plot.svg")
+# plt.savefig(save_path, format='svg')
+# plt.tight_layout()
+# plt.show()
 
 
 # ---------------------- Profile Likelihood (PL) ----------------------
-# def fcost_PL(param_log, param_index, PL_revValue):
-#     params = np.exp(param_log)
-#     # penalty in log-space
-#     joint_cost = evaluate_merged_cost(params)
-#     # Penalty to keep parameter close to stepped value
-#     penalty = 1e6 * (param_log[param_index] - PL_revValue) ** 2
-#     return joint_cost + penalty
+def fcost_PL(param_log, param_index, PL_revValue):
+    params = np.exp(param_log)
+    # penalty in log-space
+    joint_cost = evaluate_merged_cost(params)
+    # Penalty to keep parameter close to stepped value
+    penalty = 1e6 * (param_log[param_index] - PL_revValue) ** 2
+    return joint_cost + penalty
 
-# import csv as _csv
+import csv as _csv
 
-# # Use best_param as starting point
-# best_param_log = np.log(best_param)
-# step_sizes = [0.04, 0.1, 0.04, 0.02, 0.04, 0.04]
+# Use best_param as starting point
+best_param_log = np.log(best_param)
+# step_sizes_N_dof = [0.04, 0.1, 0.04, 0.02, 0.04, 0.04]
+step_sizes_1_dof = [0.01, 0.025, 0.005, 0.005, 0.01, 0.01]
 
-# # For each selected parameter, perform PL scan
-# for i, (idx, step_size) in enumerate(zip(selected_indices, step_sizes)):
-#     parameterIdx = idx
-#     nSteps = 25 
+# For each selected parameter, perform PL scan
+for i, (idx, step_size) in enumerate(zip(selected_indices, step_sizes_1_dof)):
+    parameterIdx = idx
+    nSteps = 25 
     
-#     # Check if the start point itself is valid
-#     start_params = np.exp(best_param_log)
-#     initial_cost = evaluate_merged_cost(start_params)
-    
-#     # Helper to check validity (Is it saved to CSV?)
-#     def check_validity(p):
-#         try:
-#             p_HV, p_SLE = merged_to_model_params(p)
-#             hv = fcost_joint(p_HV, simulation_objects_dict['HV'], all_datasets['HV'])
-#             sle = fcost_joint(p_SLE, simulation_objects_dict['SLE'], all_datasets['SLE'])
+    # Check if the start point itself is valid
+    start_params = np.exp(best_param_log)
+    initial_cost = evaluate_merged_cost(start_params)
+
+    limit_1_dof = initial_cost + 3.841
+
+    def check_validity_1_dof(p):
+        try:
+            total_cost = evaluate_merged_cost(p)
+            if total_cost <= limit_1_dof:
+                return True
+        except:
+            return False
+        return False
+
+    def check_validity_N_dof(p):
+        try:
+            p_HV, p_SLE = merged_to_model_params(p)
+            hv = fcost_joint(p_HV, simulation_objects_dict['HV'], all_datasets['HV'])
+            sle = fcost_joint(p_SLE, simulation_objects_dict['SLE'], all_datasets['SLE'])
             
-#             pk_hv = hv.get('PK', sum(hv.values())) if isinstance(hv, dict) else float(hv)
-#             pd_hv = hv.get('PD', 0) if isinstance(hv, dict) else 0
-#             pk_sle = sle.get('PK', sum(sle.values())) if isinstance(sle, dict) else float(sle)
-#             pd_sle = sle.get('PD', 0) if isinstance(sle, dict) else 0
+            pk_hv = hv.get('PK', sum(hv.values())) if isinstance(hv, dict) else float(hv)
+            pd_hv = hv.get('PD', 0) if isinstance(hv, dict) else 0
+            pk_sle = sle.get('PK', sum(sle.values())) if isinstance(sle, dict) else float(sle)
+            pd_sle = sle.get('PD', 0) if isinstance(sle, dict) else 0
             
-#             # Strict individual checks
-#             if (pk_hv < chi2_limits['HV']['PK'] and pd_hv < chi2_limits['HV']['PD'] and 
-#                 pk_sle < chi2_limits['SLE']['PK'] and pd_sle < chi2_limits['SLE']['PD']):
-#                 return True
-#         except:
-#             return False
-#         return False
+            # Strict individual checks
+            if (pk_hv < chi2_limits['HV']['PK'] and pd_hv < chi2_limits['HV']['PD'] and 
+                pk_sle < chi2_limits['SLE']['PK'] and pd_sle < chi2_limits['SLE']['PD']):
+                return True
+        except:
+            return False
+        return False
 
-#     # Store: (value, cost, is_valid_boolean)
-#     start_valid = check_validity(start_params)
-#     plot_data = [(start_params[parameterIdx], initial_cost, start_valid)]
+    # Store: (value, cost, is_valid_boolean)
+    start_valid = check_validity_1_dof(start_params)
+    # start_valid = check_validity_N_dof(start_params)
+    plot_data = [(start_params[parameterIdx], initial_cost, start_valid)]
     
-#     PL_params_to_save = []
-#     if start_valid: 
-#         PL_params_to_save.append(start_params.tolist())
+    PL_params_to_save = []
+    if start_valid: 
+        PL_params_to_save.append(start_params.tolist())
 
-#     print(f"--- Scanning {selected_names[i]} ---")
+    print(f"--- Scanning {selected_names[i]} ---")
 
-#     for direction in [-1, 1]:
-#         x_opt_prev = best_param_log.copy()
+    for direction in [-1, 1]:
+        x_opt_prev = best_param_log.copy()
         
-#         for step in range(1, nSteps + 1): 
-#             PL_revValue = best_param_log[parameterIdx] + direction * step_size * step
+        for step in range(1, nSteps + 1): 
+            PL_revValue = best_param_log[parameterIdx] + direction * step_size * step
             
-#             x0 = x_opt_prev.copy()
-#             x0[parameterIdx] = PL_revValue 
+            x0 = x_opt_prev.copy()
+            x0[parameterIdx] = PL_revValue 
 
-#             # 1. Try Fast Gradient Descent (L-BFGS-B)
-#             try:
-#                 res = minimize(
-#                     fun=fcost_PL,
-#                     x0=x0,
-#                     args=(parameterIdx, PL_revValue),
-#                     method='L-BFGS-B',
-#                     bounds=bounds_log_pairs,
-#                     options={'disp': False, 'maxiter': 100}
-#                 )
-#                 success = res.success
-#                 current_res = res
-#             except Exception:
-#                 success = False
+            # 1. Try Fast Gradient Descent (L-BFGS-B)
+            try:
+                res = minimize(
+                    fun=fcost_PL,
+                    x0=x0,
+                    args=(parameterIdx, PL_revValue),
+                    method='L-BFGS-B',
+                    bounds=bounds_log_pairs,
+                    options={'disp': False, 'maxiter': 100}
+                )
+                success = res.success
+                current_res = res
+            except Exception:
+                success = False
 
-#             # 2. Fallback: Nelder-Mead (Run if failed OR if cost jumped suspiciously)
-#             # Check cost jump
-#             cost_jump = res.fun - initial_cost
-#             if not success or (step > 1 and cost_jump > 20):
-#                 try:
-#                     res_nm = minimize(
-#                         fun=fcost_PL,
-#                         x0=current_res.x if success else x0, 
-#                         args=(parameterIdx, PL_revValue),
-#                         method='Nelder-Mead',
-#                         bounds=bounds_log_pairs,
-#                         options={'disp': False, 'maxiter': 500}
-#                     )
-#                     # Only accept fallback if it improved cost
-#                     if not success or res_nm.fun < res.fun:
-#                         current_res = res_nm
-#                 except Exception:
-#                     pass
+            # 2. Fallback: Nelder-Mead (Run if failed OR if cost jumped suspiciously)
+            # Check cost jump
+            cost_jump = res.fun - initial_cost
+            if not success or (step > 1 and cost_jump > 20):
+                try:
+                    res_nm = minimize(
+                        fun=fcost_PL,
+                        x0=current_res.x if success else x0, 
+                        args=(parameterIdx, PL_revValue),
+                        method='Nelder-Mead',
+                        bounds=bounds_log_pairs,
+                        options={'disp': False, 'maxiter': 500}
+                    )
+                    # Only accept fallback if it improved cost
+                    if not success or res_nm.fun < res.fun:
+                        current_res = res_nm
+                except Exception:
+                    pass
             
-#             x_opt_prev = current_res.x.copy()
-#             step_params = np.exp(current_res.x)
+            x_opt_prev = current_res.x.copy()
+            step_params = np.exp(current_res.x)
             
-#             # Calculate Pure Cost
-#             pure_cost = evaluate_merged_cost(step_params)
+            # Calculate Pure Cost
+            pure_cost = evaluate_merged_cost(step_params)
             
-#             # Check Validity (Individual Limits)
-#             is_valid = check_validity(step_params)
+            # Check Validity (Individual Limits)
+            is_valid = check_validity_1_dof(step_params)
+            # is_valid = check_validity_N_dof(step_params)
             
-#             plot_data.append((np.exp(PL_revValue), pure_cost, is_valid))
-#             print(f"  Step {step} dir {direction}: pure cost={pure_cost:.3f}, valid={is_valid}")
+            plot_data.append((np.exp(PL_revValue), pure_cost, is_valid))
+            print(f"  Step {step} dir {direction}: pure cost={pure_cost:.3f}, valid={is_valid}")
 
-#             if is_valid:
-#                 PL_params_to_save.append(step_params.tolist())
+            if is_valid:
+                PL_params_to_save.append(step_params.tolist())
 
-#     # Save acceptable params to CSV
-#     pl_csv = os.path.join(output_dir, f"acceptable_params_PL_{selected_names[i]}_test_80.csv")
-#     with open(pl_csv, 'w', newline='') as f:
-#         writer = _csv.writer(f)
-#         writer.writerows(PL_params_to_save)
+            if pure_cost > (initial_cost + 10.0):
+                 print(f"  Crossed 1 DoF boundary significantly. Stopping direction {direction}.")
+                 break
 
-#     # --- Plotting ---
-#     # Sort by parameter value
-#     plot_data.sort(key=lambda x: x[0])
+    # Save acceptable params to CSV
+    pl_csv = os.path.join(output_dir_PL, f"acceptable_params_PL_1DoF_{selected_names[i]}_400.csv")
+    with open(pl_csv, 'w', newline='') as f:
+        writer = _csv.writer(f)
+        writer.writerows(PL_params_to_save)
+
+    # --- Plotting ---
+    # Sort by parameter value
+    plot_data.sort(key=lambda x: x[0])
     
-#     x_vals = [p[0] for p in plot_data]
-#     y_vals = [p[1] for p in plot_data]
+    x_vals = [p[0] for p in plot_data]
+    y_vals = [p[1] for p in plot_data]
     
-#     # Separate valid and invalid points for different markers
-#     x_valid = [p[0] for p in plot_data if p[2]]
-#     y_valid = [p[1] for p in plot_data if p[2]]
+    # Separate valid and invalid points for different markers
+    x_valid = [p[0] for p in plot_data if p[2]]
+    y_valid = [p[1] for p in plot_data if p[2]]
     
-#     x_invalid = [p[0] for p in plot_data if not p[2]]
-#     y_invalid = [p[1] for p in plot_data if not p[2]]
+    x_invalid = [p[0] for p in plot_data if not p[2]]
+    y_invalid = [p[1] for p in plot_data if not p[2]]
 
-#     plt.figure()
-#     # Plot the profile line (dashed)
-#     plt.plot(x_vals, y_vals, 'k--', alpha=0.5, label='PL Profile')
+    plt.figure()
+    # Plot the profile line (dashed)
+    plt.plot(x_vals, y_vals, 'k--', alpha=0.5, label='PL Profile')
     
-#     # Plot Valid points (Black Circles)
-#     if x_valid:
-#         plt.scatter(x_valid, y_valid, color='black', zorder=5, label='Accepted (Passed All)')
+    # Plot Valid points (Black Circles)
+    # if x_valid:
+    #     plt.scatter(x_valid, y_valid, color='black', zorder=5, label='Accepted (Passed All)')
         
-#     # Plot Invalid points (Red X)
-#     if x_invalid:
-#         plt.scatter(x_invalid, y_invalid, color='red', marker='x', zorder=5, label='Rejected (Failed Individual)')
+    # # Plot Invalid points (Red X)
+    # if x_invalid:
+    #     plt.scatter(x_invalid, y_invalid, color='red', marker='x', zorder=5, label='Rejected (Failed Individual)')
 
-#     plt.axhline(y=chi2_total_limit, linestyle='--', color='r', label='Total Chi² Limit')
-#     plt.xlabel(f'{selected_names[i]} Value')
-#     plt.ylabel('Total Cost')
+    if x_valid:
+        plt.scatter(x_valid, y_valid, color='black', zorder=5, label='Inside 95% CI (1 DoF)')
+    if x_invalid:
+        plt.scatter(x_invalid, y_invalid, color='red', marker='x', zorder=5, label='Outside 95% CI')
+
+    # plt.axhline(y=chi2_total_limit, linestyle='--', color='r', label='Total Chi² Limit')
+    plt.axhline(y=limit_1_dof, linestyle='--', color='r', label=f'95% CI Limit')
+    plt.xlabel(f'{selected_names[i]} Value')
+    plt.ylabel('Total Cost')
     
-#     # Smart Y-limit
-#     plt.ylim(0, chi2_total_limit * 1.15)
+    # Smart Y-limit
+    # plt.ylim(0, chi2_total_limit * 1.15)
+    plt.ylim(initial_cost - 1.0, initial_cost + 10.0)
         
-#     plt.legend(fontsize='small')
-#     save_path = os.path.join(save_dir, f"PL_{selected_names[i]}_model_test_80.svg")
-#     plt.savefig(save_path, format='svg')
-#     plt.close()
+    plt.legend(fontsize='small', loc='upper center')
+    save_path = os.path.join(output_dir_PL, f"PL_1DoF_{selected_names[i]}_model_400.svg")
+    plt.savefig(save_path, format='svg')
+    plt.close()
 
-# print('MCMC and PL done.')
+print('MCMC and PL done.')

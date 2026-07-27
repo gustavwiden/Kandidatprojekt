@@ -16,14 +16,12 @@ dataset_files = {
     'SLE_CLE_PK_validation_data': 'SLE_CLE_PK_validation_data.json',
     'HV_vs_SLE_plasma_PK_response_data': 'HV_vs_SLE_plasma_PK_response_data.json',
     'HV_vs_SLE_plasma_PD_response_data': 'HV_vs_SLE_plasma_PD_response_data.json',
-    'SLE_IV_dose_skin_PD_response_data': 'SLE_IV_dose_skin_PD_response_data.json',
-    'SLE_SC_dose_skin_PD_response_data': 'SLE_SC_dose_skin_PD_response_data.json'   
+    'SLE_IV_dose_skin_PD_response_data': 'SLE_IV_dose_skin_PD_response_data.json'   
 }
 
 model_files = {
     'HV_model': 'HV_model.txt',
     'SLE_model_1': 'SLE_model_1.txt',
-    'SLE_model_10': 'SLE_model_10.txt',
     'SLE_model_80': 'SLE_model_80.txt',
     'SLE_model_400': 'SLE_model_400.txt',
     'HV_model_high': 'HV_model_high.txt'
@@ -32,7 +30,6 @@ model_files = {
 parameter_files = {
     'final_params': 'final_params.json',
     'acceptable_params_1': 'acceptable_params_PL_1.csv',
-    'acceptable_params_10': 'acceptable_params_PL_10.csv',
     'acceptable_params_80': 'acceptable_params_PL_80.csv',
     'acceptable_params_400': 'acceptable_params_PL_400.csv'
 }
@@ -131,11 +128,10 @@ def create_simulation_objects(model, model_key, bodyweight, dataset=None, custom
             
     if custom_SC_doses:
         for dose in custom_SC_doses:
-            infusion_duration = 0.25 # 15 minutes in hours
+            infusion_duration = 0.25
             t_list, f_list = [], [0]
 
             if 'custom_times_h' in dose:
-                # Scenario C.3: Explicit custom times (Seamless Loading + Maintenance)
                 if 'custom_sizes_mg' in dose:
                     sizes_ug = [s * 1000 for s in dose['custom_sizes_mg']]
                 else:
@@ -147,15 +143,13 @@ def create_simulation_objects(model, model_key, bodyweight, dataset=None, custom
                 custom_key = f"SCdose_{dose.get('size_mg', 'mixed')}_custom_{model_key}"
 
             elif dose.get('interval_weeks') is None:
-                # Scenario A: Single dose
-                size = dose['size_mg'] * 1000  # Convert mg to ug
+                size = dose['size_mg'] * 1000
                 t_list = [0, infusion_duration]
                 f_list = [0, size, 0]
                 custom_key = f"SCdose_{dose['size_mg']}_{model_key}"
 
             elif 'num_doses' in dose:
-                # Scenario C.2: Fixed number of doses to reach perfect steady-state
-                size = dose['size_mg'] * 1000  # Convert mg to ug
+                size = dose['size_mg'] * 1000
                 interval = dose['interval_weeks'] * 168.0
                 for i in range(dose['num_doses']):
                     dose_event = i * interval
@@ -164,8 +158,7 @@ def create_simulation_objects(model, model_key, bodyweight, dataset=None, custom
                 custom_key = f"SCdose_{dose['size_mg']}_{dose['num_doses']}doses_{model_key}"
                
             else:
-                # Scenario C: Standard repeating continuous doses
-                size = dose['size_mg'] * 1000  # Convert mg to ug
+                size = dose['size_mg'] * 1000
                 interval = dose['interval_weeks'] * 168.0
                 total_duration = dose['total_weeks'] * 168.0
                 for dose_event in np.arange(0, total_duration, interval):
@@ -248,18 +241,14 @@ def get_response_time(y_data, response_threshold, startpoint, time_weeks, data_t
 
 
 def check_suppression_maintained(y_data, time_vector, threshold, window_start_h, window_end_h):
-    # Create mask for the exact evaluation window in hours
     mask = (time_vector >= window_start_h) & (time_vector <= window_end_h)
     y_check = y_data[mask]
     
     if len(y_check) == 0:
         return False
     
-    # 1. Must be suppressed at the end of the window
     is_suppressed_end = y_check[-1] <= threshold
     
-    # 2. Crossing Criteria: Once in the window, it should not cross
-    # back above the threshold (0 crossings if already suppressed, 1 if it dips in).
     crossings = np.sum(np.diff(np.sign(y_check - threshold)) != 0)
     
     return is_suppressed_end and crossings <= 1
