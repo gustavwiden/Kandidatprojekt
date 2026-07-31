@@ -1,0 +1,22 @@
+# Environments
+.env
+.venv
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDEs
+.vscode/
+.ipynb_checkpoints/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+folder_structure.txt
+make_gitignores.py
