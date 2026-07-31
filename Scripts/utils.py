@@ -29,9 +29,9 @@ model_files = {
 
 parameter_files = {
     'final_params': 'final_params.json',
-    'acceptable_params_1': 'acceptable_params_PL_1.csv',
-    'acceptable_params_80': 'acceptable_params_PL_80.csv',
-    'acceptable_params_400': 'acceptable_params_PL_400.csv'
+    'acceptable_params_1': 'acceptable_params_PL_N_dgf_1.csv',
+    'acceptable_params_80': 'acceptable_params_PL_N_dgf_80.csv',
+    'acceptable_params_400': 'acceptable_params_PL_N_dgf_400.csv'
 }
 
 
@@ -174,18 +174,6 @@ def create_simulation_objects(model, model_key, bodyweight, dataset=None, custom
     return simulation_objects
 
 
-def save_plot(save_dir, filename):
-    os.makedirs(save_dir, exist_ok=True)
-    
-    svg_path = os.path.join(save_dir, f"{filename}.svg")
-    plt.savefig(svg_path, format='svg')
-    
-    png_path = os.path.join(save_dir, f"{filename}.png")
-    plt.savefig(png_path, format='png', dpi=600)
-    
-    plt.close()
-
-
 def simulate(params, sim, time_vector, feature_to_plot):
     if isinstance(sim, dict):
         sim = list(sim.values())[0]
@@ -196,6 +184,29 @@ def simulate(params, sim, time_vector, feature_to_plot):
     y_sim = sim.feature_data[:, feature_idx]
 
     return y_sim
+
+
+def plot_dataset(data, measurement, ylabel, face_color='k'):
+    plt.errorbar(data['time'], data[measurement], data['SEM'], linestyle='None', marker='o', markerfacecolor=face_color, color='k')
+    plt.xlabel('Time [Hours]')
+    plt.ylabel(ylabel)
+
+
+def plot_sim(params, sims, timepoints, feature_to_plot, color='b'):
+    y_sim = simulate(params, sims, timepoints, feature_to_plot)
+    plt.plot(timepoints, y_sim, color)
+
+
+def save_plot(save_dir, filename):
+    os.makedirs(save_dir, exist_ok=True)
+    
+    svg_path = os.path.join(save_dir, f"{filename}.svg")
+    plt.savefig(svg_path, format='svg')
+    
+    png_path = os.path.join(save_dir, f"{filename}.png")
+    plt.savefig(png_path, format='png', dpi=600)
+    
+    plt.close()
 
 
 def calculate_uncertainty(sim, time_vector, acceptable_params, patient_type, feature_to_plot):
@@ -220,6 +231,61 @@ def calculate_uncertainty(sim, time_vector, acceptable_params, patient_type, fea
                 raise e
                 
     return y_min, y_max
+
+
+def fcost_joint(params, sims, dataset):
+    costs = {}
+    for data_key, current_data in dataset.items():
+        measurement = 'BIIB059_mean' if data_key == 'PK' else 'BDCA2_median'
+        cost = 0
+        for dose in current_data:
+            try:
+                sim = simulate(params, sims[dose], current_data[dose]['time'], f'{data_key}_plasma_sim')
+                y = current_data[dose][measurement]
+                SEM = current_data[dose]["SEM"]
+                cost += np.sum(np.square(((sim - y) / SEM)))
+            except Exception as e:
+                if "CVODE" not in str(e):
+                    print(f"Simulation of {dose} failed: {e}")
+                    cost = 1e30
+                    break
+        costs[data_key] = cost
+    return costs
+
+
+def merged_to_model_params(merged, HV_remove=[11, 16], SLE_remove=[10, 15]):
+    merged = np.array(merged)
+    params_HV = np.delete(merged, HV_remove) # Removing parameter for SLE clearance and RCS
+    params_SLE = np.delete(merged, SLE_remove) # Removing parameter for HV clearance and RCS
+    return params_HV, params_SLE
+
+
+def evaluate_cost(all_params, simulation_objects_dict, all_datasets):
+    all_costs = {}
+    for model_key in simulation_objects_dict.keys():
+        try:
+            all_costs[model_key] = fcost_joint(
+                all_params[model_key], 
+                simulation_objects_dict[model_key], 
+                all_datasets[model_key]
+            )
+        except Exception as e:
+            raise RuntimeError(f"Cost evaluation failed for {model_key}: {e}")
+    return all_costs
+
+
+def callback(x, file_name):
+    with open(f"./{file_name}.json",'w') as file:
+        out = {"x": x}
+        json.dump(out, file, cls=NumpyArrayEncoder)
+
+
+def callback_log(x, file_name='temp'):
+    callback(np.exp(x), file_name=file_name)
+
+
+def callback_evolution_log(x, convergence):
+    callback_log(x, file_name='temp-evolution')
 
 
 def get_response_time(y_data, response_threshold, startpoint, time_weeks, data_type):
